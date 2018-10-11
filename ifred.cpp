@@ -14,6 +14,12 @@
 
 // include your own widget here
 
+static QHash<ushort, QSet<QString>> g_intern;
+static QSet<QString> g_is_interned;
+static QSet<QString> g_search;
+
+static bool highlightTable[65536]; // not emoji!
+
 //--------------------------------------------------------------------------
 static ssize_t idaapi ui_callback(void *user_data, int notification_code, va_list va)
 {
@@ -67,8 +73,6 @@ inline void CenterWidgets(QWidget *widget, QWidget *host = nullptr) {
 #define WIDTH 720
 #define HEIGHT 74
 
-bool highlightTable[65536]; // not emoji!
-
 class QItem: public QStyledItemDelegate {
 public:
     void paint(QPainter *painter,
@@ -89,14 +93,29 @@ public:
                                  }
                                  )");
         QString highlighted;
-        for(auto &i: model->data(model->index(index.row(), 0)).toString()) {
-            if(highlightTable[(uint8_t)i.toLower().toLatin1()]) {
-                highlighted = highlighted % "<span>" % i % "</span>";
+        QString tooltip = model->data(model->index(index.row(), 0)).toString();
+        char escaped[100];
+        bool hl_state = false;
+        for(auto &i: tooltip) {
+            // QT::qsnprintf(escaped, sizeof(escaped), "&#x%04hx;", i.unicode());
+            if(highlightTable[i.toLower().unicode()]) {
+                if(!hl_state) {
+                    highlighted = highlighted % "<span>" % QString(i);
+                    hl_state = true;
+                }
+                else {
+                    highlighted = highlighted % QString(i);
+                }
             } else {
-                highlighted = highlighted % i;
+                if(!hl_state)
+                    highlighted = highlighted % QString(i);
+                else {
+                    highlighted = highlighted % "</span>" % QString(i);
+                    hl_state = false;
+                }
             }
         }
-        doc.setHtml(QString("<div>") + highlighted + "</div>");
+        doc.setHtml(QString("<div>") % highlighted % "</div>");
 
         QStyleOptionViewItem newOption = option;
         newOption.state = option.state & (~QStyle::State_HasFocus);
@@ -116,8 +135,19 @@ public:
 
 class MyFilter: public QSortFilterProxyModel {
 public:
-    MyFilter() {
-        QSortFilterProxyModel(nullptr);
+    MyFilter(): QSortFilterProxyModel(nullptr) {
+    }
+
+    bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const override {
+        auto model = sourceModel();
+        auto str = model->data(model->index(source_row, 0, source_parent)).toString();
+        bool result = filterRegExp().pattern().size() == 0 || g_search.contains(str);
+//        msg("%s: (%d) %d\n", str.toUtf8().toStdString().c_str(), filterRegExp().pattern().size(), result);
+        return result;
+    }
+
+    void setFilter(QString &keyword) {
+        setFilterFixedString(keyword);
     }
 };
 
@@ -145,15 +175,21 @@ public:
     }
 
     void onTextChanged() {
-        QString str(".*");
+        auto keyword = text();
         memset(&highlightTable, 0, sizeof(highlightTable));
-        for(auto &i: text()) {
-            str += i;
-            highlightTable[(uint8_t)i.toLower().toLatin1()] = true;
-            str += ".*";
+        g_search.clear();
+        if(keyword.size()) g_search.unite(g_intern[keyword[0].toLower().unicode()]);
+        for(auto &i: keyword) {
+            ushort c = i.toLower().unicode();
+            if(!highlightTable[c]) {
+                if(g_intern.contains(c))
+                    g_search.intersect(g_intern[c]);
+                else
+                    g_search.clear();
+            }
+            highlightTable[c] = true;
         }
-        QRegExp regexp(str, Qt::CaseInsensitive);
-        filter_->setFilterRegExp(regexp);
+        filter_->setFilter(keyword);
     }
 
     bool event(QEvent *event) {
@@ -174,6 +210,17 @@ public:
         }
     }
 };
+
+void internString(QString &src) {
+    if(g_is_interned.contains(src))
+        return;
+    g_is_interned.insert(src);
+    for(auto &i: src) {
+        auto c = i.toLower().unicode();
+        auto &set = g_intern[c];
+        set.insert(src);
+    }
+}
 
 class Qfred: public QFrame {
 
@@ -247,10 +294,13 @@ public:
             model.setData(model.index(i, 0), item->tooltip);
             model.setData(model.index(i, 1), item->shortcut);
             model.setData(model.index(i, 2), item->id);
+
+            internString(item->tooltip);
             i += 1;
         }
 
         commands_.setModel(&proxy);
+        connect(&proxy, &MyFilter::dataChanged, &commands_, &QListView::reset);
     }
 
     void keyPressEvent(QKeyEvent *e) override {
@@ -287,7 +337,7 @@ public:
     }
 };
 
-QfredContainer widget;
+static QfredContainer widget;
 
 //--------------------------------------------------------------------------
 bool idaapi run(size_t)
