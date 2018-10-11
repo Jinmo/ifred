@@ -13,14 +13,15 @@
 #include <kernwin.hpp>
 
 // include your own widget here
+#include "common_defs.h"
+#include "myfilter.h"
+#include "qsearch.h"
 
-static QHash<ushort, QSet<QString>> g_intern;
 static QSet<QString> g_is_interned;
-static QSet<QString> g_search;
 
-static QHash<QString, QDate> g_last_used;
-
-static bool highlightTable[65536]; // not emoji!
+QHash<ushort, QSet<QString>> g_intern;
+QSet<QString> g_search;
+bool highlightTable[65536]; // not emoji!
 
 //--------------------------------------------------------------------------
 static ssize_t idaapi ui_callback(void *user_data, int notification_code, va_list va)
@@ -85,12 +86,10 @@ public:
                                  div {
                                  font-family: Segoe UI;
                                  font-size: 18px;
-                                 color: rgb(204, 201, 194);
                                  padding: 14px 12px 14px 12px;
                                  }
 
                                  span {
-                                    color:rgb(229, 184, 96);
                                     font-weight: bold;
                                  }
                                  )");
@@ -138,144 +137,11 @@ public:
     }
 };
 
-static QVector<int> costs;
-
-int distance(const QString &s1, const QString &s2)
-{
-  const int m(s1.size());
-  const int n(s2.size());
-
-  if(costs.size() < n + 1) {
-      costs.resize(n + 1);
-  }
-
-  if( m==0 ) return n;
-  if( n==0 ) return m;
-
-  for( int k=0; k<=n; k++ ) costs[k] = k;
-
-  int i = 0;
-  for ( auto &it1: s1 )
-  {
-    costs[0] = i+1;
-    int corner = i;
-
-    int j = 0;
-    for ( auto &it2: s2 )
-    {
-      int upper = costs[j+1];
-      if( it1 == it2 )
-      {
-          costs[j+1] = corner;
-      }
-      else
-      {
-        int t(upper<corner?upper:corner);
-        costs[j+1] = (costs[j]<t?costs[j]:t)+1;
-      }
-
-      corner = upper;
-      j++;
-    }
-    i++;
-  }
-
-  //msg("%-50s %-50s %d", s1.toStdString().c_str(), s2.toStdString().c_str(), costs[n]);
-
-  return costs[n];
-}
-
-class MyFilter: public QSortFilterProxyModel {
-public:
-    MyFilter(): QSortFilterProxyModel(nullptr) {
-    }
-
-    bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const override {
-        auto model = sourceModel();
-        auto str = model->data(model->index(source_row, 0, source_parent)).toString();
-        bool result = filterRegExp().pattern().size() == 0 || g_search.contains(str);
-//        msg("%s: (%d) %d\n", str.toUtf8().toStdString().c_str(), filterRegExp().pattern().size(), result);
-        return result;
-    }
-    bool lessThan(const QModelIndex &left,
-                  const QModelIndex &right) const override {
-        const QString &filterText = filterRegExp().pattern();
-        const QString &leftData = sourceModel()->data(left).toString(),
-                      &rightData = sourceModel()->data(right).toString();
-
-        auto &leftUsed = g_last_used[leftData],
-                &rightUsed = g_last_used[rightData];
-        if(leftUsed != rightUsed)
-            return leftUsed > rightUsed;
-        return distance(filterText, leftData)
-                < distance(filterText, rightData);
-    }
-
-    void setFilter(QString &keyword) {
-        setFilterFixedString(keyword);
-    }
-};
-
 struct Action {
     QString id, tooltip, shortcut;
     Action(qstring id_, qstring tooltip_, qstring shortcut_): id(QString(id_.c_str())), tooltip(QString(tooltip_.c_str())), shortcut(QString(shortcut_.c_str())) {}
 };
 
-class QSearch: public QLineEdit {
-    MyFilter *filter_;
-public:
-    QSearch(QWidget *parent, MyFilter *filter): QLineEdit(parent), filter_(filter) {
-        setStyleSheet(R"(
-                         QLineEdit, QLineEdit:hover, QLineEdit:active {
-                             border-radius: 7px 7px 0 0;
-                             font-size: 27px;
-                             width: 720px;
-                             height: 63px;
-                             color: #eee;
-                             border: none;
-                         }
-                         )");
-
-        connect(this, &QLineEdit::textChanged, this, &QSearch::onTextChanged);
-    }
-
-    void onTextChanged() {
-        auto keyword = text();
-        memset(&highlightTable, 0, sizeof(highlightTable));
-        g_search.clear();
-        if(keyword.size()) g_search.unite(g_intern[keyword[0].toLower().unicode()]);
-        for(auto &i: keyword) {
-            ushort c = i.toLower().unicode();
-            if(!highlightTable[c]) {
-                if(g_intern.contains(c))
-                    g_search.intersect(g_intern[c]);
-                else
-                    g_search.clear();
-            }
-            highlightTable[c] = true;
-        }
-        filter_->setFilter(keyword);
-        filter_->sort(0);
-    }
-
-    bool event(QEvent *event) {
-        switch(event->type()) {
-        case QEvent::KeyPress: {
-            QKeyEvent *ke = static_cast<QKeyEvent *>(event);
-            switch (ke->key()) {
-            case Qt::Key_Down:
-                return true;
-            case Qt::Key_Up:
-                return true;
-            default:
-                return QLineEdit::event(event);
-            }
-        }
-        default:
-            return QLineEdit::event(event);
-        }
-    }
-};
 
 void internString(QString &src) {
     if(g_is_interned.contains(src))
@@ -306,7 +172,7 @@ public:
 
         setStyleSheet(R"(
                       font-family: Segoe UI;
-                      background: rgb(38, 44, 56);
+                      background: #eee;
                       QFrame {
                         border-radius: 7px;
                       }
