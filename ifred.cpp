@@ -18,6 +18,8 @@ static QHash<ushort, QSet<QString>> g_intern;
 static QSet<QString> g_is_interned;
 static QSet<QString> g_search;
 
+static QHash<QString, QDate> g_last_used;
+
 static bool highlightTable[65536]; // not emoji!
 
 //--------------------------------------------------------------------------
@@ -92,9 +94,11 @@ public:
                                     font-weight: bold;
                                  }
                                  )");
-        QString highlighted;
         QString tooltip = model->data(model->index(index.row(), 0)).toString();
-        char escaped[100];
+        QString highlighted;
+
+        highlighted.reserve(tooltip.size() * 6);
+        // char escaped[100];
         bool hl_state = false;
         for(auto &i: tooltip) {
             // QT::qsnprintf(escaped, sizeof(escaped), "&#x%04hx;", i.unicode());
@@ -115,6 +119,7 @@ public:
                 }
             }
         }
+//        msg("%s\n", highlighted.toStdString().c_str());
         doc.setHtml(QString("<div>") % highlighted % "</div>");
 
         QStyleOptionViewItem newOption = option;
@@ -133,6 +138,53 @@ public:
     }
 };
 
+static QVector<int> costs;
+
+int distance(const QString &s1, const QString &s2)
+{
+  const int m(s1.size());
+  const int n(s2.size());
+
+  if(costs.size() < n + 1) {
+      costs.resize(n + 1);
+  }
+
+  if( m==0 ) return n;
+  if( n==0 ) return m;
+
+  for( int k=0; k<=n; k++ ) costs[k] = k;
+
+  int i = 0;
+  for ( auto &it1: s1 )
+  {
+    costs[0] = i+1;
+    int corner = i;
+
+    int j = 0;
+    for ( auto &it2: s2 )
+    {
+      int upper = costs[j+1];
+      if( it1 == it2 )
+      {
+          costs[j+1] = corner;
+      }
+      else
+      {
+        int t(upper<corner?upper:corner);
+        costs[j+1] = (costs[j]<t?costs[j]:t)+1;
+      }
+
+      corner = upper;
+      j++;
+    }
+    i++;
+  }
+
+  //msg("%-50s %-50s %d", s1.toStdString().c_str(), s2.toStdString().c_str(), costs[n]);
+
+  return costs[n];
+}
+
 class MyFilter: public QSortFilterProxyModel {
 public:
     MyFilter(): QSortFilterProxyModel(nullptr) {
@@ -144,6 +196,19 @@ public:
         bool result = filterRegExp().pattern().size() == 0 || g_search.contains(str);
 //        msg("%s: (%d) %d\n", str.toUtf8().toStdString().c_str(), filterRegExp().pattern().size(), result);
         return result;
+    }
+    bool lessThan(const QModelIndex &left,
+                  const QModelIndex &right) const override {
+        const QString &filterText = filterRegExp().pattern();
+        const QString &leftData = sourceModel()->data(left).toString(),
+                      &rightData = sourceModel()->data(right).toString();
+
+        auto &leftUsed = g_last_used[leftData],
+                &rightUsed = g_last_used[rightData];
+        if(leftUsed != rightUsed)
+            return leftUsed > rightUsed;
+        return distance(filterText, leftData)
+                < distance(filterText, rightData);
     }
 
     void setFilter(QString &keyword) {
@@ -190,6 +255,7 @@ public:
             highlightTable[c] = true;
         }
         filter_->setFilter(keyword);
+        filter_->sort(0);
     }
 
     bool event(QEvent *event) {
@@ -287,7 +353,7 @@ public:
         // TODO: cache it by id
         auto out = getActions();
 
-        model.setRowCount(out->size());
+        model.setRowCount(static_cast<int>(out->size()));
 
         int i = 0;
         for(auto &item: *out) {
@@ -300,7 +366,8 @@ public:
         }
 
         commands_.setModel(&proxy);
-        connect(&proxy, &MyFilter::dataChanged, &commands_, &QListView::reset);
+        // TODO: we need to repaint the list item... I don't know how.
+        // connect(&proxy, &MyFilter::dataChanged, &commands_, [=](){ commands_.viewport()->update(); });
     }
 
     void keyPressEvent(QKeyEvent *e) override {
