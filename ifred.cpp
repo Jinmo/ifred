@@ -86,11 +86,13 @@ public:
                                  div {
                                  font-family: Segoe UI;
                                  font-size: 18px;
-                                 padding: 14px 12px 14px 12px;
+                                 display: block;
+                                 color: #959DA6;
                                  }
 
                                  span {
                                     font-weight: bold;
+                                 color: #F2973D;
                                  }
                                  )");
         QString tooltip = model->data(model->index(index.row(), 0)).toString();
@@ -118,15 +120,23 @@ public:
                 }
             }
         }
-//        msg("%s\n", highlighted.toStdString().c_str());
+        msg("%s %08x\n", highlighted.toStdString().c_str(), option.state);
         doc.setHtml(QString("<div>") % highlighted % "</div>");
+
+        painter->save();
 
         QStyleOptionViewItem newOption = option;
         newOption.state = option.state & (~QStyle::State_HasFocus);
 
-        painter->save();
-        newOption.widget->style()->drawControl(QStyle::CE_ItemViewItem, &newOption, painter);
+//        newOption.widget->style()->drawControl(QStyle::CE_ItemViewItem, &newOption, painter);
         painter->translate(option.rect.left(), option.rect.top());
+
+        if(option.state & QStyle::State_HasFocus) {
+            painter->fillRect(0, 0, option.rect.width(), option.rect.height(), QBrush("#f5f5f5"));
+        }
+
+        painter->translate(28, 8);
+
         doc.drawContents(painter, QRectF(0, 0, option.rect.width(), option.rect.height()));
         painter->restore();
     }
@@ -172,7 +182,7 @@ public:
 
         setStyleSheet(R"(
                       font-family: Segoe UI;
-                      background: #eee;
+                      background: #fff;
                       QFrame {
                         border-radius: 7px;
                       }
@@ -181,7 +191,30 @@ public:
         populateList();
         commands_.setItemDelegate(new QItem());
         commands_.setLineWidth(0);
-        commands_.setStyleSheet("border: none;");
+        commands_.setStyleSheet(R"(
+                                QListView {border: none;}
+                                QScrollBar:vertical {
+                                border: none;
+                                background: #f5f5f5;
+                                width: 12px;
+                                border-radius: 6px;
+                                }
+                                QScrollBar::handle:vertical {
+                                background: #dadada;
+                                min-height: 20px;
+                                border-radius: 6px;
+                                }
+                                QScrollBar::add-line:vertical {
+                                width: 0; height: 0;
+                                subcontrol-position: bottom;
+                                subcontrol-origin: margin;
+                                }
+                                QScrollBar::sub-line:vertical {
+                                width: 0; height: 0;
+                                subcontrol-position: top;
+                                subcontrol-origin: margin;
+                                }
+                                )");
 
         layout_.addWidget(&searchbox_);
         layout_.addWidget(&commands_);
