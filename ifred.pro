@@ -111,11 +111,14 @@ unix {
 
 SOURCES += ifred.cpp \
     myfilter.cpp \
-    qsearch.cpp
+    qsearch.cpp \
+    qcommands.cpp
 
 #HEADERS +=
 
 HEADERS += \
     myfilter.h \
     common_defs.h \
-    qsearch.h
+    qsearch.h \
+    qsearch.h \
+    qcommands.h

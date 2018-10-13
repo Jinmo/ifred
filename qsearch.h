@@ -4,10 +4,14 @@
 
 #include <QtGui>
 #include <QtWidgets>
+#include <functional>
 
+#include "common_defs.h"
 #include "myfilter.h"
 
-class QSearch: public QLineEdit {
+#include <idp.hpp>
+
+class QSearch: public QLineEdit, public FredCallback {
     MyFilter *filter_;
 public:
     QSearch(QWidget *parent, MyFilter *filter): QLineEdit(parent), filter_(filter) {
@@ -25,22 +29,8 @@ public:
 
     void onTextChanged();
 
-    bool event(QEvent *event) {
-        switch(event->type()) {
-        case QEvent::KeyPress: {
-            QKeyEvent *ke = static_cast<QKeyEvent *>(event);
-            switch (ke->key()) {
-            case Qt::Key_Down:
-                return true;
-            case Qt::Key_Up:
-                return true;
-            default:
-                return QLineEdit::event(event);
-            }
-        }
-        default:
-            return QLineEdit::event(event);
-        }
+    void keyPressEvent(QKeyEvent *event) override {
+        QLineEdit::keyPressEvent(event);
     }
 };
 

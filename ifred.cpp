@@ -16,46 +16,13 @@
 #include "common_defs.h"
 #include "myfilter.h"
 #include "qsearch.h"
+#include "qcommands.h"
 
 static QSet<QString> g_is_interned;
 
 QHash<ushort, QSet<QString>> g_intern;
 QSet<QString> g_search;
 bool highlightTable[65536]; // not emoji!
-
-//--------------------------------------------------------------------------
-static ssize_t idaapi ui_callback(void *user_data, int notification_code, va_list va)
-{
-  if ( notification_code == ui_widget_visible )
-  {
-    TWidget *widget = va_arg(va, TWidget *);
-    if ( widget == user_data )
-    {
-    }
-  }
-  if ( notification_code == ui_widget_invisible )
-  {
-    TWidget *widget = va_arg(va, TWidget *);
-    if ( widget == user_data )
-    {
-      // widget is closed, destroy objects (if required)
-    }
-  }
-  return 0;
-}
-
-//--------------------------------------------------------------------------
-int idaapi init(void)
-{
-  // the plugin works only with idaq
-  return is_idaq() ? PLUGIN_OK : PLUGIN_SKIP;
-}
-
-//--------------------------------------------------------------------------
-void idaapi term(void)
-{
-  unhook_from_notification_point(HT_UI, ui_callback);
-}
 
 inline void CenterWidgets(QWidget *widget, QWidget *host = nullptr) {
     if (!host)
@@ -120,7 +87,7 @@ public:
                 }
             }
         }
-        msg("%s %08x\n", highlighted.toStdString().c_str(), option.state);
+//        msg("%s %08x\n", highlighted.toStdString().c_str(), option.state);
         doc.setHtml(QString("<div>") % highlighted % "</div>");
 
         painter->save();
@@ -131,7 +98,7 @@ public:
 //        newOption.widget->style()->drawControl(QStyle::CE_ItemViewItem, &newOption, painter);
         painter->translate(option.rect.left(), option.rect.top());
 
-        if(option.state & QStyle::State_HasFocus) {
+        if(option.state & (QStyle::State_HasFocus | QStyle::State_Selected)) {
             painter->fillRect(0, 0, option.rect.width(), option.rect.height(), QBrush("#f5f5f5"));
         }
 
@@ -171,12 +138,13 @@ class Qfred: public QFrame {
     QVBoxLayout layout_;
     QSearch searchbox_;
 
-    QListView commands_;
+    QCommands commands_;
     MyFilter proxy;
 
     QStandardItemModel model;
 public:
-    Qfred(): mainWindow_(nullptr), searchbox_(this, &proxy), model(0, 2) {
+    auto &searchbox() { return searchbox_; }
+    Qfred(QMainWindow *parent): mainWindow_(nullptr), searchbox_(this, &proxy), model(0, 2) {
         setWindowFlags( Qt::FramelessWindowHint);
         setAttribute(Qt::WA_TranslucentBackground);
 
@@ -188,7 +156,11 @@ public:
                       }
                       )");
 
+        proxy.setDynamicSortFilter(true);
+        proxy.setSourceModel(&model);
+
         populateList();
+        commands_.setModel(&proxy);
         commands_.setItemDelegate(new QItem());
         commands_.setLineWidth(0);
         commands_.setStyleSheet(R"(
@@ -225,8 +197,49 @@ public:
 
         resize(WIDTH, HEIGHT);
 
-        CenterWidgets(this);
+        parent->installEventFilter(this);
+
+        connect(&searchbox_, &QSearch::returnPressed, this, &Qfred::enter_callback);
     }
+
+    bool arrow_callback(int key) {
+        int delta;
+        if(key == Qt::Key_Down) {
+            delta = 1;
+        } else {
+            delta = -1;
+        }
+        auto new_row = commands_.currentIndex().row() + delta;
+        if(new_row == -1) new_row = 0;
+        commands_.setCurrentIndex(proxy.index(new_row, 0));
+        return true;
+    }
+
+    bool enter_callback() {
+        auto id = proxy.data(proxy.index(commands_.currentIndex().row(), 2)).toString();
+        process_ui_action(id.toStdString().c_str());
+        mainWindow_->hide();
+        return true;
+    }
+
+    bool eventFilter(QObject *obj, QEvent *event) override {
+        // if(obj != &searchbox_ && obj != &commands_) return QFrame::eventFilter(obj, event);
+        switch(event->type()) {
+        case QEvent::KeyPress: {
+            QKeyEvent *ke = static_cast<QKeyEvent *>(event);
+            switch (ke->key()) {
+            case Qt::Key_Down:
+            case Qt::Key_Up:
+                return arrow_callback(ke->key());
+            default:
+                return QFrame::eventFilter(obj, event);
+            }
+        }
+        default:
+            return QFrame::eventFilter(obj, event);
+        }
+    }
+
 
     qvector<Action *> *getActions() {
         qstrvec_t id_list;
@@ -246,12 +259,10 @@ public:
     }
 
     void populateList() {
-        proxy.setDynamicSortFilter(true);
-        proxy.setSourceModel(&model);
-
         // TODO: cache it by id
         auto out = getActions();
 
+        // model.clear();
         model.setRowCount(static_cast<int>(out->size()));
 
         int i = 0;
@@ -264,7 +275,6 @@ public:
             i += 1;
         }
 
-        commands_.setModel(&proxy);
         // TODO: we need to repaint the list item... I don't know how.
         // connect(&proxy, &MyFilter::dataChanged, &commands_, [=](){ commands_.viewport()->update(); });
     }
@@ -285,7 +295,8 @@ public:
 class QfredContainer: public QMainWindow {
     Qfred fred_;
 public:
-    QfredContainer() {
+    auto &fred() { return fred_; }
+    QfredContainer(): fred_(this) {
         const int kShadow = 30;
         setWindowFlags( Qt::FramelessWindowHint);
         setAttribute(Qt::WA_TranslucentBackground); //enable MainWindow to be transparent
@@ -300,17 +311,76 @@ public:
         fred_.setMainWindow(this);
 
         setContentsMargins(kShadow, kShadow, kShadow, kShadow);
+        CenterWidgets(this);
+
+    }
+    void focus() {
+        fred_.searchbox().selectAll();
+        fred_.searchbox().setFocus();
     }
 };
 
 static QfredContainer widget;
+int first_execution = 1;
+
+class enter_handler: public action_handler_t {
+    int idaapi activate(action_activation_ctx_t *ctx) override {
+        if(first_execution) {
+            auto *ida_twidget = create_empty_widget("ifred");
+            QWidget *ida_widget = reinterpret_cast<QWidget *>(ida_twidget);
+            display_widget(ida_twidget, 0);
+            widget.setParent(ida_widget->window()->parentWidget()->window());
+            close_widget(ida_twidget, 0);
+        }
+
+        first_execution = 0;
+
+        // widget.fred().populateList();
+        widget.show();
+        widget.focus();
+
+        return 1;
+    }
+    action_state_t idaapi update(action_update_ctx_t *ctx) override {
+        return AST_ENABLE_ALWAYS;
+    }
+};
+
+static enter_handler enter_handler_;
+static action_desc_t enter_action = ACTION_DESC_LITERAL(
+            "ifred:enter",
+            "ifred command palette",
+            &enter_handler_,
+            "Ctrl+Shift+P",
+            "command palette",
+            -1
+            );
 
 //--------------------------------------------------------------------------
 bool idaapi run(size_t)
 {
-  // hook_to_notification_point(HT_UI, ui_callback, &widget);
-  widget.show();
   return true;
+}
+
+//--------------------------------------------------------------------------
+static ssize_t idaapi ui_callback(void *user_data, int notification_code, va_list va)
+{
+  if ( notification_code == ui_widget_visible )
+  {
+    TWidget *widget = va_arg(va, TWidget *);
+    if ( widget == user_data )
+    {
+    }
+  }
+  if ( notification_code == ui_widget_invisible )
+  {
+    TWidget *widget = va_arg(va, TWidget *);
+    if ( widget == user_data )
+    {
+      // widget is closed, destroy objects (if required)
+    }
+  }
+  return 0;
 }
 
 extern char comment[], help[], wanted_name[], wanted_hotkey[];
@@ -334,8 +404,31 @@ char wanted_name[] = "ifred";
 // Note: IDA won't tell you if the hotkey is not correct
 //       It will just disable the hotkey.
 
-char wanted_hotkey[] = "Ctrl-Shift-P";
+char wanted_hotkey[] = "";
 
+
+//--------------------------------------------------------------------------
+int idaapi init(void)
+{
+  // the plugin works only with idaq
+  int r = is_idaq() ? PLUGIN_KEEP : PLUGIN_SKIP;
+  if(r == PLUGIN_KEEP) {
+        hook_to_notification_point(HT_UI, &ui_callback, &widget);
+
+        msg("ifred loading...\n");
+
+        if(!register_action(enter_action)) {
+            msg("ifred action loading error");
+        };
+  }
+  return r;
+}
+
+//--------------------------------------------------------------------------
+void idaapi term(void)
+{
+  unhook_from_notification_point(HT_UI, ui_callback);
+}
 
 //--------------------------------------------------------------------------
 //
@@ -345,7 +438,7 @@ char wanted_hotkey[] = "Ctrl-Shift-P";
 plugin_t PLUGIN =
 {
   IDP_INTERFACE_VERSION,
-  0,                    // plugin flags
+  PLUGIN_FIX | PLUGIN_HIDE,                    // plugin flags
   init,                 // initialize
 
   term,                 // terminate. this pointer may be NULL.
