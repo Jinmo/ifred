@@ -160,6 +160,9 @@ public:
         proxy.setSourceModel(&model);
 
         populateList();
+
+        // TODO: we need to repaint the list item... I don't know how.
+        connect(&proxy, &MyFilter::dataChanged, &commands_, [=](){ commands_.viewport()->update(); });
         commands_.setModel(&proxy);
         commands_.setItemDelegate(new QItem());
         commands_.setLineWidth(0);
@@ -200,6 +203,12 @@ public:
         parent->installEventFilter(this);
 
         connect(&searchbox_, &QSearch::returnPressed, this, &Qfred::enter_callback);
+        connect(&searchbox_, &QSearch::textChanged, this, &Qfred::onTextChanged);
+    }
+
+    void onTextChanged(const QString &text) {
+        commands_.setCurrentIndex(proxy.index(0,0));
+        commands_.scrollToTop();
     }
 
     bool arrow_callback(int key) {
@@ -216,9 +225,9 @@ public:
     }
 
     bool enter_callback() {
-        auto id = proxy.data(proxy.index(commands_.currentIndex().row(), 2)).toString();
-        process_ui_action(id.toStdString().c_str());
+        auto id = model.data(model.index(proxy.mapToSource(commands_.currentIndex()).row(), 2)).toString();
         mainWindow_->hide();
+        process_ui_action(id.toStdString().c_str());
         return true;
     }
 
@@ -262,8 +271,8 @@ public:
         // TODO: cache it by id
         auto out = getActions();
 
-        // model.clear();
         model.setRowCount(static_cast<int>(out->size()));
+        model.setColumnCount(3);
 
         int i = 0;
         for(auto &item: *out) {
@@ -274,9 +283,6 @@ public:
             internString(item->tooltip);
             i += 1;
         }
-
-        // TODO: we need to repaint the list item... I don't know how.
-        // connect(&proxy, &MyFilter::dataChanged, &commands_, [=](){ commands_.viewport()->update(); });
     }
 
     void keyPressEvent(QKeyEvent *e) override {
@@ -328,14 +334,16 @@ class enter_handler: public action_handler_t {
         if(first_execution) {
             auto *ida_twidget = create_empty_widget("ifred");
             QWidget *ida_widget = reinterpret_cast<QWidget *>(ida_twidget);
+            ida_widget->setGeometry(0, 0, 0, 0);
+            ida_widget->setWindowFlags( Qt::FramelessWindowHint);
+            ida_widget->setAttribute(Qt::WA_TranslucentBackground); //enable MainWindow to be transparent
             display_widget(ida_twidget, 0);
             widget.setParent(ida_widget->window()->parentWidget()->window());
             close_widget(ida_twidget, 0);
+            widget.fred().populateList();
         }
 
         first_execution = 0;
-
-        // widget.fred().populateList();
         widget.show();
         widget.focus();
 
