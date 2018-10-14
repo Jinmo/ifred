@@ -8,6 +8,7 @@ extern QHash<ushort, QSet<QString>> g_intern;
 extern QSet<QString> g_search;
 
 extern bool highlightTable[65536];
+extern QHash<QString, QDate> g_last_used;
 
 class FredCallback {
 public:

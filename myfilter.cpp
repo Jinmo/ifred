@@ -1,7 +1,6 @@
 #include "myfilter.h"
 
 static QVector<int> costs; // used by distance(s1, s2)
-static QHash<QString, QDate> g_last_used;
 
 int distance(const QString &s1, const QString &s2)
 {

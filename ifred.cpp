@@ -24,6 +24,8 @@ QHash<ushort, QSet<QString>> g_intern;
 QSet<QString> g_search;
 bool highlightTable[65536]; // not emoji!
 
+QHash<QString, QDate> g_last_used;
+
 inline void CenterWidgets(QWidget *widget, QWidget *host = nullptr) {
     if (!host)
         host = widget->parentWidget();
@@ -42,77 +44,6 @@ inline void CenterWidgets(QWidget *widget, QWidget *host = nullptr) {
 
 #define WIDTH 720
 #define HEIGHT 74
-
-class QItem: public QStyledItemDelegate {
-public:
-    void paint(QPainter *painter,
-               const QStyleOptionViewItem &option, const QModelIndex &index) const override {
-        auto model = index.model();
-        QTextDocument doc;
-        doc.setDefaultStyleSheet(R"(
-                                 div {
-                                 font-family: Segoe UI;
-                                 font-size: 18px;
-                                 display: block;
-                                 color: #959DA6;
-                                 }
-
-                                 span {
-                                    font-weight: bold;
-                                 color: #F2973D;
-                                 }
-                                 )");
-        QString tooltip = model->data(model->index(index.row(), 0)).toString();
-        QString highlighted;
-
-        highlighted.reserve(tooltip.size() * 6);
-        // char escaped[100];
-        bool hl_state = false;
-        for(auto &i: tooltip) {
-            // QT::qsnprintf(escaped, sizeof(escaped), "&#x%04hx;", i.unicode());
-            if(highlightTable[i.toLower().unicode()]) {
-                if(!hl_state) {
-                    highlighted = highlighted % "<span>" % QString(i);
-                    hl_state = true;
-                }
-                else {
-                    highlighted = highlighted % QString(i);
-                }
-            } else {
-                if(!hl_state)
-                    highlighted = highlighted % QString(i);
-                else {
-                    highlighted = highlighted % "</span>" % QString(i);
-                    hl_state = false;
-                }
-            }
-        }
-//        msg("%s %08x\n", highlighted.toStdString().c_str(), option.state);
-        doc.setHtml(QString("<div>") % highlighted % "</div>");
-
-        painter->save();
-
-        QStyleOptionViewItem newOption = option;
-        newOption.state = option.state & (~QStyle::State_HasFocus);
-
-//        newOption.widget->style()->drawControl(QStyle::CE_ItemViewItem, &newOption, painter);
-        painter->translate(option.rect.left(), option.rect.top());
-
-        if(option.state & (QStyle::State_HasFocus | QStyle::State_Selected)) {
-            painter->fillRect(0, 0, option.rect.width(), option.rect.height(), QBrush("#f5f5f5"));
-        }
-
-        painter->translate(28, 8);
-
-        doc.drawContents(painter, QRectF(0, 0, option.rect.width(), option.rect.height()));
-        painter->restore();
-    }
-
-    QSize sizeHint(const QStyleOptionViewItem &,
-                   const QModelIndex &) const override {
-        return QSize(0, 48);
-    }
-};
 
 struct Action {
     QString id, tooltip, shortcut;
@@ -135,16 +66,13 @@ class Qfred: public QFrame {
 
     QMainWindow *mainWindow_;
 
+    QCommands commands_;
+
     QVBoxLayout layout_;
     QSearch searchbox_;
-
-    QCommands commands_;
-    MyFilter proxy;
-
-    QStandardItemModel model;
 public:
     auto &searchbox() { return searchbox_; }
-    Qfred(QMainWindow *parent): mainWindow_(nullptr), searchbox_(this, &proxy), model(0, 2) {
+    Qfred(QMainWindow *parent): mainWindow_(nullptr), commands_(), searchbox_(this, &commands_.model()) {
         setWindowFlags( Qt::FramelessWindowHint);
         setAttribute(Qt::WA_TranslucentBackground);
 
@@ -156,40 +84,10 @@ public:
                       }
                       )");
 
-        proxy.setDynamicSortFilter(true);
-        proxy.setSourceModel(&model);
-
         populateList();
 
         // TODO: we need to repaint the list item... I don't know how.
-        connect(&proxy, &MyFilter::dataChanged, &commands_, [=](){ commands_.viewport()->update(); });
-        commands_.setModel(&proxy);
-        commands_.setItemDelegate(new QItem());
-        commands_.setLineWidth(0);
-        commands_.setStyleSheet(R"(
-                                QListView {border: none;}
-                                QScrollBar:vertical {
-                                border: none;
-                                background: #f5f5f5;
-                                width: 12px;
-                                border-radius: 6px;
-                                }
-                                QScrollBar::handle:vertical {
-                                background: #dadada;
-                                min-height: 20px;
-                                border-radius: 6px;
-                                }
-                                QScrollBar::add-line:vertical {
-                                width: 0; height: 0;
-                                subcontrol-position: bottom;
-                                subcontrol-origin: margin;
-                                }
-                                QScrollBar::sub-line:vertical {
-                                width: 0; height: 0;
-                                subcontrol-position: top;
-                                subcontrol-origin: margin;
-                                }
-                                )");
+        connect(&commands_.model(), &MyFilter::dataChanged, &commands_, [=](){ commands_.viewport()->update(); });
 
         layout_.addWidget(&searchbox_);
         layout_.addWidget(&commands_);
@@ -206,8 +104,8 @@ public:
         connect(&searchbox_, &QSearch::textChanged, this, &Qfred::onTextChanged);
     }
 
-    void onTextChanged(const QString &text) {
-        commands_.setCurrentIndex(proxy.index(0,0));
+    void onTextChanged(const QString &) {
+        commands_.setCurrentIndex(commands_.model().index(0,0));
         commands_.scrollToTop();
     }
 
@@ -220,13 +118,15 @@ public:
         }
         auto new_row = commands_.currentIndex().row() + delta;
         if(new_row == -1) new_row = 0;
-        commands_.setCurrentIndex(proxy.index(new_row, 0));
+        commands_.setCurrentIndex(commands_.model().index(new_row, 0));
         return true;
     }
 
     bool enter_callback() {
-        auto id = model.data(model.index(proxy.mapToSource(commands_.currentIndex()).row(), 2)).toString();
+        auto &model = commands_.model();
+        auto id = model.data(model.index(commands_.currentIndex().row(), 2)).toString();
         mainWindow_->hide();
+        g_last_used[id] = QDate::currentDate();
         process_ui_action(id.toStdString().c_str());
         return true;
     }
@@ -270,15 +170,16 @@ public:
     void populateList() {
         // TODO: cache it by id
         auto out = getActions();
+        auto &source = commands_.source();
 
-        model.setRowCount(static_cast<int>(out->size()));
-        model.setColumnCount(3);
+        source.setRowCount(static_cast<int>(out->size()));
+        source.setColumnCount(3);
 
         int i = 0;
         for(auto &item: *out) {
-            model.setData(model.index(i, 0), item->tooltip);
-            model.setData(model.index(i, 1), item->shortcut);
-            model.setData(model.index(i, 2), item->id);
+            source.setData(source.index(i, 0), item->tooltip);
+            source.setData(source.index(i, 1), item->shortcut);
+            source.setData(source.index(i, 2), item->id);
 
             internString(item->tooltip);
             i += 1;
@@ -317,8 +218,10 @@ public:
         fred_.setMainWindow(this);
 
         setContentsMargins(kShadow, kShadow, kShadow, kShadow);
+    }
+    void show() {
         CenterWidgets(this);
-
+        QMainWindow::show();
     }
     void focus() {
         fred_.searchbox().selectAll();
