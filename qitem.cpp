@@ -2,5 +2,4 @@
 
 QItem::QItem()
 {
-
 }

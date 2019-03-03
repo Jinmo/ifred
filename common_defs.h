@@ -32,4 +32,61 @@ public:
     }
 };
 
+const char kStyleSheet[] = R"(
+                    font-family: Segoe UI;
+                    background: #fff;
+
+                    QListView {border: none;}
+
+                    QScrollBar:vertical {
+                        border: none;
+                        background: #f5f5f5;
+                        width: 12px;
+                        border-radius: 6px;
+                    }
+
+                    QScrollBar::handle:vertical {
+                        background: #dadada;
+                        min-height: 20px;
+                        border-radius: 6px;
+                    }
+
+                    QScrollBar::add-line:vertical {
+                        width: 0; height: 0;
+                        subcontrol-position: bottom;
+                        subcontrol-origin: margin;
+                    }
+
+                    QScrollBar::sub-line:vertical {
+                        width: 0; height: 0;
+                        subcontrol-position: top;
+                        subcontrol-origin: margin;
+                    }
+
+                    QFrame {
+                        border-radius: 7px;
+                    }
+                    QLineEdit, QLineEdit:hover, QLineEdit:active {
+                        font-size: 27px;
+                        width: 720px;
+                        height: 63px;
+                        border: none;
+                    }
+
+                    )";
+
+const char kItemStyleSheet[] = R"(
+                    div {
+                        font-family: Segoe UI;
+                        font-size: 18px;
+                        display: block;
+                        color: #959DA6;
+                    }
+
+                    span {
+                        font-weight: bold;
+                        color: #F2973D;
+                    }
+)";
+
 #endif // COMMON_DEFS_H

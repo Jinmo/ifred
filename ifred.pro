@@ -1,3 +1,5 @@
+QMAKE_PROJECT_DEPTH = 0
+
 # compile for ida64
 # CONFIG += is64
 
@@ -80,7 +82,7 @@ linux:LIBS += -z \
 
 # add library directory
 LIBDIR = ../../lib/$${SYSDIR}/
-LIBS += -L$${LIBDIR} -lida
+LIBS += -L$${LIBDIR}
 
 # set all build directories
 MOC_DIR = $${OBJDIR}
@@ -89,7 +91,7 @@ RCC_DIR = $${OBJDIR}
 UI_DIR = $${OBJDIR}
 
 # set the destination directory for the binary
-DESTDIR = ../../bin/$${TARGET_PROCESSOR_NAME}_$${SYSNAME}_$${COMPILER_NAME}_$${ADRSIZE}$${OPTSUF}/plugins/
+DESTDIR = bin/$${TARGET_PROCESSOR_NAME}_$${SYSNAME}_$${COMPILER_NAME}_$${ADRSIZE}$${OPTSUF}/plugins/
 
 # run install_name_tool after linking
 # mac:QMAKE_POST_LINK += install_name_tool -change /idapathsample/libida$${SUFF64}.dylib @executable_path/libida$${SUFF64}.dylib $(TARGET)
