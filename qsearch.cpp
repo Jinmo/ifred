@@ -2,6 +2,7 @@
 #include "common_defs.h"
 
 bool highlightTable[65536]; // not emoji!
+QSet<QString> g_search;
 
 void QSearch::onTextChanged()
 {

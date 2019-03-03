@@ -4,6 +4,11 @@
  *
  */
 
+#include <ida.hpp>
+#include <idp.hpp>
+#include <kernwin.hpp>
+#include <loader.hpp>
+
 #include <QtGui>
 #include <QtWidgets>
 
@@ -12,39 +17,10 @@
 #include "myfilter.h"
 #include "qsearch.h"
 #include "qcommands.h"
+#include "qpalette_.h"
 
 QSet<QString> g_is_interned;
-
 QHash<ushort, QSet<QString>> g_intern;
-QSet<QString> g_search;
-
-void CenterWidgets(QWidget *widget, QWidget *host = nullptr)
-{
-    if (!host)
-        host = widget->parentWidget();
-
-    if (host)
-    {
-        auto hostRect = host->geometry();
-        widget->move(hostRect.center() - widget->rect().center());
-    }
-    else
-    {
-        QRect screenGeometry = QApplication::desktop()->screenGeometry();
-        int x = (screenGeometry.width() - widget->width()) / 2;
-        int y = (screenGeometry.height() - widget->height()) / 2;
-        widget->move(x, y);
-    }
-}
-
-#define WIDTH 720
-#define HEIGHT 74
-
-struct Action
-{
-    QString id, tooltip, shortcut;
-    Action(std::string id_, std::string tooltip_, std::string shortcut_) : id(QString(id_.c_str())), tooltip(QString(tooltip_.c_str())), shortcut(QString(shortcut_.c_str())) {}
-};
 
 void internString(QString &src)
 {
@@ -59,147 +35,15 @@ void internString(QString &src)
     }
 }
 
-class QPaletteInner : public QFrame
+struct Action
 {
-    QPalette_ *mainWindow_;
-    QCommands commands_;
-    QVBoxLayout layout_;
-    QSearch searchbox_;
-
-  public:
-    auto &searchbox() { return searchbox_; }
-    QPaletteInner() : mainWindow_(nullptr), commands_(), searchbox_(this, &commands_.model())
-    {
-        setWindowFlags(Qt::FramelessWindowHint);
-        setAttribute(Qt::WA_TranslucentBackground);
-
-        setStyleSheet(kStyleSheet);
-
-        // TODO: we need to repaint the list item... I don't know how.
-        connect(&commands_.model(), &MyFilter::dataChanged, &commands_, [=]() { commands_.viewport()->update(); });
-
-        layout_.addWidget(&searchbox_);
-        layout_.addWidget(&commands_);
-        layout_.setContentsMargins(0, 0, 0, 0);
-        layout_.setSpacing(0);
-
-        setLayout(&layout_);
-
-        resize(WIDTH, HEIGHT);
-
-        connect(&searchbox_, &QSearch::returnPressed, this, &QPaletteInner::enter_callback);
-        connect(&searchbox_, &QSearch::textChanged, this, &QPaletteInner::onTextChanged);
-    }
-
-    void setParent(QPalette_ *parent)
-    {
-        QFrame::setParent(parent);
-        parent->installEventFilter(this);
-        mainWindow_ = parent;
-    }
-
-    void onTextChanged(const QString &)
-    {
-        commands_.setCurrentIndex(commands_.model().index(0, 0));
-        commands_.scrollToTop();
-    }
-
-    bool arrow_callback(int key)
-    {
-        int delta;
-        if (key == Qt::Key_Down)
-        {
-            delta = 1;
-        }
-        else
-        {
-            delta = -1;
-        }
-        auto new_row = commands_.currentIndex().row() + delta;
-        if (new_row == -1)
-            new_row = 0;
-        commands_.setCurrentIndex(commands_.model().index(new_row, 0));
-        return true;
-    }
-
-    virtual bool enter_callback() = 0;
-
-    bool eventFilter(QObject *obj, QEvent *event) override
-    {
-        // if(obj != &searchbox_ && obj != &commands_) return QFrame::eventFilter(obj, event);
-        switch (event->type())
-        {
-        case QEvent::KeyPress:
-        {
-            QKeyEvent *ke = static_cast<QKeyEvent *>(event);
-            switch (ke->key())
-            {
-            case Qt::Key_Down:
-            case Qt::Key_Up:
-                return arrow_callback(ke->key());
-            default:
-                return QFrame::eventFilter(obj, event);
-            }
-        }
-        default:
-            return QFrame::eventFilter(obj, event);
-        }
-    }
-
-    void keyPressEvent(QKeyEvent *e) override
-    {
-        if (e->key() != Qt::Key_Escape)
-            QFrame::keyPressEvent(e);
-        else
-        {
-            if (mainWindow_)
-                mainWindow_->hide();
-        }
-    }
+    QString id, tooltip, shortcut;
+    Action(qstring id_, qstring tooltip_, qstring shortcut_) : id(QString(id_.c_str())), tooltip(QString(tooltip_.c_str())), shortcut(QString(shortcut_.c_str())) {}
 };
 
-class QPalette_ : public QMainWindow
+class QIDACommandPaletteInner : public QPaletteInner
 {
-    QPaletteInner *inner_;
-
-  public:
-    auto &inner() { return *inner_; }
-    QPalette_()
-    {
-        const int kShadow = 30;
-
-        inner_->setParent(this);
-
-        setWindowFlags(Qt::FramelessWindowHint);
-        setAttribute(Qt::WA_TranslucentBackground); //enable MainWindow to be transparent
-
-        QGraphicsDropShadowEffect *effect = new QGraphicsDropShadowEffect();
-        effect->setBlurRadius(kShadow);
-        effect->setColor(QColor(0, 0, 0, 100));
-        effect->setOffset(0);
-        inner_->setGraphicsEffect(effect);
-        setCentralWidget(inner_);
-
-        setContentsMargins(kShadow, kShadow, kShadow, kShadow);
-    }
-    void show()
-    {
-        CenterWidgets(this);
-        QMainWindow::show();
-    }
-    void focus()
-    {
-        inner_->searchbox().selectAll();
-        inner_->searchbox().setFocus();
-    }
-};
-
-#if 0
-static QPalette_ widget;
-QHash<QString, QDate> g_last_used;
-
-class QIDACommandPalette {
-    bool enter_callback()
+    bool enter_callback() override
     {
         auto &model = commands_.model();
         auto id = model.data(model.index(commands_.currentIndex().row(), 2)).toString();
@@ -248,9 +92,10 @@ class QIDACommandPalette {
             i += 1;
         }
     }
-
-
 };
+
+QPalette_<QIDACommandPaletteInner> widget;
+QHash<QString, QDate> g_last_used;
 
 int first_execution = 1;
 
@@ -262,13 +107,15 @@ class enter_handler : public action_handler_t
         {
             auto *ida_twidget = create_empty_widget("ifred");
             QWidget *ida_widget = reinterpret_cast<QWidget *>(ida_twidget);
+
             ida_widget->setGeometry(0, 0, 0, 0);
             ida_widget->setWindowFlags(Qt::FramelessWindowHint);
             ida_widget->setAttribute(Qt::WA_TranslucentBackground); //enable MainWindow to be transparent
+
             display_widget(ida_twidget, 0);
             widget.setParent(ida_widget->window()->parentWidget()->window());
             close_widget(ida_twidget, 0);
-            widget.inner().populateList();
+
         }
 
         first_execution = 0;
@@ -282,6 +129,8 @@ class enter_handler : public action_handler_t
         return AST_ENABLE_ALWAYS;
     }
 };
+
+extern plugin_t PLUGIN;
 
 static enter_handler enter_handler_;
 static action_desc_t enter_action = ACTION_DESC_LITERAL(
@@ -389,5 +238,3 @@ plugin_t PLUGIN =
         wanted_name,  // the preferred short name of the plugin
         wanted_hotkey // the preferred hotkey to run the plugin
 };
-
-#endif

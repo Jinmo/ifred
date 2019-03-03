@@ -89,4 +89,7 @@ const char kItemStyleSheet[] = R"(
                     }
 )";
 
+#define WIDTH 720
+#define HEIGHT 74
+
 #endif // COMMON_DEFS_H

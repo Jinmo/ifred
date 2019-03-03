@@ -18,7 +18,7 @@ QT += widgets
 QT_NAMESPACE = QT
 
 # add include path
-INCLUDEPATH += ../../include
+INCLUDEPATH += ../../../include
 
 # build settings
 
@@ -81,8 +81,8 @@ linux:LIBS += -z \
     -Wl,-rpath=\'\$\$ORIGIN\'
 
 # add library directory
-LIBDIR = ../../lib/$${SYSDIR}/
-LIBS += -L$${LIBDIR}
+LIBDIR = ../../../lib/$${SYSDIR}/
+LIBS += -L$${LIBDIR} -lida
 
 # set all build directories
 MOC_DIR = $${OBJDIR}
@@ -115,7 +115,9 @@ SOURCES += ifred.cpp \
     myfilter.cpp \
     qsearch.cpp \
     qcommands.cpp \
-    qitem.cpp
+    qitem.cpp \
+    qpalette_.cpp \
+    qpalette_inner.cpp
 
 #HEADERS +=
 
@@ -124,4 +126,6 @@ HEADERS += \
     common_defs.h \
     qsearch.h \
     qcommands.h \
-    qitem.h
+    qitem.h \
+    qpalette_.h \
+    qpalette_inner.h
