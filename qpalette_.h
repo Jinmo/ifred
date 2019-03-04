@@ -4,6 +4,7 @@
 #include <QtWidgets>
 
 #include "qpalette_inner.h"
+#include "utils.h"
 
 static void centerWidgets(QWidget *widget, QWidget *host = nullptr)
 {
@@ -27,37 +28,29 @@ static void centerWidgets(QWidget *widget, QWidget *host = nullptr)
 template <class T>
 class QPalette_ : public QMainWindow
 {
-    T inner_;
+    T *inner_;
+    QGraphicsDropShadowEffect *effect_;
 
   public:
-    QPaletteInner &inner() { return inner_; }
-    QPalette_()
+    QPalette_(): inner_(new T())
     {
-        const int kShadow = 30;
-
-        inner().setParent(this);
-
         setWindowFlags(Qt::FramelessWindowHint);
         setAttribute(Qt::WA_TranslucentBackground); //enable MainWindow to be transparent
 
-        QGraphicsDropShadowEffect *effect = new QGraphicsDropShadowEffect();
-        effect->setBlurRadius(kShadow);
-        effect->setColor(QColor(0, 0, 0, 100));
-        effect->setOffset(0);
-
-        inner().setGraphicsEffect(effect);
-        setCentralWidget(&inner());
-
-        setContentsMargins(kShadow, kShadow, kShadow, kShadow);
+        inner_->setParent(this);
     }
+
+    auto &effect() { return effect_; }
+
     void show()
     {
         centerWidgets(this);
         QMainWindow::show();
     }
+
     void focus()
     {
-        inner_.searchbox().selectAll();
-        inner_.searchbox().setFocus();
+        inner_->searchbox().selectAll();
+        inner_->searchbox().setFocus();
     }
 };

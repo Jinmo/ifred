@@ -1,6 +1,6 @@
-#include "qcommands.h"
+#include "qitems.h"
 
-QCommands::QCommands()
+QItems::QItems()
 {
     filter_.setDynamicSortFilter(true);
     filter_.setSourceModel(&source_);

@@ -1,5 +1,5 @@
-#ifndef QCOMMANDS_H
-#define QCOMMANDS_H
+#ifndef QITEMS_H
+#define QITEMS_H
 
 #include <QtGui>
 #include <QtWidgets>
@@ -7,7 +7,7 @@
 #include "myfilter.h"
 #include "qitem.h"
 
-class QCommands : public QListView, public FredCallback
+class QItems : public QListView, public FredCallback
 {
     MyFilter filter_;
     QStandardItemModel source_;
@@ -16,7 +16,7 @@ class QCommands : public QListView, public FredCallback
 public:
     auto &model() { return filter_; }
     auto &source() { return source_; }
-    QCommands();
+    QItems();
 };
 
-#endif // QCOMMANDS_H
+#endif // QITEMS_H

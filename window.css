@@ -1,6 +1,7 @@
 * {
     font-family: Segoe UI;
-    background: #fff;
+    background: rgb(37, 37, 38);
+    color: rgb(204, 204, 204);
 }
 
 QListView {

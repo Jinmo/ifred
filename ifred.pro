@@ -1,5 +1,7 @@
 QMAKE_PROJECT_DEPTH = 0
 
+CONFIG += force_debug_info
+
 # compile for ida64
 # CONFIG += is64
 
@@ -114,10 +116,11 @@ unix {
 SOURCES += ifred.cpp \
     myfilter.cpp \
     qsearch.cpp \
-    qcommands.cpp \
+    qitems.cpp \
     qitem.cpp \
     qpalette_.cpp \
-    qpalette_inner.cpp
+    qpalette_inner.cpp \
+    utils.cpp
 
 #HEADERS +=
 
@@ -125,7 +128,8 @@ HEADERS += \
     myfilter.h \
     common_defs.h \
     qsearch.h \
-    qcommands.h \
+    qitems.h \
     qitem.h \
     qpalette_.h \
-    qpalette_inner.h
+    qpalette_inner.h \
+    utils.h

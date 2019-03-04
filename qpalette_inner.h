@@ -3,7 +3,7 @@
 #include <QtGui>
 #include <QtWidgets>
 
-#include "qcommands.h"
+#include "qitems.h"
 #include "qsearch.h"
 
 #include "common_defs.h"
@@ -18,7 +18,7 @@ struct EnterResult
     bool hide_;
     QPaletteInner *nextPalette_;
 
-  public:
+public:
     EnterResult(bool hide) : hide_(hide), nextPalette_(nullptr) {}
     EnterResult(QPaletteInner *nextPalette) : hide_(true), nextPalette_(nextPalette) {}
 
@@ -28,25 +28,53 @@ struct EnterResult
 
 class QPaletteInner : public QFrame
 {
-  protected:
+protected:
     QMainWindow *mainWindow_;
-    QCommands commands_;
+    QItems entries_;
     QVBoxLayout layout_;
     QSearch searchbox_;
 
-  public:
-    auto &searchbox() { return searchbox_; }
+    class ShadowObserver : public QConfigObserver
+    {
+        QPaletteInner *owner_;
 
-    QPaletteInner() : mainWindow_(nullptr), commands_(), searchbox_(this, &commands_.model())
+    public:
+        ShadowObserver(QPaletteInner *owner) : owner_(owner), QConfigObserver("styles.json") {}
+
+        void onConfigUpdated(QJsonObject &config) override
+        {
+            int kShadow = config["shadow"].toInt();
+
+            auto *effect = new QGraphicsDropShadowEffect();
+
+            effect->setBlurRadius(kShadow);
+            effect->setColor(QColor(0, 0, 0, 100));
+            effect->setOffset(0);
+
+            owner_->setGraphicsEffect(effect);
+
+            auto mainWindow = owner_->mainWindow();
+            if(mainWindow)
+                mainWindow->setContentsMargins(kShadow, kShadow, kShadow, kShadow);
+        }
+
+    } shadow_observer_;
+
+public:
+    auto &searchbox() { return searchbox_; }
+    QMainWindow *mainWindow() { return mainWindow_; }
+
+    QPaletteInner()
+    : mainWindow_(nullptr), entries_(), searchbox_(this, &entries_.model()), shadow_observer_(this)
     {
         setWindowFlags(Qt::FramelessWindowHint);
         setAttribute(Qt::WA_TranslucentBackground);
 
         // TODO: we need to repaint the list item... I don't know how.
-        connect(&commands_.model(), &MyFilter::dataChanged, &commands_, [=]() { commands_.viewport()->update(); });
+        connect(&entries_.model(), &MyFilter::dataChanged, &entries_, [=]() { entries_.viewport()->update(); });
 
         layout_.addWidget(&searchbox_);
-        layout_.addWidget(&commands_);
+        layout_.addWidget(&entries_);
         layout_.setContentsMargins(0, 0, 0, 0);
         layout_.setSpacing(0);
 
@@ -58,6 +86,8 @@ class QPaletteInner : public QFrame
 
         connect(&searchbox_, &QSearch::returnPressed, this, &QPaletteInner::onEnterPressed);
         connect(&searchbox_, &QSearch::textChanged, this, &QPaletteInner::onTextChanged);
+
+        shadow_observer_.activate();
     }
 
     void processEnterResult(EnterResult res)
@@ -93,12 +123,15 @@ class QPaletteInner : public QFrame
         QFrame::setParent(parent);
         parent->installEventFilter(this);
         mainWindow_ = parent;
+        mainWindow_->setCentralWidget(this);
+
+        shadow_observer_.updated();
     }
 
     void onTextChanged(const QString &)
     {
-        commands_.setCurrentIndex(commands_.model().index(0, 0));
-        commands_.scrollToTop();
+        entries_.setCurrentIndex(entries_.model().index(0, 0));
+        entries_.scrollToTop();
     }
 
     bool arrow_callback(int key)
@@ -112,10 +145,10 @@ class QPaletteInner : public QFrame
         {
             delta = -1;
         }
-        auto new_row = commands_.currentIndex().row() + delta;
+        auto new_row = entries_.currentIndex().row() + delta;
         if (new_row == -1)
             new_row = 0;
-        commands_.setCurrentIndex(commands_.model().index(new_row, 0));
+        entries_.setCurrentIndex(entries_.model().index(new_row, 0));
         return true;
     }
 
@@ -123,22 +156,22 @@ class QPaletteInner : public QFrame
 
     bool eventFilter(QObject *obj, QEvent *event) override
     {
-        // if(obj != &searchbox_ && obj != &commands_) return QFrame::eventFilter(obj, event);
+        // if(obj != &searchbox_ && obj != &entries_) return QFrame::eventFilter(obj, event);
         switch (event->type())
         {
-        case QEvent::KeyPress:
-        {
-            QKeyEvent *ke = static_cast<QKeyEvent *>(event);
-            switch (ke->key())
+            case QEvent::KeyPress:
             {
-            case Qt::Key_Down:
-            case Qt::Key_Up:
-                return arrow_callback(ke->key());
-            default:
-                return QFrame::eventFilter(obj, event);
+                QKeyEvent *ke = static_cast<QKeyEvent *>(event);
+                switch (ke->key())
+                {
+                    case Qt::Key_Down:
+                    case Qt::Key_Up:
+                    return arrow_callback(ke->key());
+                    default:
+                    return QFrame::eventFilter(obj, event);
+                }
             }
-        }
-        default:
+            default:
             return QFrame::eventFilter(obj, event);
         }
     }

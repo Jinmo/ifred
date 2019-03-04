@@ -57,6 +57,8 @@ bool MyFilter::lessThan(const QModelIndex &left, const QModelIndex &right) const
   const QString &leftData = sourceModel()->data(left).toString(),
                 &rightData = sourceModel()->data(right).toString();
 
+  return leftData < rightData;
+
   if (filterText.size() == 0)
     return leftData < rightData;
 

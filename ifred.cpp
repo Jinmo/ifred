@@ -4,15 +4,7 @@
  *
  */
 
-#pragma warning(push)
-#pragma warning(disable : 4244)
-#pragma warning(disable : 4267)
-#include <ida.hpp>
-#include <idp.hpp>
-#pragma warning(pop)
-
-#include <kernwin.hpp>
-#include <loader.hpp>
+#include "ida_headers.h"
 
 #include <QtGui>
 #include <QtWidgets>
@@ -20,7 +12,7 @@
 #include "common_defs.h"
 #include "myfilter.h"
 #include "qsearch.h"
-#include "qcommands.h"
+#include "qitems.h"
 #include "qpalette_.h"
 
 QSet<QString> g_is_interned;
@@ -60,8 +52,8 @@ class QIDACommandPaletteInner : public QPaletteInner
     {
         processEnterResult(true);
 
-        auto &model = commands_.model();
-        auto id = model.data(model.index(commands_.currentIndex().row(), 2)).toString();
+        auto &model = entries_.model();
+        auto id = model.data(model.index(entries_.currentIndex().row(), 2)).toString();
         g_last_used[id] = QDate::currentDate();
         process_ui_action(id.toStdString().c_str());
         // already hidden
@@ -91,7 +83,7 @@ class QIDACommandPaletteInner : public QPaletteInner
     {
         // TODO: cache it by id
         auto out = getActions();
-        auto &source = commands_.source();
+        auto &source = entries_.source();
 
         source.setRowCount(static_cast<int>(out->size()));
         source.setColumnCount(3);

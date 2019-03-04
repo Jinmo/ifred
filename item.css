@@ -1,11 +1,11 @@
 div {
     font-family: Segoe UI;
-    font-size: 18px;
+    font-size: 16px;
     display: block;
-    color: #959DA6;
+    color: rgb(204, 204, 204);
 }
 
 span {
     font-weight: bold;
-    color: #F2973D;
+    color: rgb(0, 151, 251);
 }
