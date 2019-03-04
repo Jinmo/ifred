@@ -8,6 +8,24 @@
 
 #include "common_defs.h"
 
+#include <ida.hpp>
+#include <idp.hpp>
+
+class QPaletteInner;
+
+struct EnterResult
+{
+    bool hide_;
+    QPaletteInner *nextPalette_;
+
+  public:
+    EnterResult(bool hide) : hide_(hide), nextPalette_(nullptr) {}
+    EnterResult(QPaletteInner *nextPalette) : hide_(true), nextPalette_(nextPalette) {}
+
+    bool hide() { return hide_; }
+    auto *nextPalette() { return nextPalette_; }
+};
+
 class QPaletteInner : public QFrame
 {
   protected:
@@ -18,12 +36,11 @@ class QPaletteInner : public QFrame
 
   public:
     auto &searchbox() { return searchbox_; }
+
     QPaletteInner() : mainWindow_(nullptr), commands_(), searchbox_(this, &commands_.model())
     {
         setWindowFlags(Qt::FramelessWindowHint);
         setAttribute(Qt::WA_TranslucentBackground);
-
-        setStyleSheet(kStyleSheet);
 
         // TODO: we need to repaint the list item... I don't know how.
         connect(&commands_.model(), &MyFilter::dataChanged, &commands_, [=]() { commands_.viewport()->update(); });
@@ -37,8 +54,38 @@ class QPaletteInner : public QFrame
 
         resize(WIDTH, HEIGHT);
 
-        connect(&searchbox_, &QSearch::returnPressed, this, &QPaletteInner::enter_callback);
+        CSSLOADER("window.css");
+
+        connect(&searchbox_, &QSearch::returnPressed, this, &QPaletteInner::onEnterPressed);
         connect(&searchbox_, &QSearch::textChanged, this, &QPaletteInner::onTextChanged);
+    }
+
+    void processEnterResult(EnterResult res)
+    {
+        if (res.hide())
+        {
+            if (res.nextPalette())
+            {
+                QPaletteInner *p = res.nextPalette();
+                p->setParent(mainWindow_);
+                hide();
+            }
+            else
+            {
+                mainWindow_->hide();
+            }
+        }
+        else
+        {
+            // hide=true if nextPalette != NULL
+            assert(!res.nextPalette());
+        }
+    }
+
+    void onEnterPressed()
+    {
+        auto res = enter_callback();
+        processEnterResult(res);
     }
 
     void setParent(QMainWindow *parent)
@@ -72,7 +119,7 @@ class QPaletteInner : public QFrame
         return true;
     }
 
-    virtual bool enter_callback() = 0;
+    virtual EnterResult enter_callback() = 0;
 
     bool eventFilter(QObject *obj, QEvent *event) override
     {

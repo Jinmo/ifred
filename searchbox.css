@@ -1,0 +1,6 @@
+QLineEdit, QLineEdit:hover, QLineEdit:active {
+    font-size: 27px;
+    width: 720px;
+    height: 63px;
+    border: none;
+}

@@ -17,7 +17,9 @@ class QItem : public QStyledItemDelegate
     {
         auto model = index.model();
         QTextDocument doc;
-        doc.setDefaultStyleSheet(kItemStyleSheet);
+        char *css = CSSLOADER_SYNC("item.css");
+        doc.setDefaultStyleSheet(css);
+        delete[] css;
         QString tooltip = model->data(model->index(index.row(), 0)).toString();
         QString highlighted;
 

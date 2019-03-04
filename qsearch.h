@@ -15,6 +15,7 @@ class QSearch : public QLineEdit, public FredCallback
   public:
     QSearch(QWidget *parent, MyFilter *filter) : QLineEdit(parent), filter_(filter)
     {
+        CSSLOADER("searchbox.css");
         connect(this, &QLineEdit::textChanged, this, &QSearch::onTextChanged);
     }
 

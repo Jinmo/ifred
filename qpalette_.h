@@ -44,6 +44,7 @@ class QPalette_ : public QMainWindow
         effect->setBlurRadius(kShadow);
         effect->setColor(QColor(0, 0, 0, 100));
         effect->setOffset(0);
+
         inner().setGraphicsEffect(effect);
         setCentralWidget(&inner());
 

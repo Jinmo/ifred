@@ -4,15 +4,19 @@
  *
  */
 
+#pragma warning(push)
+#pragma warning(disable : 4244)
+#pragma warning(disable : 4267)
 #include <ida.hpp>
 #include <idp.hpp>
+#pragma warning(pop)
+
 #include <kernwin.hpp>
 #include <loader.hpp>
 
 #include <QtGui>
 #include <QtWidgets>
 
-// include your own widget here
 #include "common_defs.h"
 #include "myfilter.h"
 #include "qsearch.h"
@@ -38,19 +42,30 @@ void internString(QString &src)
 struct Action
 {
     QString id, tooltip, shortcut;
-    Action(qstring id_, qstring tooltip_, qstring shortcut_) : id(QString(id_.c_str())), tooltip(QString(tooltip_.c_str())), shortcut(QString(shortcut_.c_str())) {}
+    Action(qstring id_, qstring tooltip_, qstring shortcut_)
+        : id(QString(id_.c_str())),
+          tooltip(QString(tooltip_.c_str())),
+          shortcut(QString(shortcut_.c_str())) {}
 };
 
 class QIDACommandPaletteInner : public QPaletteInner
 {
-    bool enter_callback() override
+  public:
+    QIDACommandPaletteInner() : QPaletteInner()
     {
+        populateList();
+    }
+
+    EnterResult enter_callback() override
+    {
+        processEnterResult(true);
+
         auto &model = commands_.model();
         auto id = model.data(model.index(commands_.currentIndex().row(), 2)).toString();
-        mainWindow_->hide();
         g_last_used[id] = QDate::currentDate();
         process_ui_action(id.toStdString().c_str());
-        return true;
+        // already hidden
+        return false;
     }
 
     std::vector<Action *> *getActions()
@@ -115,7 +130,6 @@ class enter_handler : public action_handler_t
             display_widget(ida_twidget, 0);
             widget.setParent(ida_widget->window()->parentWidget()->window());
             close_widget(ida_twidget, 0);
-
         }
 
         first_execution = 0;
