@@ -17,6 +17,8 @@ class QSearch : public QLineEdit, public FredCallback
     {
         CSSLOADER("searchbox.css");
         connect(this, &QLineEdit::textChanged, this, &QSearch::onTextChanged);
+
+        onTextChanged();
     }
 
     void onTextChanged();

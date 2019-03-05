@@ -1,11 +1,19 @@
 #include "myfilter.h"
 
 static QVector<int> costs; // used by distance(s1, s2)
+static QHash<QString, QHash<QString, int>> distances;
 
 int distance(const QString &s1, const QString &s2)
 {
   const int m(s1.size());
   const int n(s2.size());
+
+  if(distances.contains(s1) && distances[s1].contains(s2))
+    return distances[s1][s2];
+
+  if(s2.contains(s1)) {
+    return -100000 + s2.indexOf(s1);
+  }
 
   if (costs.size() < n + 1)
   {
@@ -47,6 +55,7 @@ int distance(const QString &s1, const QString &s2)
   }
 
   //msg("%-50s %-50s %d", s1.toStdString().c_str(), s2.toStdString().c_str(), costs[n]);
+  distances[s1][s2] = costs[n];
 
   return costs[n];
 }

@@ -43,13 +43,14 @@ class FredCallback
 #define CSSLOADER(filename)                        \
     QTimer *timer = new QTimer(this);              \
     connect(timer, &QTimer::timeout, this, [=]() { \
-        bool updated;\
-        auto &buf = loadFile(filename, updated);      \
-        setStyleSheet(buf);                        \
+        bool updated;                              \
+        auto &buf = loadFile(filename, updated);   \
+        if (updated)                               \
+            setStyleSheet(buf);                    \
     });                                            \
-        bool updated;\
-        auto &buf = loadFile(filename, updated);      \
-        setStyleSheet(buf);                        \
+    bool updated;                                  \
+    auto &buf = loadFile(filename, updated);       \
+    setStyleSheet(buf);                            \
     timer->start(1000);
 
 #include "utils.h"

@@ -19,8 +19,10 @@ void QItem::paint(QPainter *painter,
     memcpy(localTable, highlightTable, sizeof(localTable));
 
     highlighted.reserve(tooltip.size() * 6);
-    // char escaped[100];
+    QStringList hl_list;
     bool hl_state = false;
+    auto *table = new short[tooltip.size()];
+    
     for (auto &i : tooltip)
     {
         auto c = i.toLower().unicode();
@@ -30,7 +32,7 @@ void QItem::paint(QPainter *painter,
             localTable[c]--;
             if (!hl_state)
             {
-                highlighted = highlighted % "<span>" % QString(i);
+                highlighted = highlighted % "<em>" % QString(i);
                 hl_state = true;
             }
             else
@@ -44,7 +46,7 @@ void QItem::paint(QPainter *painter,
                 highlighted = highlighted % QString(i);
             else
             {
-                highlighted = highlighted % "</span>" % QString(i);
+                highlighted = highlighted % "</em>" % QString(i);
                 hl_state = false;
             }
         }

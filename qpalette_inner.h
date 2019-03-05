@@ -134,6 +134,7 @@ public:
     {
         entries_.setCurrentIndex(entries_.model().index(0, 0));
         entries_.scrollToTop();
+        entries_.repaint();
     }
 
     bool arrow_callback(int key)

@@ -64,11 +64,34 @@ class QIDACommandPaletteInner : public QPaletteInner
         qstrvec_t id_list;
         auto *result = new std::vector<Action *>();
 
+        static QRegularExpression blacklist[] = {
+            QRegularExpression("^hexview"),
+            QRegularExpression("^hx"),
+            QRegularExpression("^navbox")};
+
         get_registered_actions(&id_list);
 
         result->reserve(id_list.size());
         for (auto &item : id_list)
         {
+            bool found = false;
+            for (auto &pattern : blacklist)
+                if (QString(item.c_str()).contains(pattern))
+                {
+                    found = true;
+                    break;
+                }
+
+            if (found)
+                continue;
+
+            action_state_t state;
+            if (!get_action_state(item.c_str(), &state))
+                continue;
+
+            if (state > AST_ENABLE)
+                continue;
+
             qstring tooltip, shortcut;
             get_action_tooltip(&tooltip, item.c_str());
             get_action_shortcut(&shortcut, item.c_str());

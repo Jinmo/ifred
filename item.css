@@ -1,3 +1,5 @@
+* { margin: 0; }
+
 div {
     font-family: Segoe UI;
     font-size: 16px;
@@ -5,7 +7,8 @@ div {
     color: rgb(204, 204, 204);
 }
 
-span {
+em {
     font-weight: bold;
     color: rgb(0, 151, 251);
+    font-style: normal;
 }

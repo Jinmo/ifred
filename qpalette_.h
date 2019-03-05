@@ -51,6 +51,8 @@ class QPalette_ : public QMainWindow
 
     void focus()
     {
+        activateWindow();
+
         inner().searchbox().selectAll();
         inner().searchbox().setFocus();
     }

@@ -72,7 +72,5 @@ QJsonObject config()
     QJsonDocument json(QJsonDocument::fromJson(content));
     cached_json = json.object();
 
-    qDebug() << "Content: " << content_str;
-    qDebug() << json.toJson();
     return cached_json;
 }

@@ -24,7 +24,6 @@ class MyFilter : public QSortFilterProxyModel
         auto model = sourceModel();
         auto str = model->data(model->index(source_row, 0, source_parent)).toString();
         bool result = str.contains(expression_);
-        qDebug() << expression_.pattern();
         return result;
     }
 
@@ -34,8 +33,6 @@ class MyFilter : public QSortFilterProxyModel
     void setMyFilter(QString &keyword)
     {
         keyword_ = keyword;
-
-        qDebug() << keyword;
 
         QStringList regexp_before_join = {
             ".*"
