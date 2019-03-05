@@ -8,7 +8,7 @@
 #include "common_defs.h"
 #include "myfilter.h"
 
-class QSearch : public QLineEdit, public FredCallback
+class QSearch : public QLineEdit
 {
     MyFilter *filter_;
 

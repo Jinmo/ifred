@@ -129,7 +129,7 @@ int first_execution = 1;
 
 class enter_handler : public action_handler_t
 {
-    int idaapi activate(action_activation_ctx_t *ctx) override
+    int idaapi activate(action_activation_ctx_t *) override
     {
         auto *widget = new QPalette_<QIDACommandPaletteInner>();
 
@@ -139,7 +139,7 @@ class enter_handler : public action_handler_t
         return 1;
     }
 
-    action_state_t idaapi update(action_update_ctx_t *ctx) override
+    action_state_t idaapi update(action_update_ctx_t *) override
     {
         return AST_ENABLE_ALWAYS;
     }

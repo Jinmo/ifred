@@ -7,7 +7,7 @@
 #include "myfilter.h"
 #include "qitem.h"
 
-class QItems : public QListView, public FredCallback
+class QItems : public QListView
 {
     MyFilter filter_;
     QStandardItemModel source_;
