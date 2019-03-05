@@ -18,7 +18,7 @@ struct EnterResult
     bool hide_;
     QPaletteInner *nextPalette_;
 
-public:
+  public:
     EnterResult(bool hide) : hide_(hide), nextPalette_(nullptr) {}
     EnterResult(QPaletteInner *nextPalette) : hide_(true), nextPalette_(nextPalette) {}
 
@@ -28,7 +28,7 @@ public:
 
 class QPaletteInner : public QFrame
 {
-protected:
+  protected:
     QMainWindow *mainWindow_;
     QItems entries_;
     QVBoxLayout layout_;
@@ -38,7 +38,7 @@ protected:
     {
         QPaletteInner *owner_;
 
-    public:
+      public:
         ShadowObserver(QPaletteInner *owner) : owner_(owner), QConfigObserver("styles.json") {}
 
         void onConfigUpdated(QJsonObject &config) override
@@ -54,19 +54,19 @@ protected:
             owner_->setGraphicsEffect(effect);
 
             auto mainWindow = owner_->mainWindow();
-            if(mainWindow)
+            if (mainWindow)
                 mainWindow->setContentsMargins(kShadow, kShadow, kShadow, kShadow);
         }
 
     } shadow_observer_;
 
-public:
+  public:
     auto &searchbox() { return searchbox_; }
     auto &entries() { return entries_; }
     QMainWindow *mainWindow() { return mainWindow_; }
 
     QPaletteInner()
-    : mainWindow_(nullptr), entries_(), searchbox_(this, &entries_.model()), shadow_observer_(this)
+        : mainWindow_(nullptr), entries_(), searchbox_(this, &entries_.model()), shadow_observer_(this)
     {
         setWindowFlags(Qt::FramelessWindowHint);
         // setAttribute(Qt::WA_TranslucentBackground);
@@ -87,6 +87,32 @@ public:
 
         connect(&searchbox_, &QSearch::returnPressed, this, &QPaletteInner::onEnterPressed);
         connect(&searchbox_, &QSearch::textChanged, this, &QPaletteInner::onTextChanged);
+
+        searchbox_.installEventFilter(this);
+
+        auto *up_signal = new QAction(&searchbox_);
+        up_signal->setShortcut(Qt::Key_Up);
+
+        connect(up_signal, &QAction::triggered, this, [=]() {
+            msg("!");
+            arrow_callback(Qt::Key_Up);
+        });
+
+        addAction(up_signal);
+
+        auto *down_signal = new QShortcut(Qt::Key_Down, &searchbox_);
+
+        connect(down_signal, &QShortcut::activated, this, [=]() {
+            msg("yey!\n");
+            arrow_callback(Qt::Key_Down);
+        });
+
+        auto *enter_signal = new QShortcut(Qt::Key_Return, &searchbox_);
+
+        connect(enter_signal, &QShortcut::activated, this, [=]() {
+            msg("yey!\n");
+            arrow_callback(Qt::Key_Down);
+        });
 
         shadow_observer_.activate();
     }
@@ -122,7 +148,7 @@ public:
     void setParent(QMainWindow *parent)
     {
         QFrame::setParent(parent);
-        parent->installEventFilter(this);
+        // parent->installEventFilter(this);
 
         mainWindow_ = parent;
         mainWindow_->setCentralWidget(this);
@@ -164,19 +190,34 @@ public:
         // if(obj != &searchbox_ && obj != &entries_) return QFrame::eventFilter(obj, event);
         switch (event->type())
         {
-            case QEvent::KeyPress:
+        case QEvent::KeyPress:
+        {
+            auto *ke = static_cast<QKeyEvent *>(event);
+            switch (ke->key())
             {
-                QKeyEvent *ke = static_cast<QKeyEvent *>(event);
-                switch (ke->key())
-                {
-                    case Qt::Key_Down:
-                    case Qt::Key_Up:
+                case Qt::Key_Down:
+                case Qt::Key_Up: {
+                    event->ignore();
                     return arrow_callback(ke->key());
-                    default:
-                    return QFrame::eventFilter(obj, event);
                 }
-            }
+                case Qt::Key_Enter:
+                case Qt::Key_Return: {
+                    event->ignore();
+                    onEnterPressed();
+                    return true;
+                }
             default:
+                return QFrame::eventFilter(obj, event);
+            }
+        }
+        case QEvent::Shortcut: {
+            return true;
+        }
+        case QEvent::ShortcutOverride: {
+            event->accept();
+            return true;
+        }
+        default:
             return QFrame::eventFilter(obj, event);
         }
     }
