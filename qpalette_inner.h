@@ -90,30 +90,6 @@ class QPaletteInner : public QFrame
 
         searchbox_.installEventFilter(this);
 
-        auto *up_signal = new QAction(&searchbox_);
-        up_signal->setShortcut(Qt::Key_Up);
-
-        connect(up_signal, &QAction::triggered, this, [=]() {
-            msg("!");
-            arrow_callback(Qt::Key_Up);
-        });
-
-        addAction(up_signal);
-
-        auto *down_signal = new QShortcut(Qt::Key_Down, &searchbox_);
-
-        connect(down_signal, &QShortcut::activated, this, [=]() {
-            msg("yey!\n");
-            arrow_callback(Qt::Key_Down);
-        });
-
-        auto *enter_signal = new QShortcut(Qt::Key_Return, &searchbox_);
-
-        connect(enter_signal, &QShortcut::activated, this, [=]() {
-            msg("yey!\n");
-            arrow_callback(Qt::Key_Down);
-        });
-
         shadow_observer_.activate();
     }
 
@@ -209,9 +185,6 @@ class QPaletteInner : public QFrame
             default:
                 return QFrame::eventFilter(obj, event);
             }
-        }
-        case QEvent::Shortcut: {
-            return true;
         }
         case QEvent::ShortcutOverride: {
             event->accept();
