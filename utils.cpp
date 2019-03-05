@@ -3,7 +3,8 @@
 
 bool static_updated;
 
-const QString pluginPath(const char *filename) {
+const QString pluginPath(const char *filename)
+{
     return (QDir::homePath() + "/take/" + filename);
 }
 

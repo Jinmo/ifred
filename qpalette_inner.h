@@ -62,13 +62,14 @@ protected:
 
 public:
     auto &searchbox() { return searchbox_; }
+    auto &entries() { return entries_; }
     QMainWindow *mainWindow() { return mainWindow_; }
 
     QPaletteInner()
     : mainWindow_(nullptr), entries_(), searchbox_(this, &entries_.model()), shadow_observer_(this)
     {
         setWindowFlags(Qt::FramelessWindowHint);
-        setAttribute(Qt::WA_TranslucentBackground);
+        // setAttribute(Qt::WA_TranslucentBackground);
 
         // TODO: we need to repaint the list item... I don't know how.
         connect(&entries_.model(), &MyFilter::dataChanged, &entries_, [=]() { entries_.viewport()->update(); });
@@ -122,6 +123,7 @@ public:
     {
         QFrame::setParent(parent);
         parent->installEventFilter(this);
+
         mainWindow_ = parent;
         mainWindow_->setCentralWidget(this);
 
@@ -147,6 +149,8 @@ public:
         }
         auto new_row = entries_.currentIndex().row() + delta;
         if (new_row == -1)
+            new_row = 0;
+        else if (new_row == entries_.model().rowCount())
             new_row = 0;
         entries_.setCurrentIndex(entries_.model().index(new_row, 0));
         return true;
@@ -185,5 +189,6 @@ public:
             if (mainWindow_)
                 mainWindow_->hide();
         }
+        shadow_observer_.updated();
     }
 };

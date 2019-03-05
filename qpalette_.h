@@ -32,12 +32,13 @@ class QPalette_ : public QMainWindow
     QGraphicsDropShadowEffect *effect_;
 
   public:
+    QPaletteInner &inner() { return *inner_; }
     QPalette_(): inner_(new T())
     {
-        setWindowFlags(Qt::FramelessWindowHint);
+        setWindowFlags(Qt::Tool | Qt::FramelessWindowHint);
         setAttribute(Qt::WA_TranslucentBackground); //enable MainWindow to be transparent
 
-        inner_->setParent(this);
+        inner().setParent(this);
     }
 
     auto &effect() { return effect_; }
@@ -50,7 +51,7 @@ class QPalette_ : public QMainWindow
 
     void focus()
     {
-        inner_->searchbox().selectAll();
-        inner_->searchbox().setFocus();
+        inner().searchbox().selectAll();
+        inner().searchbox().setFocus();
     }
 };

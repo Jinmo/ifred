@@ -10,7 +10,6 @@
 #include <QtWidgets>
 
 #include "common_defs.h"
-#include "myfilter.h"
 #include "qsearch.h"
 #include "qitems.h"
 #include "qpalette_.h"
@@ -95,13 +94,12 @@ class QIDACommandPaletteInner : public QPaletteInner
             source.setData(source.index(i, 1), item->shortcut);
             source.setData(source.index(i, 2), item->id);
 
-            internString(item->tooltip);
+            // internString(item->tooltip);
             i += 1;
         }
     }
 };
 
-QPalette_<QIDACommandPaletteInner> widget;
 QHash<QString, QDate> g_last_used;
 
 int first_execution = 1;
@@ -110,26 +108,14 @@ class enter_handler : public action_handler_t
 {
     int idaapi activate(action_activation_ctx_t *ctx) override
     {
-        if (first_execution)
-        {
-            auto *ida_twidget = create_empty_widget("ifred");
-            QWidget *ida_widget = reinterpret_cast<QWidget *>(ida_twidget);
+        auto *widget = new QPalette_<QIDACommandPaletteInner>();
 
-            ida_widget->setGeometry(0, 0, 0, 0);
-            ida_widget->setWindowFlags(Qt::FramelessWindowHint);
-            ida_widget->setAttribute(Qt::WA_TranslucentBackground); //enable MainWindow to be transparent
-
-            display_widget(ida_twidget, 0);
-            widget.setParent(ida_widget->window()->parentWidget()->window());
-            close_widget(ida_twidget, 0);
-        }
-
-        first_execution = 0;
-        widget.show();
-        widget.focus();
+        widget->show();
+        widget->focus();
 
         return 1;
     }
+
     action_state_t idaapi update(action_update_ctx_t *ctx) override
     {
         return AST_ENABLE_ALWAYS;
@@ -153,31 +139,10 @@ bool idaapi run(size_t)
     return true;
 }
 
-//--------------------------------------------------------------------------
-static ssize_t idaapi ui_callback(void *user_data, int notification_code, va_list va)
-{
-    if (notification_code == ui_widget_visible)
-    {
-        TWidget *widget = va_arg(va, TWidget *);
-        if (widget == user_data)
-        {
-        }
-    }
-    if (notification_code == ui_widget_invisible)
-    {
-        TWidget *widget = va_arg(va, TWidget *);
-        if (widget == user_data)
-        {
-            // widget is closed, destroy objects (if required)
-        }
-    }
-    return 0;
-}
-
 extern char comment[], help[], wanted_name[], wanted_hotkey[];
 
 //--------------------------------------------------------------------------
-char comment[] = "ifred pm";
+char comment[] = "ifred";
 
 char help[] =
     "IDA package manager";
@@ -202,9 +167,10 @@ int idaapi init(void)
     int r = is_idaq() ? PLUGIN_KEEP : PLUGIN_SKIP;
     if (r == PLUGIN_KEEP)
     {
-        hook_to_notification_point(HT_UI, &ui_callback, &widget);
-
         msg("ifred loading...\n");
+
+        update_action_shortcut("ifred:enter", "");
+        update_action_shortcut("CommandPalette", "");
 
         if (!register_action(enter_action))
         {
@@ -217,7 +183,6 @@ int idaapi init(void)
 //--------------------------------------------------------------------------
 void idaapi term(void)
 {
-    unhook_from_notification_point(HT_UI, ui_callback);
 }
 
 //--------------------------------------------------------------------------

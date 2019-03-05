@@ -8,4 +8,6 @@ QItems::QItems()
     setModel(&filter_);
     setItemDelegate(&item_delegate_);
     setLineWidth(0);
+
+    setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
 }

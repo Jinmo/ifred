@@ -1,7 +1,7 @@
 {
-	"itemHeight": 50,
-	"itemMarginLeft": 20,
-	"itemMarginTop": 8,
+	"itemHeight": 28,
+	"itemMarginLeft": 19,
+	"itemMarginTop": 1,
 	"itemHoverBackground": "#062f4a",
-	"shadow": 20
+	"shadow": 30
 }

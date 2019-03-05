@@ -9,24 +9,34 @@
 
 class MyFilter : public QSortFilterProxyModel
 {
+    QRegularExpression expression_;
+    QString keyword_;
   public:
     MyFilter() : QSortFilterProxyModel(nullptr)
     {
     }
 
-    // bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const override
-    // {
-    //     auto model = sourceModel();
-    //     auto str = model->data(model->index(source_row, 0, source_parent)).toString();
-    //     bool result = filterRegExp().pattern().size() == 0 || g_search.contains(str);
-    //     //        msg("%s: (%d) %d\n", str.toUtf8().toStdString().c_str(), filterRegExp().pattern().size(), result);
-    //     return result;
-    // }
+    bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const override
+    {
+        if(keyword_.isEmpty())
+            return true;
+
+        auto model = sourceModel();
+        auto str = model->data(model->index(source_row, 0, source_parent)).toString();
+        bool result = str.contains(expression_);
+        qDebug() << expression_.pattern();
+        return result;
+    }
+
     bool lessThan(const QModelIndex &left,
                   const QModelIndex &right) const override;
 
-    void setFilter(QString &keyword)
+    void setMyFilter(QString &keyword)
     {
+        keyword_ = keyword;
+
+        qDebug() << keyword;
+
         QStringList regexp_before_join = {
             ".*"
         };
@@ -35,7 +45,10 @@ class MyFilter : public QSortFilterProxyModel
             regexp_before_join.push_back(x);
 
         regexp_before_join.push_back(".*");
-        setFilterRegExp(regexp_before_join.join(".*"));
+        expression_ = QRegularExpression(regexp_before_join.join(".*"),
+        QRegularExpression::CaseInsensitiveOption);
+
+        setFilterRegExp(keyword);
     }
 };
 

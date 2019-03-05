@@ -37,15 +37,19 @@ class FredCallback
     }
 };
 
-#define WIDTH 720
-#define HEIGHT 74
+#define WIDTH 755
+#define HEIGHT 440
 
 #define CSSLOADER(filename)                        \
     QTimer *timer = new QTimer(this);              \
     connect(timer, &QTimer::timeout, this, [=]() { \
-        auto &buf = loadFile(filename);      \
+        bool updated;\
+        auto &buf = loadFile(filename, updated);      \
         setStyleSheet(buf);                        \
     });                                            \
+        bool updated;\
+        auto &buf = loadFile(filename, updated);      \
+        setStyleSheet(buf);                        \
     timer->start(1000);
 
 #include "utils.h"
