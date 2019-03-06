@@ -7,14 +7,15 @@
 
 extern bool static_updated;
 const QString pluginPath(const char *filename);
+
 QJsonObject config();
 QString loadFile(const char *filename, bool &updated = static_updated);
 
 class QConfigObserver : public QFileSystemWatcher
 {
   public:
-    QConfigObserver(const char *filename = "styles.json")
-        : QFileSystemWatcher()
+    QConfigObserver(QWidget *parent, const char *filename = "styles.json")
+        : QFileSystemWatcher(parent)
     {
         addPath(pluginPath(filename));
     }

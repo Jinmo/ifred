@@ -42,7 +42,8 @@ struct Action
 class QIDACommandPaletteInner : public QPaletteInner
 {
   public:
-    QIDACommandPaletteInner() : QPaletteInner()
+    QIDACommandPaletteInner(QWidget *parent, QObject *prevItem)
+    : QPaletteInner(parent, prevItem)
     {
         populateList();
     }
@@ -51,8 +52,8 @@ class QIDACommandPaletteInner : public QPaletteInner
     {
         processEnterResult(true);
 
-        auto &model = entries_.model();
-        auto id = model.data(model.index(entries_.currentIndex().row(), 2)).toString();
+        auto *model = entries_->model();
+        auto id = model->data(model->index(entries_->currentIndex().row(), 2)).toString();
         g_last_used[id] = QDate::currentDate();
         process_ui_action(id.toStdString().c_str());
         // already hidden
@@ -105,17 +106,17 @@ class QIDACommandPaletteInner : public QPaletteInner
     {
         // TODO: cache it by id
         auto out = getActions();
-        auto &source = entries_.source();
+        auto *source = entries_->source();
 
-        source.setRowCount(static_cast<int>(out->size()));
-        source.setColumnCount(3);
+        source->setRowCount(static_cast<int>(out->size()));
+        source->setColumnCount(3);
 
         int i = 0;
         for (auto &item : *out)
         {
-            source.setData(source.index(i, 0), item->tooltip);
-            source.setData(source.index(i, 1), item->shortcut);
-            source.setData(source.index(i, 2), item->id);
+            source->setData(source->index(i, 0), item->tooltip);
+            source->setData(source->index(i, 1), item->shortcut);
+            source->setData(source->index(i, 2), item->id);
 
             // internString(item->tooltip);
             i += 1;
@@ -131,10 +132,12 @@ class enter_handler : public action_handler_t
 {
     int idaapi activate(action_activation_ctx_t *) override
     {
-        auto *widget = new QPalette_<QIDACommandPaletteInner>();
+        auto *widget = new QPalette_();
+
+        widget->add(new QIDACommandPaletteInner(widget, nullptr));
 
         widget->show();
-        widget->focus();
+        widget->showWidget(0);
 
         return 1;
     }
@@ -192,13 +195,12 @@ int idaapi init(void)
     {
         msg("ifred loading...\n");
 
-        update_action_shortcut("ifred:enter", "");
-        update_action_shortcut("CommandPalette", "");
-
         if (!register_action(enter_action))
         {
             msg("ifred action loading error");
         };
+
+        update_action_shortcut("CommandPalette", "");
     }
     return r;
 }

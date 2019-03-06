@@ -71,11 +71,11 @@ bool MyFilter::lessThan(const QModelIndex &left, const QModelIndex &right) const
   if (filterText.size() == 0)
     return leftData < rightData;
 
-  auto &leftUsed = g_last_used[leftData],
-       &rightUsed = g_last_used[rightData];
+  // auto &leftUsed = g_last_used[leftData],
+  //      &rightUsed = g_last_used[rightData];
 
-  if (leftUsed != rightUsed)
-    return leftUsed > rightUsed;
+  // if (leftUsed != rightUsed)
+  //   return leftUsed > rightUsed;
 
   return distance(filterText, leftData) < distance(filterText, rightData);
 }

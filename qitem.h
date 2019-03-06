@@ -4,12 +4,12 @@
 #include <QtGui>
 #include <QtWidgets>
 
-#include "common_defs.h"
+#include "utils.h"
 
 class QItem : public QStyledItemDelegate
 {
   public:
-    QItem();
+    QItem(QWidget *parent): QStyledItemDelegate(parent) {}
 
     void paint(QPainter *painter,
                const QStyleOptionViewItem &option, const QModelIndex &index) const override;

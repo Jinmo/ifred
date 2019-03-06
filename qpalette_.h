@@ -1,7 +1,7 @@
 #pragma once
 
-#include <QtGui>
-#include <QtWidgets>
+#include <QWidget>
+#include <QRect>
 
 #include "qpalette_inner.h"
 #include "utils.h"
@@ -25,23 +25,52 @@ static void centerWidgets(QWidget *widget, QWidget *host = nullptr)
     }
 }
 
-template <class T>
+extern QJsonDocument cached_json;
+
 class QPalette_ : public QMainWindow
 {
-    T *inner_;
-    QGraphicsDropShadowEffect *effect_;
+    QStackedWidget *inner_stacked_;
+
+    class ShadowObserver : public QConfigObserver
+    {
+      public:
+        ShadowObserver(QPalette_ *parent) : QConfigObserver(parent, "styles.json") {}
+
+        void onConfigUpdated(QJsonObject &config) override
+        {
+            int kShadow = config["shadow"].toInt();
+
+            if(kShadow == 0) {
+                qDebug() << "corruption" << cached_json.toJson();
+            }
+
+            auto *effect = new QGraphicsDropShadowEffect();
+
+            effect->setBlurRadius(kShadow);
+            effect->setColor(QColor(0, 0, 0, 100));
+            effect->setOffset(0);
+
+            QPalette_ *owner = static_cast<QPalette_ *>(parent());
+            owner->setGraphicsEffect(effect);
+            owner->setContentsMargins(kShadow, kShadow, kShadow, kShadow);
+        }
+
+    } *shadow_observer_;
 
   public:
-    QPaletteInner &inner() { return *inner_; }
-    QPalette_(): inner_(new T())
+    QPalette_()
+    : inner_stacked_(new QStackedWidget(this)), shadow_observer_(new ShadowObserver(this))
     {
         setWindowFlags(Qt::Tool | Qt::FramelessWindowHint);
         setAttribute(Qt::WA_TranslucentBackground); //enable MainWindow to be transparent
 
-        inner().setParent(this);
+        shadow_observer_->activate();
+        setCentralWidget(inner_stacked_);
     }
 
-    auto &effect() { return effect_; }
+    void add(QPaletteInner *delegate) {
+        inner_stacked_->addWidget(delegate);
+    }
 
     void show()
     {
@@ -49,11 +78,16 @@ class QPalette_ : public QMainWindow
         QMainWindow::show();
     }
 
-    void focus()
+    void showWidget(int index=0)
     {
         activateWindow();
 
-        inner().searchbox().selectAll();
-        inner().searchbox().setFocus();
+        if(inner_stacked_->count() <= index)
+            return;
+
+        auto *inner = static_cast<QPaletteInner *>(inner_stacked_->widget(index));
+
+        inner->searchbox().selectAll();
+        inner->searchbox().setFocus();
     }
 };

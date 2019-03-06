@@ -5,14 +5,12 @@
 #include <QtGui>
 #include <QtWidgets>
 
-#include "common_defs.h"
-
 class MyFilter : public QSortFilterProxyModel
 {
     QRegularExpression expression_;
     QString keyword_;
   public:
-    MyFilter() : QSortFilterProxyModel(nullptr)
+    MyFilter(QWidget *parent) : QSortFilterProxyModel(parent)
     {
     }
 
@@ -35,13 +33,12 @@ class MyFilter : public QSortFilterProxyModel
         keyword_ = keyword;
 
         QStringList regexp_before_join = {
-            ".*"
         };
 
         for(auto &x: keyword)
             regexp_before_join.push_back(x);
 
-        regexp_before_join.push_back(".*");
+        // regexp_before_join.push_back(".*");
         expression_ = QRegularExpression(regexp_before_join.join(".*"),
         QRegularExpression::CaseInsensitiveOption);
 

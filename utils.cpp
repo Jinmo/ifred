@@ -32,9 +32,9 @@ QString loadFile(const char *filename, bool &updated)
             return csspair.second;
         }
     }
-    FILE *fp = qfopen(absolutePath.toStdString().c_str(), "r");
+    FILE *fp = qfopen(absolutePath.toStdString().c_str(), "rb");
 
-    if (fp == NULL)
+    if (fp == nullptr)
     {
         return QString();
     }
@@ -53,12 +53,14 @@ QString loadFile(const char *filename, bool &updated)
 
     updated = true;
 
+    qDebug() << buf;
+
     delete[] buf;
 
     return csspair.second;
 }
 
-QJsonObject cached_json;
+QJsonDocument cached_json;
 
 QJsonObject config()
 {
@@ -66,11 +68,11 @@ QJsonObject config()
     auto &content_str = loadFile("styles.json", updated);
 
     if (!updated)
-        return cached_json;
+        return cached_json.object();
 
     auto &content = content_str.toUtf8();
     QJsonDocument json(QJsonDocument::fromJson(content));
-    cached_json = json.object();
+    cached_json = json;
 
-    return cached_json;
+    return cached_json.object();
 }

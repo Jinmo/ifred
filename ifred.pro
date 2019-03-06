@@ -35,7 +35,6 @@ win32 {
         __VC__
     SYSNAME = win
     COMPILER_NAME = vc
-    QMAKE_CXXFLAGS += /Od
 }
 !mac:unix {
     TARGET_EXT = .plx
