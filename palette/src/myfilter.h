@@ -5,18 +5,15 @@
 #include <QtGui>
 #include <QtWidgets>
 
-class MyFilter : public QSortFilterProxyModel
-{
+class MyFilter : public QSortFilterProxyModel {
     QRegularExpression expression_;
     QString keyword_;
-  public:
-    MyFilter(QWidget *parent) : QSortFilterProxyModel(parent)
-    {
+public:
+    MyFilter(QWidget *parent) : QSortFilterProxyModel(parent) {
     }
 
-    bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const override
-    {
-        if(keyword_.isEmpty())
+    bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const override {
+        if (keyword_.isEmpty())
             return true;
 
         auto model = sourceModel();
@@ -28,19 +25,18 @@ class MyFilter : public QSortFilterProxyModel
     bool lessThan(const QModelIndex &left,
                   const QModelIndex &right) const override;
 
-    void setMyFilter(QString &keyword)
-    {
+    void setMyFilter(QString &keyword) {
         keyword_ = keyword;
 
         QStringList regexp_before_join = {
         };
 
-        for(auto &x: keyword)
+        for (auto &x: keyword)
             regexp_before_join.push_back(x);
 
         // regexp_before_join.push_back(".*");
         expression_ = QRegularExpression(regexp_before_join.join(".*"),
-        QRegularExpression::CaseInsensitiveOption);
+                                         QRegularExpression::CaseInsensitiveOption);
 
         setFilterRegExp(keyword);
     }

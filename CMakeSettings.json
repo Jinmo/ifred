@@ -1,0 +1,52 @@
+﻿{
+  "configurations": [
+    {
+      "name": "x64-Release",
+      "generator": "Ninja",
+      "configurationType": "RelWithDebInfo",
+      "buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
+      "installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "-v",
+      "ctestCommandArgs": "",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "variables": [
+        {
+          "name": "IDA_SDK",
+          "value": "C:\\Users\\berry\\idasdk70",
+          "type": "STRING"
+        },
+        {
+          "name": "IDA_INSTALL_DIR",
+          "value": "C:\\Program Files\\IDA 7.0",
+          "type": "STRING"
+        },
+        {
+          "name": "IDA_VERSION",
+          "value": "700",
+          "type": "STRING"
+        },
+        {
+          "name": "IDA_ENABLE_QT_SUPPORT",
+          "value": "True",
+          "type": "STRING"
+        },
+        {
+          "name": "IDA_BINARY_64",
+          "value": "True",
+          "type": "STRING"
+        },
+        {
+          "name": "CMAKE_PREFIX_PATH",
+          "value": "C:/Qt/5.6.0-x64;C:\\Users\\berry\\idasdk70\\lib\\x64_win_vc_32",
+          "type": "STRING"
+        },
+        {
+          "name": "IDA_EA_64",
+          "value": "False",
+          "type": "BOOL"
+        }
+      ]
+    }
+  ]
+}

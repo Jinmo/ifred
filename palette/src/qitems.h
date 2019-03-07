@@ -6,16 +6,17 @@
 #include "myfilter.h"
 #include "qitem.h"
 
-class QItems : public QListView
-{
+class QItems : public QListView {
     MyFilter *filter_;
     QStandardItemModel *source_;
     QItem *item_delegate_;
 
 public:
-    auto *model() { return filter_; }
-    auto *source() { return source_; }
-    QItems(QWidget *parent);
+    MyFilter *model() { return filter_; }
+
+    QStandardItemModel *source() { return source_; }
+
+    explicit QItems(QWidget *parent);
 };
 
 #endif // QITEMS_H

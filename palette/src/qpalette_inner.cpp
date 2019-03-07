@@ -2,12 +2,11 @@
 #include "common_defs.h"
 
 QPaletteInner::QPaletteInner(QWidget *parent, QObject *)
-    : QFrame(parent),
-      css_observer_(new CSSObserver(this, "window.css")),
-      layout_(new QVBoxLayout(this)),
-      entries_(new QItems(this)),
-      searchbox_(new QSearch(this, entries_->model()))
-{
+        : QFrame(parent),
+          css_observer_(new CSSObserver(this, "window.css")),
+          layout_(new QVBoxLayout(this)),
+          entries_(new QItems(this)),
+          searchbox_(new QSearch(this, entries_->model())) {
     // TODO: we need to repaint the list item... I don't know how.
     // connect(entries_->model(), &MyFilter::dataChanged, entries_, [=]() {
     //     entries_->viewport()->update();
@@ -29,22 +28,15 @@ QPaletteInner::QPaletteInner(QWidget *parent, QObject *)
     searchbox_->installEventFilter(this);
 }
 
-void QPaletteInner::processEnterResult(EnterResult res)
-{
-    if (res.hide())
-    {
-        if (res.nextPalette())
-        {
+void QPaletteInner::processEnterResult(EnterResult res) {
+    if (res.hide()) {
+        if (res.nextPalette()) {
             // TODO
-        }
-        else
-        {
+        } else {
             Q_ASSERT(window() != nullptr);
             window()->close();
         }
-    }
-    else
-    {
+    } else {
         // hide=true if nextPalette != NULL
         Q_ASSERT(!res.nextPalette());
     }

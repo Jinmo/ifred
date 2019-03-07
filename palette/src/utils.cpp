@@ -3,13 +3,11 @@
 
 bool static_updated;
 
-const QString pluginPath(const char *filename)
-{
+const QString pluginPath(const char *filename) {
     return (QDir::homePath() + "/take/" + filename);
 }
 
-QString loadFile(const char *filename, bool &updated)
-{
+QString loadFile(const char *filename, bool &updated) {
     static QHash<QString, std::pair<long, QString>> last_loaded;
 
     auto absolutePath = pluginPath(filename);
@@ -17,25 +15,21 @@ QString loadFile(const char *filename, bool &updated)
 
     updated = false;
 
-    if (!file.exists())
-    {
+    if (!file.exists()) {
         return QString();
     }
 
     long timestamp = QFileInfo(file).lastModified().toTime_t();
 
-    if (last_loaded.contains(absolutePath))
-    {
+    if (last_loaded.contains(absolutePath)) {
         auto &csspair = last_loaded[absolutePath];
-        if (csspair.first >= timestamp)
-        {
+        if (csspair.first >= timestamp) {
             return csspair.second;
         }
     }
     FILE *fp = qfopen(absolutePath.toStdString().c_str(), "rb");
 
-    if (fp == nullptr)
-    {
+    if (fp == nullptr) {
         return QString();
     }
 
@@ -62,8 +56,7 @@ QString loadFile(const char *filename, bool &updated)
 
 QJsonDocument cached_json;
 
-QJsonObject config()
-{
+QJsonObject config() {
     bool updated;
     auto &content_str = loadFile("styles.json", updated);
 

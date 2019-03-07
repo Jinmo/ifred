@@ -1,4 +1,4 @@
-  // LICENSE
+// LICENSE
 //
 //   This software is dual-licensed to the public domain and under the following
 //   license: you are granted a perpetual, irrevocable license to copy, modify,
@@ -39,9 +39,11 @@
 
 // Public interface
 namespace fts {
-    static bool fuzzy_match_simple(char const * pattern, char const * str);
-    static bool fuzzy_match(char const * pattern, char const * str, int & outScore);
-    static bool fuzzy_match(char const * pattern, char const * str, int & outScore, uint8_t * matches, int maxMatches);
+    static bool fuzzy_match_simple(char const *pattern, char const *str);
+
+    static bool fuzzy_match(char const *pattern, char const *str, int &outScore);
+
+    static bool fuzzy_match(char const *pattern, char const *str, int &outScore, uint8_t *matches, int maxMatches);
 }
 
 
@@ -50,14 +52,14 @@ namespace fts {
 
     // Forward declarations for "private" implementation
     namespace fuzzy_internal {
-        static bool fuzzy_match_recursive(const char * pattern, const char * str, int & outScore, const char * strBegin,          
-            uint8_t const * srcMatches,  uint8_t * newMatches,  int maxMatches, int nextMatch, 
-            int & recursionCount, int recursionLimit);
+        static bool fuzzy_match_recursive(const char *pattern, const char *str, int &outScore, const char *strBegin,
+                                          uint8_t const *srcMatches, uint8_t *newMatches, int maxMatches, int nextMatch,
+                                          int &recursionCount, int recursionLimit);
     }
 
     // Public interface
-    static bool fuzzy_match_simple(char const * pattern, char const * str) {
-        while (*pattern != '\0' && *str != '\0')  {
+    static bool fuzzy_match_simple(char const *pattern, char const *str) {
+        while (*pattern != '\0' && *str != '\0') {
             if (tolower(*pattern) == tolower(*str))
                 ++pattern;
             ++str;
@@ -66,24 +68,25 @@ namespace fts {
         return *pattern == '\0' ? true : false;
     }
 
-    static bool fuzzy_match(char const * pattern, char const * str, int & outScore) {
-        
+    static bool fuzzy_match(char const *pattern, char const *str, int &outScore) {
+
         uint8_t matches[256];
         return fuzzy_match(pattern, str, outScore, matches, sizeof(matches));
     }
 
-    static bool fuzzy_match(char const * pattern, char const * str, int & outScore, uint8_t * matches, int maxMatches) {
+    static bool fuzzy_match(char const *pattern, char const *str, int &outScore, uint8_t *matches, int maxMatches) {
         int recursionCount = 0;
         int recursionLimit = 10;
 
-        return fuzzy_internal::fuzzy_match_recursive(pattern, str, outScore, str, nullptr, matches, maxMatches, 0, recursionCount, recursionLimit);
+        return fuzzy_internal::fuzzy_match_recursive(pattern, str, outScore, str, nullptr, matches, maxMatches, 0,
+                                                     recursionCount, recursionLimit);
     }
 
     // Private implementation
-    static bool fuzzy_internal::fuzzy_match_recursive(const char * pattern, const char * str, int & outScore, 
-        const char * strBegin, uint8_t const * srcMatches, uint8_t * matches, int maxMatches, 
-        int nextMatch, int & recursionCount, int recursionLimit)
-    {
+    static bool fuzzy_internal::fuzzy_match_recursive(const char *pattern, const char *str, int &outScore,
+                                                      const char *strBegin, uint8_t const *srcMatches, uint8_t *matches,
+                                                      int maxMatches,
+                                                      int nextMatch, int &recursionCount, int recursionLimit) {
         // Count recursions
         ++recursionCount;
         if (recursionCount >= recursionLimit)
@@ -101,14 +104,14 @@ namespace fts {
         // Loop through pattern and str looking for a match
         bool first_match = true;
         while (*pattern != '\0' && *str != '\0') {
-            
+
             // Found match
             if (tolower(*pattern) == tolower(*str)) {
 
                 // Supplied matches buffer was too short
                 if (nextMatch >= maxMatches)
                     return false;
-                
+
                 // "Copy-on-Write" srcMatches into matches
                 if (first_match && srcMatches) {
                     memcpy(matches, srcMatches, nextMatch);
@@ -118,8 +121,9 @@ namespace fts {
                 // Recursive call that "skips" this match
                 uint8_t recursiveMatches[256];
                 int recursiveScore;
-                if (fuzzy_match_recursive(pattern, str + 1, recursiveScore, strBegin, matches, recursiveMatches, sizeof(recursiveMatches), nextMatch, recursionCount, recursionLimit)) {
-                    
+                if (fuzzy_match_recursive(pattern, str + 1, recursiveScore, strBegin, matches, recursiveMatches,
+                                          sizeof(recursiveMatches), nextMatch, recursionCount, recursionLimit)) {
+
                     // Pick best recursive score
                     if (!recursiveMatch || recursiveScore > bestRecursiveScore) {
                         memcpy(bestRecursiveMatches, recursiveMatches, 256);
@@ -129,7 +133,7 @@ namespace fts {
                 }
 
                 // Advance
-                matches[nextMatch++] = (uint8_t)(str - strBegin);
+                matches[nextMatch++] = (uint8_t) (str - strBegin);
                 ++pattern;
             }
             ++str;
@@ -163,7 +167,7 @@ namespace fts {
             outScore += penalty;
 
             // Apply unmatched penalty
-            int unmatched = (int)(str - strBegin) - nextMatch;
+            int unmatched = (int) (str - strBegin) - nextMatch;
             outScore += unmatched_letter_penalty * unmatched;
 
             // Apply ordering bonuses
@@ -190,8 +194,7 @@ namespace fts {
                     bool neighborSeparator = neighbor == '_' || neighbor == ' ';
                     if (neighborSeparator)
                         outScore += separator_bonus;
-                }
-                else {
+                } else {
                     // First letter
                     outScore += first_letter_bonus;
                 }
@@ -204,12 +207,10 @@ namespace fts {
             memcpy(matches, bestRecursiveMatches, maxMatches);
             outScore = bestRecursiveScore;
             return true;
-        }
-        else if (matched) {
+        } else if (matched) {
             // "this" score is better than recursive
             return true;
-        }
-        else {
+        } else {
             // no match
             return false;
         }

@@ -8,58 +8,53 @@
 
 class QPaletteInner;
 
-struct EnterResult
-{
+struct EnterResult {
     bool hide_;
     QPaletteInner *nextPalette_;
 
-  public:
+public:
     EnterResult(bool hide) : hide_(hide), nextPalette_(nullptr) {}
+
     EnterResult(QPaletteInner *nextPalette) : hide_(true), nextPalette_(nextPalette) {}
 
     bool hide() { return hide_; }
-    auto nextPalette() { return nextPalette_; }
+
+    QPaletteInner *nextPalette() { return nextPalette_; }
 };
 
-class QPaletteInner : public QFrame
-{
-  protected:
+class QPaletteInner : public QFrame {
+protected:
     QItems *entries_;
     QVBoxLayout *layout_;
     QSearch *searchbox_;
 
     CSSObserver *css_observer_;
 
-  public:
-    auto &searchbox() { return *searchbox_; }
-    auto &entries() { return *entries_; }
+public:
+    QSearch &searchbox() { return *searchbox_; }
+
+    QItems &entries() { return *entries_; }
 
     QPaletteInner(QWidget *parent, QObject *);
 
     void processEnterResult(EnterResult res);
 
-    void onTextChanged(const QString &)
-    {
+    void onTextChanged(const QString &) {
         entries_->setCurrentIndex(entries_->model()->index(0, 0));
         entries_->scrollToTop();
         entries_->repaint();
     }
 
-    void onEnterPressed()
-    {
+    void onEnterPressed() {
         auto res = enter_callback();
         processEnterResult(res);
     }
 
-    bool onArrowPressed(int key)
-    {
+    bool onArrowPressed(int key) {
         int delta;
-        if (key == Qt::Key_Down)
-        {
+        if (key == Qt::Key_Down) {
             delta = 1;
-        }
-        else
-        {
+        } else {
             delta = -1;
         }
         auto new_row = entries_->currentIndex().row() + delta;
@@ -73,48 +68,39 @@ class QPaletteInner : public QFrame
 
     virtual EnterResult enter_callback() = 0;
 
-    bool eventFilter(QObject *obj, QEvent *event) override
-    {
-        switch (event->type())
-        {
-        case QEvent::KeyPress:
-        {
-            auto *ke = static_cast<QKeyEvent *>(event);
-            switch (ke->key())
-            {
-            case Qt::Key_Down:
-            case Qt::Key_Up:
-            {
-                event->ignore();
-                return onArrowPressed(ke->key());
+    bool eventFilter(QObject *obj, QEvent *event) override {
+        switch (event->type()) {
+            case QEvent::KeyPress: {
+                auto *ke = static_cast<QKeyEvent *>(event);
+                switch (ke->key()) {
+                    case Qt::Key_Down:
+                    case Qt::Key_Up: {
+                        event->ignore();
+                        return onArrowPressed(ke->key());
+                    }
+                    case Qt::Key_Enter:
+                    case Qt::Key_Return: {
+                        event->ignore();
+                        onEnterPressed();
+                        return true;
+                    }
+                    default:
+                        return QFrame::eventFilter(obj, event);
+                }
             }
-            case Qt::Key_Enter:
-            case Qt::Key_Return:
-            {
-                event->ignore();
-                onEnterPressed();
+            case QEvent::ShortcutOverride: {
+                event->accept();
                 return true;
             }
             default:
                 return QFrame::eventFilter(obj, event);
-            }
-        }
-        case QEvent::ShortcutOverride:
-        {
-            event->accept();
-            return true;
-        }
-        default:
-            return QFrame::eventFilter(obj, event);
         }
     }
 
-    void keyPressEvent(QKeyEvent *e) override
-    {
+    void keyPressEvent(QKeyEvent *e) override {
         if (e->key() != Qt::Key_Escape)
             QFrame::keyPressEvent(e);
-        else
-        {
+        else {
             if (window())
                 window()->close();
         }

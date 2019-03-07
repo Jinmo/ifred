@@ -1,7 +1,1 @@
-ifred.pro.user
-build/
-.vscode/
-.idea/
-CMakeLists.txt
-cmake-build-debug
-*.dmp
+.vs

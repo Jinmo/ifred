@@ -7,25 +7,21 @@
 #include "myfilter.h"
 #include "cssobserver.h"
 
-class QSearch : public QLineEdit
-{
+class QSearch : public QLineEdit {
     MyFilter *filter_;
     CSSObserver *css_observer_;
 
-  public:
+public:
     QSearch(QWidget *parent, MyFilter *filter)
-        : QLineEdit(parent), filter_(filter),
-          css_observer_(new CSSObserver(this, "searchbox.css"))
-
-    {
+            : QLineEdit(parent), filter_(filter),
+              css_observer_(new CSSObserver(this, "searchbox.css")) {
         connect(this, &QLineEdit::textChanged, this, &QSearch::onTextChanged);
         onTextChanged();
     }
 
     void onTextChanged();
 
-    void keyPressEvent(QKeyEvent *event) override
-    {
+    void keyPressEvent(QKeyEvent *event) override {
         QLineEdit::keyPressEvent(event);
     }
 };

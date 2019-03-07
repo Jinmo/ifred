@@ -1,12 +1,10 @@
 #include "qitem.h"
-#include "utils.h"
 
 #include "common_defs.h"
 
 QCache<QPair<QString, QString>, QString> hlCache;
 
-QString &highlight(QString &keyword, QString &tooltip)
-{
+QString &highlight(QString &keyword, QString &tooltip) {
     static QString em_("<em>"), emEnd_("</em>");
     auto cache_key = QPair<QString, QString>(keyword, tooltip);
 
@@ -19,22 +17,17 @@ QString &highlight(QString &keyword, QString &tooltip)
 
     highlights.push_back("<div>");
 
-    if (keyword.size())
-    {
-        for (i = 0; i < tooltip.size(); i++)
-        {
+    if (keyword.size()) {
+        for (i = 0; i < tooltip.size(); i++) {
             auto c = tooltip[i];
-            if (c.toLower() == keyword[j].toLower())
-            {
+            if (c.toLower() == keyword[j].toLower()) {
                 // start of highlighted text
-                if (!toggle)
-                {
+                if (!toggle) {
                     highlights << (tooltip.mid(start, i - start));
                     start = i;
                 }
                 ++j;
-                if (j == keyword.size())
-                {
+                if (j == keyword.size()) {
                     highlights << (em_);
                     highlights << tooltip.mid(start, i++ + 1 - start);
                     highlights << (emEnd_);
@@ -42,11 +35,8 @@ QString &highlight(QString &keyword, QString &tooltip)
                     break;
                 }
                 toggle = true;
-            }
-            else
-            {
-                if (toggle)
-                {
+            } else {
+                if (toggle) {
                     highlights << (em_);
                     highlights << tooltip.mid(start, i - start);
                     highlights << (emEnd_);
@@ -60,9 +50,7 @@ QString &highlight(QString &keyword, QString &tooltip)
         highlights << tooltip.mid(i, tooltip.size() - i);
         if (toggle)
             highlights << (emEnd_);
-    }
-    else
-    {
+    } else {
         highlights << tooltip;
     }
     highlights << ("</div>");
@@ -73,8 +61,7 @@ QString &highlight(QString &keyword, QString &tooltip)
 }
 
 void QItem::paint(QPainter *painter,
-                  const QStyleOptionViewItem &option, const QModelIndex &index) const
-{
+                  const QStyleOptionViewItem &option, const QModelIndex &index) const {
     auto model = index.model();
     QTextDocument doc;
     auto &css = loadFile("item.css");
@@ -96,8 +83,7 @@ void QItem::paint(QPainter *painter,
 
     auto json_ = config();
 
-    if (option.state & (QStyle::State_HasFocus | QStyle::State_Selected))
-    {
+    if (option.state & (QStyle::State_HasFocus | QStyle::State_Selected)) {
         painter->fillRect(0, 0, option.rect.width(), option.rect.height(),
                           QBrush(json_["itemHoverBackground"].toString().toStdString().c_str()));
     }

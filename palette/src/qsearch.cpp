@@ -7,8 +7,7 @@ void prepareHighlighter(QString &str) {
     g_keyword = str;
 }
 
-void QSearch::onTextChanged()
-{
+void QSearch::onTextChanged() {
     QString &keyword = text();
 
     prepareHighlighter(keyword);
