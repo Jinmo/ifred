@@ -3,17 +3,15 @@
 
 #include "common_defs.h"
 
-void QItem::paint(QPainter *painter,
-                  const QStyleOptionViewItem &option, const QModelIndex &index) const
-{
-    auto model = index.model();
-    QTextDocument doc;
-    auto &css = loadFile("item.css");
-    doc.setDefaultStyleSheet(css);
-    QString tooltip = model->data(model->index(index.row(), 0)).toString();
+QCache<QPair<QString, QString>, QString> hlCache;
 
-    QString em("<em>"), emEnd("</em>");
-    QString em_(em), emEnd_(emEnd);
+QString &highlight(QString &keyword, QString &tooltip)
+{
+    static QString em_("<em>"), emEnd_("</em>");
+    auto cache_key = QPair<QString, QString>(keyword, tooltip);
+
+    if (hlCache.contains(cache_key))
+        return *hlCache[cache_key];
 
     QStringList highlights;
     int i, j = 0, start = 0;
@@ -21,12 +19,12 @@ void QItem::paint(QPainter *painter,
 
     highlights.push_back("<div>");
 
-    if (g_keyword.size())
+    if (keyword.size())
     {
         for (i = 0; i < tooltip.size(); i++)
         {
             auto c = tooltip[i];
-            if (c.toLower() == g_keyword[j].toLower())
+            if (c.toLower() == keyword[j].toLower())
             {
                 // start of highlighted text
                 if (!toggle)
@@ -35,7 +33,7 @@ void QItem::paint(QPainter *painter,
                     start = i;
                 }
                 ++j;
-                if (j == g_keyword.size())
+                if (j == keyword.size())
                 {
                     highlights << (em_);
                     highlights << tooltip.mid(start, i++ + 1 - start);
@@ -62,12 +60,33 @@ void QItem::paint(QPainter *painter,
         highlights << tooltip.mid(i, tooltip.size() - i);
         if (toggle)
             highlights << (emEnd_);
-    } else {
+    }
+    else
+    {
         highlights << tooltip;
     }
     highlights << ("</div>");
 
-    doc.setHtml(highlights.join(""));
+    QString *result = new QString(highlights.join(""));
+    hlCache.insert(cache_key, result);
+    return *result;
+}
+
+void QItem::paint(QPainter *painter,
+                  const QStyleOptionViewItem &option, const QModelIndex &index) const
+{
+    auto model = index.model();
+    QTextDocument doc;
+    auto &css = loadFile("item.css");
+    doc.setDefaultStyleSheet(css);
+
+    QString tooltip = model->data(model->index(index.row(), 0)).toString();
+    QString id = model->data(model->index(index.row(), 2)).toString();
+    QString keyword = g_keyword;
+
+    auto html = highlight(keyword, tooltip) + "<span>" + id + "</span>";
+
+    doc.setHtml(html);
     painter->save();
 
     QStyleOptionViewItem newOption = option;

@@ -10,25 +10,9 @@
 #include <QtWidgets>
 
 #include "common_defs.h"
-#include "qsearch.h"
-#include "qitems.h"
 #include "qpalette_.h"
 
-QSet<QString> g_is_interned;
-QHash<ushort, QSet<QString>> g_intern;
-
-void internString(QString &src)
-{
-    if (g_is_interned.contains(src))
-        return;
-    g_is_interned.insert(src);
-    for (auto &i : src)
-    {
-        auto c = i.toLower().unicode();
-        auto &set = g_intern[c];
-        set.insert(src);
-    }
-}
+QHash<QString, QDate> g_last_used;
 
 struct Action
 {
@@ -43,7 +27,7 @@ class QIDACommandPaletteInner : public QPaletteInner
 {
   public:
     QIDACommandPaletteInner(QWidget *parent, QObject *prevItem)
-    : QPaletteInner(parent, prevItem)
+        : QPaletteInner(parent, prevItem)
     {
         populateList();
     }
@@ -60,40 +44,51 @@ class QIDACommandPaletteInner : public QPaletteInner
         return false;
     }
 
+    QVector<QRegularExpression> getBlacklist() {
+        auto blacklist = config()["blacklist"].toArray();
+        QVector<QRegularExpression> blacklist_converted;
+
+        for (int i = 0; i < blacklist.size(); i++)
+        {
+            if (blacklist[i].toString().size())
+                blacklist_converted.push_back(QRegularExpression(blacklist[i].toString()));
+        }
+        return blacklist_converted;
+    }
+
     std::vector<Action *> *getActions()
     {
         qstrvec_t id_list;
-        auto *result = new std::vector<Action *>();
-
-        static QRegularExpression blacklist[] = {
-            QRegularExpression("^hexview"),
-            QRegularExpression("^hx"),
-            QRegularExpression("^navbox")};
-
         get_registered_actions(&id_list);
 
+        auto *result = new std::vector<Action *>();
+        auto blacklist = getBlacklist();
+
         result->reserve(id_list.size());
+
+        // Variables used in the loop below
+        qstring tooltip, shortcut;
+        action_state_t state;
+
         for (auto &item : id_list)
         {
-            bool found = false;
+            bool skip = false;
             for (auto &pattern : blacklist)
-                if (QString(item.c_str()).contains(pattern))
+                if (pattern.match(item.c_str()).hasMatch())
                 {
-                    found = true;
+                    skip = true;
                     break;
                 }
 
-            if (found)
+            if (skip)
                 continue;
 
-            action_state_t state;
             if (!get_action_state(item.c_str(), &state))
                 continue;
 
             if (state > AST_ENABLE)
                 continue;
 
-            qstring tooltip, shortcut;
             get_action_tooltip(&tooltip, item.c_str());
             get_action_shortcut(&shortcut, item.c_str());
             result->push_back(new Action(item, tooltip, shortcut));
@@ -104,7 +99,6 @@ class QIDACommandPaletteInner : public QPaletteInner
 
     void populateList()
     {
-        // TODO: cache it by id
         auto out = getActions();
         auto *source = entries_->source();
 
@@ -117,27 +111,24 @@ class QIDACommandPaletteInner : public QPaletteInner
             source->setData(source->index(i, 0), item->tooltip);
             source->setData(source->index(i, 1), item->shortcut);
             source->setData(source->index(i, 2), item->id);
-
-            // internString(item->tooltip);
             i += 1;
         }
     }
 };
 
-QHash<QString, QDate> g_last_used;
-
-int first_execution = 1;
+QPaletteContainer *curWidget;
 
 class enter_handler : public action_handler_t
 {
     int idaapi activate(action_activation_ctx_t *) override
     {
-        auto *widget = new QPalette_();
+        if(!curWidget)
+            curWidget = new QPaletteContainer();
 
-        widget->add(new QIDACommandPaletteInner(widget, nullptr));
-
-        widget->show();
-        widget->showWidget(0);
+        curWidget->clear();
+        curWidget->add(new QIDACommandPaletteInner(curWidget, nullptr));
+        curWidget->show();
+        curWidget->showWidget(0);
 
         return 1;
     }
@@ -151,6 +142,7 @@ class enter_handler : public action_handler_t
 extern plugin_t PLUGIN;
 
 static enter_handler enter_handler_;
+
 static action_desc_t enter_action = ACTION_DESC_LITERAL(
     "ifred:enter",
     "ifred command palette",
@@ -171,20 +163,13 @@ extern char comment[], help[], wanted_name[], wanted_hotkey[];
 char comment[] = "ifred";
 
 char help[] =
-    "IDA package manager";
+    "IDA palette";
 
 //--------------------------------------------------------------------------
 // This is the preferred name of the plugin module in the menu system
 // The preferred name may be overriden in plugins.cfg file
 
 char wanted_name[] = "ifred";
-
-// This is the preferred hotkey for the plugin module
-// The preferred hotkey may be overriden in plugins.cfg file
-// Note: IDA won't tell you if the hotkey is not correct
-//       It will just disable the hotkey.
-
-char wanted_hotkey[] = "";
 
 //--------------------------------------------------------------------------
 int idaapi init(void)
@@ -208,6 +193,8 @@ int idaapi init(void)
 //--------------------------------------------------------------------------
 void idaapi term(void)
 {
+    if(curWidget)
+        delete curWidget;
 }
 
 //--------------------------------------------------------------------------
@@ -218,7 +205,7 @@ void idaapi term(void)
 plugin_t PLUGIN =
     {
         IDP_INTERFACE_VERSION,
-        PLUGIN_FIX | PLUGIN_HIDE, // plugin flags
+        PLUGIN_FIX | PLUGIN_HIDE | PLUGIN_UNL, // plugin flags
         init,                     // initialize
 
         term, // terminate. this pointer may be NULL.
@@ -232,5 +219,5 @@ plugin_t PLUGIN =
         help, // multiline help about the plugin
 
         wanted_name,  // the preferred short name of the plugin
-        wanted_hotkey // the preferred hotkey to run the plugin
+        "" // wanted_hotkey; the preferred hotkey to run the plugin
 };

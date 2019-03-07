@@ -1,81 +1,43 @@
 #include "myfilter.h"
+#include "common_defs.h"
 
-static QVector<int> costs; // used by distance(s1, s2)
+#define FTS_FUZZY_MATCH_IMPLEMENTATION
+#include "fts_fuzzy_match.h"
+
 static QHash<QString, QHash<QString, int>> distances;
 
-int distance(const QString &s1, const QString &s2)
+int distance(const QString &s1_, const QString &s2_)
 {
-  const int m(s1.size());
-  const int n(s2.size());
+  QString s1 = s1_.toLower();
+  QString s2 = s2_.toLower();
 
-  if(distances.contains(s1) && distances[s1].contains(s2))
+  if (distances.contains(s1) && distances[s1].contains(s2))
     return distances[s1][s2];
 
-  if(s2.contains(s1)) {
-    return -100000 + s2.indexOf(s1);
-  }
+  QByteArray s1b = s1.toUtf8();
+  QByteArray s2b = s2.toUtf8();
 
-  if (costs.size() < n + 1)
-  {
-    costs.resize(n + 1);
-  }
+  int score;
+  fts::fuzzy_match(s1b.data(), s2b.data(), score);
 
-  if (m == 0)
-    return n;
-  if (n == 0)
-    return m;
-
-  for (int k = 0; k <= n; k++)
-    costs[k] = k;
-
-  int i = 0;
-  for (auto &it1 : s1)
-  {
-    costs[0] = i + 1;
-    int corner = i;
-
-    int j = 0;
-    for (auto &it2 : s2)
-    {
-      int upper = costs[j + 1];
-      if (it1 == it2)
-      {
-        costs[j + 1] = corner;
-      }
-      else
-      {
-        int t(upper < corner ? upper : corner);
-        costs[j + 1] = (costs[j] < t ? costs[j] : t) + 1;
-      }
-
-      corner = upper;
-      j++;
-    }
-    i++;
-  }
-
-  //msg("%-50s %-50s %d", s1.toStdString().c_str(), s2.toStdString().c_str(), costs[n]);
-  distances[s1][s2] = costs[n];
-
-  return costs[n];
+  distances[s1][s2] = -score;
+  return -score;
 }
 
 bool MyFilter::lessThan(const QModelIndex &left, const QModelIndex &right) const
 {
-  const QString &filterText = filterRegExp().pattern();
+#define FUZZY 0
+
+#if FUZZY
+  return QSortFilterProxyModel::lessThan(left, right);
+#else
+  const QString &filterText = g_keyword;
   const QString &leftData = sourceModel()->data(left).toString(),
                 &rightData = sourceModel()->data(right).toString();
-
-  // return leftData < rightData;
 
   if (filterText.size() == 0)
     return leftData < rightData;
 
-  // auto &leftUsed = g_last_used[leftData],
-  //      &rightUsed = g_last_used[rightData];
-
-  // if (leftUsed != rightUsed)
-  //   return leftUsed > rightUsed;
-
   return distance(filterText, leftData) < distance(filterText, rightData);
+#endif
 }

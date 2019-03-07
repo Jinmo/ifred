@@ -27,14 +27,14 @@ static void centerWidgets(QWidget *widget, QWidget *host = nullptr)
 
 extern QJsonDocument cached_json;
 
-class QPalette_ : public QMainWindow
+class QPaletteContainer : public QMainWindow
 {
     QStackedWidget *inner_stacked_;
 
     class ShadowObserver : public QConfigObserver
     {
       public:
-        ShadowObserver(QPalette_ *parent) : QConfigObserver(parent, "styles.json") {}
+        ShadowObserver(QPaletteContainer *parent) : QConfigObserver(parent, "styles.json") {}
 
         void onConfigUpdated(QJsonObject &config) override
         {
@@ -50,7 +50,7 @@ class QPalette_ : public QMainWindow
             effect->setColor(QColor(0, 0, 0, 100));
             effect->setOffset(0);
 
-            QPalette_ *owner = static_cast<QPalette_ *>(parent());
+            QPaletteContainer *owner = static_cast<QPaletteContainer *>(parent());
             owner->setGraphicsEffect(effect);
             owner->setContentsMargins(kShadow, kShadow, kShadow, kShadow);
         }
@@ -58,7 +58,7 @@ class QPalette_ : public QMainWindow
     } *shadow_observer_;
 
   public:
-    QPalette_()
+    QPaletteContainer()
     : inner_stacked_(new QStackedWidget(this)), shadow_observer_(new ShadowObserver(this))
     {
         setWindowFlags(Qt::Tool | Qt::FramelessWindowHint);
@@ -66,6 +66,11 @@ class QPalette_ : public QMainWindow
 
         shadow_observer_->activate();
         setCentralWidget(inner_stacked_);
+    }
+
+    void clear() {
+        while(inner_stacked_->count())
+            inner_stacked_->removeWidget(inner_stacked_->widget(0));
     }
 
     void add(QPaletteInner *delegate) {

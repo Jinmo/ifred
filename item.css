@@ -12,3 +12,10 @@ em {
     color: rgb(0, 151, 251);
     font-style: normal;
 }
+
+span {
+    font-family: Segoe UI;
+	color: #555;
+	padding-left: 20px;
+	display: block;
+}
