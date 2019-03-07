@@ -4,11 +4,13 @@
 
 Currently windows only, but maybe working with other OSes too.
 
-```
+```shell
 cd <idasdk path>\plugins
-git clone https://github.com/Jinmo/ifred.git
+git clone --recursive https://github.com/Jinmo/ifred.git
 cd ifred
 
-cd build
-..\build.cmd
+# you can use CMakeSettings.json for Visual Studio
+# or wrapper script
+ida-cmake/build.py -i <ida-sdk-path> -t 6.95 \
+    --idaq-path '/Applications/IDA Pro 6.95.app/Contents/MacOS/'
 ```
