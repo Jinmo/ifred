@@ -1,9 +1,3 @@
-/*
- *  This is a sample plugin module. It demonstrates how to fully use
- *  the Qt environment in IDA.
- *
- */
-
 #include "ida_headers.h"
 
 #include <QtGui>
@@ -76,7 +70,7 @@ std::vector<Action*>* getActions() {
 	}
 
 	for (size_t i = 0; i < names_count; i++) {
-		result->push_back(new Action(qstring(("@ " + QString::number(get_nlist_ea(i), 16).toUpper()).toStdString().c_str()), qstring("Name:") + get_nlist_name(i), ""));
+		result->push_back(new Action(qstring(("@ " + QString::number(get_nlist_ea(i), 16).toUpper()).toStdString().c_str()), qstring("Name: ") + get_nlist_name(i), ""));
 	}
 
 	cached_actions = *result;

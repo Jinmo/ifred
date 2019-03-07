@@ -14,13 +14,15 @@ const QString pluginPath(const char *filename) {
 
 QString loadFile(const char *filename, bool &updated) {
     static QHash<QString, QString> last_loaded;
+	static time_t last_load_timer;
 
     auto absolutePath = pluginPath(filename);
     QFile file(absolutePath);
+	int timestamp = time(NULL);
 
     updated = false;
 
-    if (last_loaded.contains(absolutePath)) {
+    if (last_loaded.contains(absolutePath) && last_load_timer >= timestamp - 2) {
         auto &content = last_loaded[absolutePath];
         return content;
     }
@@ -46,6 +48,7 @@ QString loadFile(const char *filename, bool &updated) {
 
     auto content = QString(buf);
     last_loaded[absolutePath] = content;
+	last_load_timer = timestamp;
 
     updated = true;
 
