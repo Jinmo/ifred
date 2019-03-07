@@ -26,9 +26,9 @@ int distance(const QString &s1_, const QString &s2_)
 
 bool MyFilter::lessThan(const QModelIndex &left, const QModelIndex &right) const
 {
-#define FUZZY 0
+#define FUZZY 1
 
-#if FUZZY
+#if !FUZZY
   return QSortFilterProxyModel::lessThan(left, right);
 #else
   const QString &filterText = g_keyword;

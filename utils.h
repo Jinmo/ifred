@@ -11,10 +11,10 @@ const QString pluginPath(const char *filename);
 QJsonObject config();
 QString loadFile(const char *filename, bool &updated = static_updated);
 
-class QConfigObserver : public QFileSystemWatcher
+class ConfigObserver : public QFileSystemWatcher
 {
   public:
-    QConfigObserver(QWidget *parent, const char *filename = "styles.json")
+    ConfigObserver(QWidget *parent, const char *filename = "styles.json")
         : QFileSystemWatcher(parent)
     {
         addPath(pluginPath(filename));
@@ -27,7 +27,7 @@ class QConfigObserver : public QFileSystemWatcher
 
     void activate()
     {
-        connect(this, &QFileSystemWatcher::fileChanged, this, &QConfigObserver::updated);
+        connect(this, &QFileSystemWatcher::fileChanged, this, &ConfigObserver::updated);
         updated();
     }
 

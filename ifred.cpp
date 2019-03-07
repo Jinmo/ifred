@@ -23,6 +23,67 @@ struct Action
           shortcut(QString(shortcut_.c_str())) {}
 };
 
+std::vector<Action *> cached_actions;
+
+QVector<QRegularExpression> getBlacklist()
+{
+    auto blacklist = config()["blacklist"].toArray();
+    QVector<QRegularExpression> blacklist_converted;
+
+    for (int i = 0; i < blacklist.size(); i++)
+    {
+        if (blacklist[i].toString().size())
+            blacklist_converted.push_back(QRegularExpression(blacklist[i].toString()));
+    }
+    return blacklist_converted;
+}
+
+std::vector<Action *> *getActions()
+{
+    qstrvec_t id_list;
+    get_registered_actions(&id_list);
+
+    if (cached_actions.size() == id_list.size())
+        return &cached_actions;
+
+    auto *result = new std::vector<Action *>();
+    auto blacklist = getBlacklist();
+
+    result->reserve(id_list.size());
+
+    // Variables used in the loop below
+    qstring tooltip, shortcut;
+    action_state_t state;
+
+    for (auto &item : id_list)
+    {
+        bool skip = false;
+        for (auto &pattern : blacklist)
+            if (pattern.match(item.c_str()).hasMatch())
+            {
+                skip = true;
+                break;
+            }
+
+        if (skip)
+            continue;
+
+        if (!get_action_state(item.c_str(), &state))
+            continue;
+
+        if (state > AST_ENABLE)
+            continue;
+
+        get_action_tooltip(&tooltip, item.c_str());
+        get_action_shortcut(&shortcut, item.c_str());
+        result->push_back(new Action(item, tooltip, shortcut));
+    }
+
+    cached_actions = *result;
+
+    return result;
+}
+
 class QIDACommandPaletteInner : public QPaletteInner
 {
   public:
@@ -42,59 +103,6 @@ class QIDACommandPaletteInner : public QPaletteInner
         process_ui_action(id.toStdString().c_str());
         // already hidden
         return false;
-    }
-
-    QVector<QRegularExpression> getBlacklist() {
-        auto blacklist = config()["blacklist"].toArray();
-        QVector<QRegularExpression> blacklist_converted;
-
-        for (int i = 0; i < blacklist.size(); i++)
-        {
-            if (blacklist[i].toString().size())
-                blacklist_converted.push_back(QRegularExpression(blacklist[i].toString()));
-        }
-        return blacklist_converted;
-    }
-
-    std::vector<Action *> *getActions()
-    {
-        qstrvec_t id_list;
-        get_registered_actions(&id_list);
-
-        auto *result = new std::vector<Action *>();
-        auto blacklist = getBlacklist();
-
-        result->reserve(id_list.size());
-
-        // Variables used in the loop below
-        qstring tooltip, shortcut;
-        action_state_t state;
-
-        for (auto &item : id_list)
-        {
-            bool skip = false;
-            for (auto &pattern : blacklist)
-                if (pattern.match(item.c_str()).hasMatch())
-                {
-                    skip = true;
-                    break;
-                }
-
-            if (skip)
-                continue;
-
-            if (!get_action_state(item.c_str(), &state))
-                continue;
-
-            if (state > AST_ENABLE)
-                continue;
-
-            get_action_tooltip(&tooltip, item.c_str());
-            get_action_shortcut(&shortcut, item.c_str());
-            result->push_back(new Action(item, tooltip, shortcut));
-        }
-
-        return result;
     }
 
     void populateList()
@@ -122,7 +130,7 @@ class enter_handler : public action_handler_t
 {
     int idaapi activate(action_activation_ctx_t *) override
     {
-        if(!curWidget)
+        if (!curWidget)
             curWidget = new QPaletteContainer();
 
         curWidget->clear();
@@ -179,6 +187,7 @@ int idaapi init(void)
     if (r == PLUGIN_KEEP)
     {
         msg("ifred loading...\n");
+        getActions();
 
         if (!register_action(enter_action))
         {
@@ -193,7 +202,7 @@ int idaapi init(void)
 //--------------------------------------------------------------------------
 void idaapi term(void)
 {
-    if(curWidget)
+    if (curWidget)
         delete curWidget;
 }
 
@@ -205,7 +214,7 @@ void idaapi term(void)
 plugin_t PLUGIN =
     {
         IDP_INTERFACE_VERSION,
-        PLUGIN_FIX | PLUGIN_HIDE | PLUGIN_UNL, // plugin flags
+        PLUGIN_FIX | PLUGIN_HIDE, // plugin flags
         init,                     // initialize
 
         term, // terminate. this pointer may be NULL.
@@ -218,6 +227,6 @@ plugin_t PLUGIN =
 
         help, // multiline help about the plugin
 
-        wanted_name,  // the preferred short name of the plugin
-        "" // wanted_hotkey; the preferred hotkey to run the plugin
+        wanted_name, // the preferred short name of the plugin
+        ""           // wanted_hotkey; the preferred hotkey to run the plugin
 };

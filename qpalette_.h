@@ -31,10 +31,10 @@ class QPaletteContainer : public QMainWindow
 {
     QStackedWidget *inner_stacked_;
 
-    class ShadowObserver : public QConfigObserver
+    class ShadowObserver : public ConfigObserver
     {
       public:
-        ShadowObserver(QPaletteContainer *parent) : QConfigObserver(parent, "styles.json") {}
+        ShadowObserver(QPaletteContainer *parent) : ConfigObserver(parent, "styles.json") {}
 
         void onConfigUpdated(QJsonObject &config) override
         {

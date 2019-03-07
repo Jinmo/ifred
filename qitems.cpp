@@ -6,7 +6,7 @@ filter_(new MyFilter(this)),
 source_(new QStandardItemModel(this)),
 item_delegate_(new QItem(this))
 {
-    filter_->setDynamicSortFilter(true);
+    filter_->setDynamicSortFilter(false);
     filter_->setSourceModel(source_);
 
     setModel(filter_);
