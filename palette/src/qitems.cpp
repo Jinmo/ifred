@@ -13,4 +13,5 @@ QItems::QItems(QWidget *parent)
     setLineWidth(0);
 
     setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+	setUniformItemSizes(true);
 }

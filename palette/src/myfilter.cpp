@@ -5,14 +5,16 @@
 
 #include "fts_fuzzy_match.h"
 
-static QHash<QString, QHash<QString, int>> distances;
+static QHash<QPair<QString, QString>, int> distances;
 
 int distance(const QString &s1_, const QString &s2_) {
     QString s1 = s1_.toLower();
     QString s2 = s2_.toLower();
 
-    if (distances.contains(s1) && distances[s1].contains(s2))
-        return distances[s1][s2];
+	QPair<QString, QString> pair(s1, s2);
+
+    if (distances.contains(pair))
+        return distances[pair];
 
     QByteArray s1b = s1.toUtf8();
     QByteArray s2b = s2.toUtf8();
@@ -20,7 +22,7 @@ int distance(const QString &s1_, const QString &s2_) {
     int score;
     fts::fuzzy_match(s1b.data(), s2b.data(), score);
 
-    distances[s1][s2] = -score;
+    distances[pair] = -score;
     return -score;
 }
 

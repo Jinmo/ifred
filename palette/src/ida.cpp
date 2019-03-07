@@ -76,7 +76,7 @@ std::vector<Action*>* getActions() {
 	}
 
 	for (size_t i = 0; i < names_count; i++) {
-		result->push_back(new Action(qstring(("@ " + QString::number(i, 16)).toStdString().c_str()), get_nlist_name(i), ""));
+		result->push_back(new Action(qstring(("@ " + QString::number(get_nlist_ea(i), 16).toUpper()).toStdString().c_str()), qstring("Name:") + get_nlist_name(i), ""));
 	}
 
 	cached_actions = *result;
@@ -97,9 +97,13 @@ public:
 		auto* model = entries_->model();
 		auto id = model->data(model->index(entries_->currentIndex().row(), 2)).toString();
 		g_last_used[id] = QDate::currentDate();
-		if (id.startsWith("@ "))
-			jumpto(id.mid(2).toUInt(nullptr, 16));
-		process_ui_action(id.toStdString().c_str());
+		if (id.startsWith("@ ")) {
+			auto address = id.mid(2).toUInt(nullptr, 16);
+			qDebug() << address << id.mid(2);
+			jumpto(address);
+		}
+		else
+			process_ui_action(id.toStdString().c_str());
 		// already hidden
 		return false;
 	}
