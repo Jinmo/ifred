@@ -4,6 +4,7 @@
 #include <QtWidgets>
 
 #include "qpalettecontainer.h"
+#include "palette_manager.h"
 
 QHash<QString, QDate> g_last_used;
 
@@ -119,17 +120,9 @@ public:
 	}
 };
 
-QPaletteContainer* curWidget;
-
 class enter_handler : public action_handler_t {
 	int idaapi activate(action_activation_ctx_t*) override {
-		if (!curWidget)
-			curWidget = new QPaletteContainer();
-
-		curWidget->clear();
-		curWidget->add(new QIDACommandPaletteInner(curWidget, nullptr));
-		curWidget->show();
-		curWidget->showWidget(0);
+		show_palette(new QIDACommandPaletteInner(nullptr, nullptr));
 
 		return 1;
 	}
@@ -170,13 +163,42 @@ char help[] =
 
 char wanted_name[] = "ifred";
 
+void init_python_module();
+
+#include <Python.h>
+
+ssize_t idaapi load_python(void* user_data, int notification_code, va_list va) {
+	auto info = va_arg(va, plugin_info_t *);
+
+	if (notification_code == ui_plugin_loaded && !strcmp(info->org_name, "IDAPython")) {
+		PyGILState_STATE state;
+
+		PyEval_InitThreads();
+		PyEval_SaveThread();
+		state = PyGILState_Ensure();
+
+		init_python_module();
+
+		PyGILState_Release(state);
+		unhook_from_notification_point(HT_UI, load_python, NULL);
+	}
+
+	return 0;
+}
+
 //--------------------------------------------------------------------------
 int idaapi init(void) {
 	// the plugin works only with idaq
 	int r = is_idaq() ? PLUGIN_KEEP : PLUGIN_SKIP;
 	if (r == PLUGIN_KEEP) {
 		msg("ifred loading...\n");
-		// getActions();
+
+		if (!Py_IsInitialized())
+			hook_to_notification_point(HT_UI, load_python, NULL);
+		else
+			init_python_module();
+
+		getActions();
 
 		if (!register_action(enter_action)) {
 			msg("ifred action loading error");
@@ -190,8 +212,7 @@ int idaapi init(void) {
 
 //--------------------------------------------------------------------------
 void idaapi term(void) {
-	if (curWidget)
-		delete curWidget;
+	cleanup_palettes();
 }
 
 //--------------------------------------------------------------------------

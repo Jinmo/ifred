@@ -1,11 +1,4 @@
-﻿# CMakeList.txt : CMake project for palette, include source and define
-# project specific logic here.
-#
-cmake_minimum_required (VERSION 3.8)
-
-project(palette)
-
-include("ida-cmake/cmake/IDA.cmake")
+﻿include("ida-cmake/cmake/IDA.cmake")
 
 set(sources src/ida.cpp
 			src/myfilter.cpp
@@ -14,12 +7,16 @@ set(sources src/ida.cpp
 			src/qpalette_inner.cpp
 			src/qitems.cpp
 			src/qitem.cpp
-			src/python.cpp
+			src/bindings/pypalette.cpp
+			src/bindings/qpypalette_inner.cpp
+			src/palette_manager.cpp
 )
 
-set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+set(PYTHON_EXECUTABLE       ""    CACHE PATH "Python executable (x64 if >= 7.0)")
+set(IDA_SKIP_ADD_LIBRARY ON)
 add_subdirectory(pybind11)
-add_ida_qt_plugin(${CMAKE_PROJECT_NAME} ${sources})
+
 pybind11_add_module(${CMAKE_PROJECT_NAME} ${sources})
+add_ida_qt_plugin(${CMAKE_PROJECT_NAME})
 
 # TODO: Add tests and install targets if needed.
