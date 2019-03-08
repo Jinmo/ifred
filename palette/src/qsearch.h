@@ -14,7 +14,7 @@ class QSearch : public QLineEdit {
 public:
     QSearch(QWidget *parent, MyFilter *filter)
             : QLineEdit(parent), filter_(filter),
-              css_observer_(new CSSObserver(this, "searchbox.css")) {
+              css_observer_(new CSSObserver(this, "theme/searchbox.css")) {
         connect(this, &QLineEdit::textChanged, this, &QSearch::onTextChanged);
         onTextChanged();
     }

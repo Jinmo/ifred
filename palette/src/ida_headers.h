@@ -4,10 +4,11 @@
 
 #include <ida.hpp>
 #include <idp.hpp>
-#include <name.hpp>
 
 #pragma warning(pop)
 
 #include <kernwin.hpp>
 #include <loader.hpp>
+#include <name.hpp>
+#include <diskio.hpp>
 #include <fpro.h>

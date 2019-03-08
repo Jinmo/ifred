@@ -19,7 +19,7 @@ struct Action {
 std::vector<Action*> cached_actions;
 
 QVector<QRegularExpression> getBlacklist() {
-	auto blacklist = config()["blacklist"].toArray();
+	auto blacklist = config("config.json")["blacklist"].toArray();
 	QVector<QRegularExpression> blacklist_converted;
 
 	for (auto& i : blacklist) {
@@ -176,7 +176,7 @@ int idaapi init(void) {
 	int r = is_idaq() ? PLUGIN_KEEP : PLUGIN_SKIP;
 	if (r == PLUGIN_KEEP) {
 		msg("ifred loading...\n");
-		getActions();
+		// getActions();
 
 		if (!register_action(enter_action)) {
 			msg("ifred action loading error");

@@ -45,6 +45,11 @@
           "name": "IDA_EA_64",
           "value": "False",
           "type": "BOOL"
+        },
+        {
+          "name": "PYTHON_EXECUTABLE",
+          "value": "C:\\Python27-x64\\python.exe",
+          "type": "STRING"
         }
       ]
     }

@@ -3,16 +3,13 @@
 
 QPaletteInner::QPaletteInner(QWidget *parent, QObject *)
         : QFrame(parent),
-          css_observer_(new CSSObserver(this, "window.css")),
+          css_observer_(new CSSObserver(this, "theme/window.css")),
           layout_(new QVBoxLayout(this)),
           entries_(new QItems(this)),
           searchbox_(new QSearch(this, entries_->model())) {
-    // TODO: we need to repaint the list item... I don't know how.
-    // connect(entries_->model(), &MyFilter::dataChanged, entries_, [=]() {
-    //     entries_->viewport()->update();
-    // });
 
-    layout_->addWidget(searchbox_);
+	// Add widgets
+	layout_->addWidget(searchbox_);
     layout_->addWidget(entries_);
     layout_->setContentsMargins(0, 0, 0, 0);
     layout_->setSpacing(0);

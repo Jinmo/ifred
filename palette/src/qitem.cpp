@@ -64,7 +64,7 @@ void QItem::paint(QPainter *painter,
                   const QStyleOptionViewItem &option, const QModelIndex &index) const {
     auto model = index.model();
     QTextDocument doc;
-    auto &css = loadFile("item.css");
+    auto &css = loadFile("theme/item.css");
     doc.setDefaultStyleSheet(css);
 
     QString tooltip = model->data(model->index(index.row(), 0)).toString();
@@ -81,7 +81,7 @@ void QItem::paint(QPainter *painter,
 
     painter->translate(option.rect.left(), option.rect.top());
 
-    auto json_ = config();
+    auto json_ = config("config.json");
 
     if (option.state & (QStyle::State_HasFocus | QStyle::State_Selected)) {
         painter->fillRect(0, 0, option.rect.width(), option.rect.height(),

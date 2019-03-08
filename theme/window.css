@@ -14,10 +14,12 @@ QScrollBar:vertical * {
 
 QScrollBar:vertical {
     border: none;
-    background: none;
-    background-color: #000;
     width: 12px;
     border-radius: 6px;
+}
+
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: rgba(0,0,0,0.1);
 }
 
 QScrollBar::handle:vertical {

@@ -1,3 +1,6 @@
 [submodule "palette/ida-cmake"]
 	path = palette/ida-cmake
 	url = https://github.com/zyantific/ida-cmake.git
+[submodule "palette/pybind11"]
+	path = palette/pybind11
+	url = https://github.com/pybind/pybind11.git

@@ -32,7 +32,8 @@ public:
         };
 
         for (auto &x: keyword)
-            regexp_before_join.push_back(x);
+            if(!x.isSpace())
+				regexp_before_join.push_back(x);
 
         // regexp_before_join.push_back(".*");
         expression_ = QRegularExpression(regexp_before_join.join(".*"),

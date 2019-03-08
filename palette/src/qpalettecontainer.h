@@ -21,20 +21,18 @@ static void centerWidgets(QWidget *widget, QWidget *host = nullptr) {
     }
 }
 
-extern QJsonDocument cached_json;
-
 class QPaletteContainer : public QMainWindow {
     QStackedWidget *inner_stacked_;
 
     class ShadowObserver : public ConfigObserver {
     public:
-        ShadowObserver(QPaletteContainer *parent) : ConfigObserver(parent, "styles.json") {}
+        ShadowObserver(QPaletteContainer *parent) : ConfigObserver(parent, "theme/styles.json") {}
 
         void onConfigUpdated(QJsonObject &config) override {
             int kShadow = config["shadow"].toInt();
 
             if (kShadow == 0) {
-                qDebug() << "corruption" << cached_json.toJson();
+                qDebug() << "corruption";
             }
 
             auto *effect = new QGraphicsDropShadowEffect();

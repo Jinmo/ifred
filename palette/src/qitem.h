@@ -15,7 +15,7 @@ public:
 
     QSize sizeHint(const QStyleOptionViewItem &,
                    const QModelIndex &) const override {
-        return QSize(0, config()["itemHeight"].toInt());
+        return QSize(0, config("theme/styles.json")["itemHeight"].toInt());
     }
 };
 

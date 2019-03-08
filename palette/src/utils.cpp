@@ -8,21 +8,26 @@ const QString pluginPath(const char *filename) {
 	if (g_plugin_path.size())
 		return g_plugin_path + filename;
 
-	g_plugin_path = (QDir::homePath() + "/take/theme/");
+	qDebug() << QDir::homePath();
+
+	g_plugin_path = (QString(get_user_idadir()).replace("\\", "/") + QString("/plugins/palette/"));
+	QDir plugin_dir(g_plugin_path);
+	plugin_dir.mkpath(".");
+
 	return g_plugin_path + filename;
 }
 
-QString loadFile(const char *filename, bool &updated) {
+QString loadFile(const char *filename, bool force_update, bool &updated) {
     static QHash<QString, QString> last_loaded;
 	static time_t last_load_timer;
 
     auto absolutePath = pluginPath(filename);
     QFile file(absolutePath);
-	int timestamp = time(NULL);
+	time_t timestamp = time(NULL);
 
     updated = false;
 
-    if (last_loaded.contains(absolutePath) && last_load_timer >= timestamp - 2) {
+    if (last_loaded.contains(absolutePath) && !force_update) {
         auto &content = last_loaded[absolutePath];
         return content;
     }
@@ -59,18 +64,18 @@ QString loadFile(const char *filename, bool &updated) {
     return content;
 }
 
-QJsonDocument cached_json;
+QHash<QString, QJsonDocument> cached_json;
 
-QJsonObject config() {
+QJsonObject config(const char *filename, bool force_update) {
     bool updated;
-    auto &content_str = loadFile("styles.json", updated);
+    auto &content_str = loadFile(filename, force_update, updated);
 
     if (!updated)
-        return cached_json.object();
+        return cached_json[filename].object();
 
     auto &content = content_str.toUtf8();
     QJsonDocument json(QJsonDocument::fromJson(content));
-    cached_json = json;
+    cached_json[filename] = json;
 
-    return cached_json.object();
+    return json.object();
 }
