@@ -1,11 +1,19 @@
 #pragma once
 
+#include <QtGui>
+#include <QtWidgets>
+#include <string>
+
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 
-#include <QtGui>
-#include "qpypalette_inner.h"
+#include <bindings/qpypalette_inner.h>
+
+static QString py_to_qstring(py::object obj) {
+	std::string resStr = py::str(obj);
+	return QString(resStr.c_str());
+}
 
 class PaletteItem {
 	std::string description_, id_, shortcut_;
@@ -23,11 +31,6 @@ public:
 	std::string id() { return id_; }
 };
 
-static QString py_to_qstring(py::object obj) {
-	std::string str(obj.str());
-	return QString(str.c_str());
-}
-
 class PyPalette {
 	py::list entries_;
 	QPyPaletteInner* inner_;
@@ -44,7 +47,7 @@ public:
 	}
 
 	void populateList() {
-		auto* source = inner_->entries().source();
+		auto source = inner_->entries().source();
 
 		source->setRowCount(static_cast<int>(entries_.size()));
 		source->setColumnCount(3);

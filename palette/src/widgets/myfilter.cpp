@@ -1,8 +1,6 @@
 #include "myfilter.h"
-#include "common_defs.h"
 
 #define FTS_FUZZY_MATCH_IMPLEMENTATION
-
 #include "fts_fuzzy_match.h"
 
 static QHash<QPair<QString, QString>, int> distances;
@@ -25,7 +23,7 @@ int distance(const QString &s1_, const QString &s2_) {
 }
 
 bool MyFilter::lessThan(const QModelIndex &left, const QModelIndex &right) const {
-#define FUZZY 1
+#define FUZZY 0
 
 #if !FUZZY
     return QSortFilterProxyModel::lessThan(left, right);

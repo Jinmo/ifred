@@ -5,5 +5,10 @@ cmake_minimum_required (VERSION 3.8)
 
 project ("palette")
 
+add_subdirectory(palette/pybind11)
+
 # Include sub-projects.
 add_subdirectory ("palette")
+
+enable_testing()
+add_subdirectory ("benchmark")

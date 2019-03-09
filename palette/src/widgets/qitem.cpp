@@ -1,8 +1,7 @@
 #include "qitem.h"
 
-#include "common_defs.h"
-
 QCache<QPair<QString, QString>, QString> hlCache;
+extern QString g_keyword;
 
 QString &highlight(QString &keyword, QString &tooltip) {
     static QString em_("<em>"), emEnd_("</em>");

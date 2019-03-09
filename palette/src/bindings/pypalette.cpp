@@ -1,5 +1,5 @@
-#include "../qpalette_inner.h"
-#include "../palette_manager.h"
+#include "../widgets/qpalette_inner.h"
+#include "../widgets/palette_manager.h"
 #include "pypalette.h"
 #include "qpypalette_inner.h"
 

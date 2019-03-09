@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../qpalette_inner.h"
+#include <widgets/qpalette_inner.h>
 
 class PyPalette;
 

@@ -1,4 +1,4 @@
-﻿{
+{
   "configurations": [
     {
       "name": "x64-Release",
@@ -52,6 +52,7 @@
           "type": "STRING"
         }
       ]
-    }
+    },
+    { "cacheRoot": "C:\\Users\\berry\\CMakeBuilds\\675c7c32-d73c-773f-bdd8-c950b5e8b63b\\build\\x64-Release" }
   ]
 }

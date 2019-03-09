@@ -26,6 +26,7 @@ public:
                   const QModelIndex &right) const override;
 
     void setMyFilter(QString &keyword) {
+		static QRegExp emptyRegExp;
         keyword_ = keyword;
 
         QStringList regexp_before_join = {
@@ -39,7 +40,7 @@ public:
         expression_ = QRegularExpression(regexp_before_join.join(".*"),
                                          QRegularExpression::CaseInsensitiveOption);
 
-        setFilterRegExp(keyword);
+        setFilterRegExp(emptyRegExp);
     }
 };
 
