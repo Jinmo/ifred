@@ -6,7 +6,7 @@
 #include <QApplication>
 #include <string>
 
-#define COUNT 100000
+#define COUNT 200000
 #define LENGTH 20
 
 const char key[] = "abcdefghjiklmnopqrstuvwxyz";

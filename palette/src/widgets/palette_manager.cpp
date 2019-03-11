@@ -3,7 +3,7 @@
 
 QPaletteContainer* g_current_widget;
 
-void show_palette(QPaletteInner *inner) {
+void show_palette(QPaletteInner* inner) {
 	if (!g_current_widget)
 		g_current_widget = new QPaletteContainer();
 

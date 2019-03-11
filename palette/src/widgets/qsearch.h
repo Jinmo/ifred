@@ -8,22 +8,22 @@
 #include "cssobserver.h"
 
 class QSearch : public QLineEdit {
-    QItems *entries_;
-    CSSObserver *css_observer_;
+	QItems* entries_;
+	CSSObserver* css_observer_;
 
 public:
-    QSearch(QWidget *parent, QItems *entries)
-            : QLineEdit(parent), entries_(entries),
-              css_observer_(new CSSObserver(this, "theme/searchbox.css")) {
-        connect(this, &QLineEdit::textChanged, this, &QSearch::onTextChanged);
-        onTextChanged();
-    }
+	QSearch(QWidget* parent, QItems* entries)
+		: QLineEdit(parent), entries_(entries),
+		css_observer_(new CSSObserver(this, "theme/searchbox.css")) {
+		connect(this, &QLineEdit::textChanged, this, &QSearch::onTextChanged);
+		onTextChanged();
+	}
 
-    void onTextChanged();
+	void onTextChanged();
 
-    void keyPressEvent(QKeyEvent *event) override {
-        QLineEdit::keyPressEvent(event);
-    }
+	void keyPressEvent(QKeyEvent* event) override {
+		QLineEdit::keyPressEvent(event);
+	}
 };
 
 #endif // QSEARCH_H

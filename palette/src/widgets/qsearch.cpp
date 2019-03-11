@@ -12,4 +12,5 @@ void QSearch::onTextChanged() {
 
     prepareHighlighter(keyword);
     entries_->model()->setFilter(keyword);
+    entries_->model()->setFilter(keyword);
 }

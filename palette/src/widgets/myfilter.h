@@ -8,7 +8,7 @@
 class Action {
 public:
 	Action() {}
-	Action(const Action& other): id_(other.id_), description_(other.description_), shortcut_(other.shortcut_) {
+	Action(const Action& other) : id_(other.id_), description_(other.description_), shortcut_(other.shortcut_) {
 	}
 	~Action() {}
 
@@ -34,20 +34,20 @@ class MyFilter : public QStandardItemModel {
 	QVector<Action> items_;
 
 public:
-    MyFilter(QWidget *parent) : QStandardItemModel(parent) {
-    }
+	MyFilter(QWidget* parent) : QStandardItemModel(parent) {
+	}
 
-    bool filterAcceptsRow(int source_row) {
-        if (keyword_.isEmpty())
-            return true;
+	bool filterAcceptsRow(int source_row) {
+		if (keyword_.isEmpty())
+			return true;
 
-        const QString &str = items_[source_row].description();
-        bool result = str.contains(expression_);
-        return result;
-    }
+		const QString& str = items_[source_row].description();
+		bool result = str.contains(expression_);
+		return result;
+	}
 
-    bool lessThan(const QModelIndex &left,
-                  const QModelIndex &right) const;
+	bool lessThan(const QModelIndex& left,
+		const QModelIndex& right) const;
 
 	void setFilter(QString& keyword) {
 		static QRegExp emptyRegExp;
@@ -72,7 +72,7 @@ public:
 		setRowCount(count);
 	}
 
-	void populate(const QVector<Action> &items) {
+	void populate(const QVector<Action>& items) {
 		items_ = items;
 		qDebug() << items_.size();
 
