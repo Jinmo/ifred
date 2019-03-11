@@ -4,16 +4,16 @@
 #include <QtGui>
 #include <QtWidgets>
 
-#include "myfilter.h"
+#include <widgets/qitems.h>
 #include "cssobserver.h"
 
 class QSearch : public QLineEdit {
-    MyFilter *filter_;
+    QItems *entries_;
     CSSObserver *css_observer_;
 
 public:
-    QSearch(QWidget *parent, MyFilter *filter)
-            : QLineEdit(parent), filter_(filter),
+    QSearch(QWidget *parent, QItems *entries)
+            : QLineEdit(parent), entries_(entries),
               css_observer_(new CSSObserver(this, "theme/searchbox.css")) {
         connect(this, &QLineEdit::textChanged, this, &QSearch::onTextChanged);
         onTextChanged();

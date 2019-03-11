@@ -3,18 +3,17 @@
 
 #include <QtGui>
 #include <QtWidgets>
-#include "myfilter.h"
-#include "qitem.h"
+#include <widgets/qitem.h>
+#include <widgets/myfilter.h>
+
+class MyFilter;
 
 class QItems : public QListView {
-    MyFilter *filter_;
-    QStandardItemModel *source_;
+    MyFilter *model_;
     QItem *item_delegate_;
 
 public:
-    MyFilter *model() { return filter_; }
-
-    QStandardItemModel *source() { return source_; }
+    MyFilter *model() { return model_; }
 
     explicit QItems(QWidget *parent);
 };

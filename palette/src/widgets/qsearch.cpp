@@ -11,6 +11,5 @@ void QSearch::onTextChanged() {
     QString &keyword = text();
 
     prepareHighlighter(keyword);
-    filter_->setMyFilter(keyword);
-    filter_->sort(0);
+    entries_->model()->setFilter(keyword);
 }

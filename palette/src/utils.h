@@ -13,23 +13,23 @@ QJsonObject config(const char *filename, bool force_update=false);
 
 QString loadFile(const char *filename, bool force_update=false, bool &updated = static_updated);
 
-class ConfigObserver : public QFileSystemWatcher {
+class JSONObserver : public QFileSystemWatcher {
 private:
 	const char* filename_;
 public:
-    ConfigObserver(QWidget *parent, const char *filename = "settings.json")
+    JSONObserver(QWidget *parent, const char *filename = "settings.json")
             : QFileSystemWatcher(parent), filename_(filename) {
         addPath(pluginPath(filename));
     }
 
     void updated() {
-        onConfigUpdated(config(filename_, true));
+        onUpdated(config(filename_, true));
     }
 
     void activate() {
-        connect(this, &QFileSystemWatcher::fileChanged, this, &ConfigObserver::updated);
+        connect(this, &QFileSystemWatcher::fileChanged, this, &JSONObserver::updated);
         updated();
     }
 
-    virtual void onConfigUpdated(QJsonObject &config) = 0;
+    virtual void onUpdated(QJsonObject &config) = 0;
 };

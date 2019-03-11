@@ -1,4 +1,5 @@
 #include "qitem.h"
+#include "myfilter.h"
 
 QCache<QPair<QString, QString>, QString> hlCache;
 extern QString g_keyword;
@@ -63,14 +64,12 @@ void QItem::paint(QPainter *painter,
                   const QStyleOptionViewItem &option, const QModelIndex &index) const {
     auto model = index.model();
     QTextDocument doc;
-    auto &css = loadFile("theme/item.css");
-    doc.setDefaultStyleSheet(css);
+    doc.setDefaultStyleSheet(style_sheet_);
 
-    QString tooltip = model->data(model->index(index.row(), 0)).toString();
-    QString id = model->data(model->index(index.row(), 2)).toString();
+    Action action = model->data(model->index(index.row(), 0)).value<Action>();
     QString keyword = g_keyword;
 
-    auto html = highlight(keyword, tooltip) + "<span>" + id + "</span>";
+    auto html = highlight(keyword, action.description()) + "<span>" + action.id() + "</span>";
 
     doc.setHtml(html);
     painter->save();
@@ -80,14 +79,12 @@ void QItem::paint(QPainter *painter,
 
     painter->translate(option.rect.left(), option.rect.top());
 
-    auto json_ = config("config.json");
-
     if (option.state & (QStyle::State_HasFocus | QStyle::State_Selected)) {
         painter->fillRect(0, 0, option.rect.width(), option.rect.height(),
-                          QBrush(json_["itemHoverBackground"].toString().toStdString().c_str()));
+                          item_hover_background_);
     }
 
-    painter->translate(json_["itemMarginLeft"].toInt(), json_["itemMarginTop"].toInt());
+    painter->translate(item_margin_left_, item_margin_top_);
 
     doc.drawContents(painter, QRectF(0, 0, option.rect.width(), option.rect.height()));
     painter->restore();

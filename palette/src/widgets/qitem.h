@@ -8,15 +8,55 @@
 
 class QItem : public QStyledItemDelegate {
 public:
-    QItem(QWidget *parent) : QStyledItemDelegate(parent) {}
+	QBrush item_hover_background_;
+	QString style_sheet_;
+	int item_height_, item_margin_left_, item_margin_top_;
 
-    void paint(QPainter *painter,
-               const QStyleOptionViewItem &option, const QModelIndex &index) const override;
+	class ItemStyleObserver : public JSONObserver {
+	public:
+		ItemStyleObserver(QWidget* parent) : JSONObserver(parent, "theme/styles.json") {}
 
-    QSize sizeHint(const QStyleOptionViewItem &,
-                   const QModelIndex &) const override {
-        return QSize(0, config("theme/styles.json")["itemHeight"].toInt());
-    }
+		void onUpdated(QJsonObject& styles) {
+			QItem* owner = static_cast<QItem*>(parent());
+			owner->updateConfig(styles);
+		}
+	};
+
+	class ItemStyleSheetObserver : public QFileSystemWatcher {
+		ItemStyleSheetObserver(QWidget* parent) {
+			addPath("theme/item.css");
+			connect(this, &QFileSystemWatcher::fileChanged, this, &ItemStyleSheetObserver::updated);
+		}
+
+		void updated() {
+			QItem* owner = static_cast<QItem*>(parent());
+			owner->setCSS(loadFile("theme/item.css"));
+		}
+	};
+
+	QItem(QWidget* parent) : QStyledItemDelegate(parent) {
+		updateConfig(config("theme/styles.json"));
+	}
+
+	void setCSS(QString& css) {
+		style_sheet_ = css;
+	}
+
+	void updateConfig(QJsonObject& styles) {
+		item_height_ = styles["itemHeight"].toInt();
+		item_hover_background_ = QBrush(styles["itemHoverBackground"].toString().toStdString().c_str());
+		item_margin_left_ = styles["itemMarginLeft"].toInt();
+		item_margin_top_ = styles["itemMarginTop"].toInt();
+		setCSS(loadFile("theme/item.css"));
+	}
+
+	void paint(QPainter* painter,
+		const QStyleOptionViewItem& option, const QModelIndex& index) const override;
+
+	QSize sizeHint(const QStyleOptionViewItem&,
+		const QModelIndex&) const override {
+		return QSize(0, item_height_);
+	}
 };
 
 #endif // QITEM_H

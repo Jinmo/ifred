@@ -6,7 +6,7 @@
 #include <QApplication>
 #include <string>
 
-#define COUNT 20000
+#define COUNT 100000
 #define LENGTH 20
 
 const char key[] = "abcdefghjiklmnopqrstuvwxyz";
@@ -25,19 +25,18 @@ public:
 		populateList();
 	}
 	void populateList() {
-		auto* source = entries().source();
+		QVector<Action> action_list;
 
-		source->setRowCount(static_cast<int>(COUNT));
-		source->setColumnCount(3);
+		action_list.reserve(COUNT);
 
-		int i = 0;
-		for (i = 0; i < COUNT; i++) {
+		for (int i = 0; i < COUNT; i++) {
 			auto id = get_random_str();
-
-			source->setData(source->index(i, 0), get_random_str());
-			source->setData(source->index(i, 1), "");
-			source->setData(source->index(i, 2), id);
+			action_list.push_back(Action(id, get_random_str(), ""));
 		}
+
+		qDebug() << action_list.size();
+
+		entries().model()->populate(action_list);
 	}
 
 	EnterResult enter_callback() override {

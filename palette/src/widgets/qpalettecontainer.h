@@ -24,11 +24,11 @@ static void centerWidgets(QWidget *widget, QWidget *host = nullptr) {
 class QPaletteContainer : public QMainWindow {
     QStackedWidget *inner_stacked_;
 
-    class ShadowObserver : public ConfigObserver {
+    class ShadowObserver : public JSONObserver {
     public:
-        ShadowObserver(QPaletteContainer *parent) : ConfigObserver(parent, "theme/styles.json") {}
+        ShadowObserver(QPaletteContainer *parent) : JSONObserver(parent, "theme/styles.json") {}
 
-        void onConfigUpdated(QJsonObject &config) override {
+        void onUpdated(QJsonObject &config) override {
             int kShadow = config["shadow"].toInt();
 
             if (kShadow == 0) {

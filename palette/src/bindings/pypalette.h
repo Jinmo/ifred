@@ -47,19 +47,14 @@ public:
 	}
 
 	void populateList() {
-		auto source = inner_->entries().source();
-
-		source->setRowCount(static_cast<int>(entries_.size()));
-		source->setColumnCount(3);
+		auto &source = inner_->entries();
 
 		int i = 0;
 		for (auto item : entries_) {
 			auto id = py_to_qstring(item["id"]);
 			py::function handler = item["handler"];
 
-			source->setData(source->index(i, 0), py_to_qstring(item["description"]));
-			source->setData(source->index(i, 1), py_to_qstring(item["shortcut"]));
-			source->setData(source->index(i, 2), id);
+			Action(id, py_to_qstring(item["description"]), py_to_qstring(item["shortcut"]));
 
 			action_map_[id] = PaletteItem(item["id"].str(), handler, item["description"].str(), item["shortcut"].str());
 			i += 1;

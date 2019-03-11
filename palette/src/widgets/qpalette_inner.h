@@ -36,12 +36,12 @@ protected:
 	QSearch* searchbox_;
 
 	CSSObserver* css_observer_;
-	class StylesObserver : public ConfigObserver {
+	class StylesObserver : public JSONObserver {
 	public:
-		StylesObserver(QPaletteInner* parent) : ConfigObserver(parent, "theme/styles.json") {}
+		StylesObserver(QPaletteInner* parent) : JSONObserver(parent, "theme/styles.json") {}
 
-		void onConfigUpdated(QJsonObject& config) override {
-			auto width = config["width"].toInt();
+		void onUpdated(QJsonObject& data) override {
+			auto width = data["width"].toInt();
 			auto parentWidget = static_cast<QPaletteInner *>(parent());
 
 			if (!width) width = 750;

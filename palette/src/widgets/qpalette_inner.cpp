@@ -6,7 +6,7 @@ QPaletteInner::QPaletteInner(QWidget* parent, QObject*)
 	styles_observer_(new StylesObserver(this)),
 	layout_(new QVBoxLayout(this)),
 	entries_(new QItems(this)),
-	searchbox_(new QSearch(this, entries_->model())) {
+	searchbox_(new QSearch(this, entries_)) {
 
 	// Add widgets
 	layout_->addWidget(searchbox_);

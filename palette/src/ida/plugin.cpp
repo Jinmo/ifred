@@ -8,16 +8,7 @@
 
 QHash<QString, QDate> g_last_used;
 
-struct Action {
-	QString id, tooltip, shortcut;
-
-	Action(qstring id_, qstring tooltip_, qstring shortcut_)
-		: id(QString(id_.c_str())),
-		tooltip(QString(tooltip_.c_str())),
-		shortcut(QString(shortcut_.c_str())) {}
-};
-
-std::vector<Action*> cached_actions;
+QVector<Action> cached_actions;
 
 QVector<QRegularExpression> getBlacklist() {
 	auto blacklist = config("config.json")["blacklist"].toArray();
@@ -30,7 +21,7 @@ QVector<QRegularExpression> getBlacklist() {
 	return blacklist_converted;
 }
 
-std::vector<Action*>* getActions() {
+const QVector<Action>* getActions() {
 	qstrvec_t id_list;
 	get_registered_actions(&id_list);
 
@@ -39,7 +30,7 @@ std::vector<Action*>* getActions() {
 	if (cached_actions.size() == id_list.size() + names_count)
 		return &cached_actions;
 
-	auto * result = new std::vector<Action*>();
+	auto * result = new QVector<Action>();
 	auto blacklist = getBlacklist();
 
 	result->reserve(id_list.size());
@@ -67,11 +58,15 @@ std::vector<Action*>* getActions() {
 
 		get_action_tooltip(&tooltip, item.c_str());
 		get_action_shortcut(&shortcut, item.c_str());
-		result->push_back(new Action(item, tooltip, shortcut));
+		result->push_back(Action(
+			QString(item.c_str()), QString(tooltip.c_str()), QString(shortcut.c_str())));
 	}
 
 	for (size_t i = 0; i < names_count; i++) {
-		result->push_back(new Action(qstring(("@ " + QString::number(get_nlist_ea(i), 16).toUpper()).toStdString().c_str()), qstring("Name: ") + get_nlist_name(i), ""));
+		result->push_back(Action(
+			"@ " + QString::number(get_nlist_ea(i), 16).toUpper(),
+			QString("Name: ") + get_nlist_name(i),
+			QString()));
 	}
 
 	cached_actions = *result;
@@ -104,19 +99,7 @@ public:
 	}
 
 	void populateList() {
-		auto out = getActions();
-		auto* source = entries_->source();
-
-		source->setRowCount(static_cast<int>(out->size()));
-		source->setColumnCount(3);
-
-		int i = 0;
-		for (auto& item : *out) {
-			source->setData(source->index(i, 0), item->tooltip);
-			source->setData(source->index(i, 1), item->shortcut);
-			source->setData(source->index(i, 2), item->id);
-			i += 1;
-		}
+		entries().model()->populate(*getActions());
 	}
 };
 
@@ -215,10 +198,11 @@ void idaapi term(void) {
 
 const QString pluginPath(const char* filename) {
 	static QString g_plugin_path;
-	if (g_plugin_path.size())
-		return g_plugin_path + filename;
-
-	qDebug() << QDir::homePath();
+	if (g_plugin_path.size()) {
+		QString r = g_plugin_path + filename;
+		qDebug() << r;
+		return r;
+	}
 
 	g_plugin_path = (QString(get_user_idadir()).replace("\\", "/") + QString("/plugins/palette/"));
 	QDir plugin_dir(g_plugin_path);

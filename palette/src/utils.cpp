@@ -22,6 +22,9 @@ QString loadFile(const char *filename, bool force_update, bool &updated) {
 		return QString();
 	}
 
+    if (!file.open(QIODevice::ReadOnly))
+        return QString();
+
     auto content = QString::fromUtf8(file.readAll());
     last_loaded[absolutePath] = content;
 	last_load_timer = timestamp;

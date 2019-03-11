@@ -26,7 +26,7 @@ bool MyFilter::lessThan(const QModelIndex &left, const QModelIndex &right) const
 #define FUZZY 0
 
 #if !FUZZY
-    return QSortFilterProxyModel::lessThan(left, right);
+    return false;
 #else
     const QString &filterText = g_keyword;
     const QString &leftData = sourceModel()->data(left).toString(),

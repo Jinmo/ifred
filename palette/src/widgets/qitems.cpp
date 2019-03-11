@@ -2,13 +2,10 @@
 
 QItems::QItems(QWidget *parent)
         : QListView(parent),
-          filter_(new MyFilter(this)),
-          source_(new QStandardItemModel(this)),
+          model_(new MyFilter(this)),
           item_delegate_(new QItem(this)) {
-    filter_->setDynamicSortFilter(false);
-    filter_->setSourceModel(source_);
 
-    setModel(filter_);
+    setModel(model_);
     setItemDelegate(item_delegate_);
     setLineWidth(0);
 
