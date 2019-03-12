@@ -15,57 +15,36 @@ static QString py_to_qstring(py::object obj) {
 	return QString(resStr.c_str());
 }
 
-class PaletteItem {
-	std::string description_, id_, shortcut_;
-	py::function handler_;
-
-public:
-	PaletteItem() {}
-	PaletteItem(std::string id, py::object handler, std::string description, std::string shortcut)
-		: description_(description), id_(id), shortcut_(shortcut), handler_(handler) {
-	}
-
-	py::function handler() { return handler_; }
-	void set_handler(py::object& new_handler) { handler_ = new_handler; }
-
-	std::string id() { return id_; }
-};
-
 class PyPalette {
 	py::list entries_;
 	QPyPaletteInner* inner_;
-	QHash<QString, PaletteItem> action_map_;
+	QHash<QString, py::object> action_map_;
 public:
-	PyPalette(py::list& entries) : entries_(entries), inner_(new QPyPaletteInner(this)) {
-		try {
-			populateList();
-		}
-		catch (pybind11::key_error) {
-			delete inner_;
-			inner_ = NULL;
-		}
+	PyPalette(py::list& entries)
+		: entries_(entries), inner_(new QPyPaletteInner(this, populateList(entries))) {
 	}
 
-	void populateList() {
-		auto &source = inner_->entries();
-
+	QVector<Action> populateList(py::list entries) const {
+		QVector<Action> result;
 		int i = 0;
+
+		result.reserve(entries.size());
 		for (auto item : entries_) {
 			auto id = py_to_qstring(item["id"]);
-			py::function handler = item["handler"];
+			py::object handler = item["handler"];
 
-			Action(id, py_to_qstring(item["description"]), py_to_qstring(item["shortcut"]));
+			result.push_back(Action(id, py_to_qstring(item["description"]), py_to_qstring(item["shortcut"])));
 
-			action_map_[id] = PaletteItem(item["id"].str(), handler, item["description"].str(), item["shortcut"].str());
+			//action_map_[id] = handler;
 			i += 1;
 		}
+
+		return result;
 	}
 
-	EnterResult trigger_action(QString& id) {
-		py::object handler = action_map_[id].handler();
-		qDebug() << QString(py::cast<std::string>(handler).c_str());
-		return true;
-		py::object& res = handler(action_map_[id]);
+	EnterResult trigger_action(Action &action) {
+		py::object handler = action_map_[action.id()]();
+		py::object& res = handler(action);
 
 		if (py::isinstance<EnterResult>(res)) {
 			EnterResult enter_result = py::cast<EnterResult>(res);

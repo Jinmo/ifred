@@ -64,21 +64,17 @@ QString& highlight(QString& keyword, QString& tooltip) {
 
 void QItem::paint(QPainter * painter,
 	const QStyleOptionViewItem & option, const QModelIndex & index) const {
-	auto model = index.model();
 	QTextDocument doc;
+
+	auto model = index.model();
+	Action action = model->data(model->index(index.row(), 0)).value<Action>();
+
 	doc.setDefaultStyleSheet(style_sheet_);
 
-	Action action = model->data(model->index(index.row(), 0)).value<Action>();
-	QString keyword = g_keyword;
-
-	auto html = highlight(keyword, action.description()) + "<span>" + action.id() + "</span>";
-
+	auto html = highlight(g_keyword, action.description()) + "<span>" + action.id() + "</span>";
 	doc.setHtml(html);
+
 	painter->save();
-
-	QStyleOptionViewItem newOption = option;
-	newOption.state = option.state & (~QStyle::State_HasFocus);
-
 	painter->translate(option.rect.left(), option.rect.top());
 
 	if (option.state & (QStyle::State_HasFocus | QStyle::State_Selected)) {

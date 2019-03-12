@@ -1,11 +1,11 @@
 #include "qpalette_inner.h"
 
-QPaletteInner::QPaletteInner(QWidget* parent, QObject*)
+QPaletteInner::QPaletteInner(QWidget* parent, const QVector<Action> &items)
 	: QFrame(parent),
 	css_observer_(new CSSObserver(this, "theme/window.css")),
 	styles_observer_(new StylesObserver(this)),
 	layout_(new QVBoxLayout(this)),
-	entries_(new QItems(this)),
+	entries_(new QItems(this, std::move(items))),
 	searchbox_(new QSearch(this, entries_)) {
 
 	// Add widgets
@@ -20,6 +20,7 @@ QPaletteInner::QPaletteInner(QWidget* parent, QObject*)
 	connect(searchbox_, &QSearch::textChanged, this, &QPaletteInner::onTextChanged);
 
 	searchbox_->installEventFilter(this);
+	entries_->installEventFilter(this);
 }
 
 void QPaletteInner::processEnterResult(EnterResult res) {

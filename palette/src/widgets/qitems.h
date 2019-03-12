@@ -15,7 +15,7 @@ class QItems : public QListView {
 public:
 	MyFilter* model() { return model_; }
 
-	explicit QItems(QWidget* parent);
+	explicit QItems(QWidget* parent, const QVector<Action> &items);
 };
 
 #endif // QITEMS_H

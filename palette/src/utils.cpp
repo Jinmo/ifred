@@ -1,6 +1,8 @@
 #include "utils.h"
 #include <time.h>
 
+#include <widgets/palette_manager.h>
+
 bool static_updated;
 
 QString loadFile(const char* filename, bool force_update, bool& updated) {
@@ -36,7 +38,7 @@ QString loadFile(const char* filename, bool force_update, bool& updated) {
 
 QHash<QString, QJsonDocument> cached_json;
 
-QJsonObject config(const char* filename, bool force_update) {
+QJsonObject json(const char* filename, bool force_update) {
 	bool updated;
 	auto& content_str = loadFile(filename, force_update, updated);
 

@@ -33,7 +33,8 @@ class QPaletteContainer : public QMainWindow {
 			int kShadow = config["shadow"].toInt();
 
 			if (kShadow == 0) {
-				qDebug() << "corruption";
+				qDebug() << "config not valid: shadow == 0";
+				kShadow = 20;
 			}
 
 			auto* effect = new QGraphicsDropShadowEffect();

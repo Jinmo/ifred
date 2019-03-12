@@ -35,7 +35,7 @@ public:
 	};
 
 	QItem(QWidget* parent) : QStyledItemDelegate(parent) {
-		updateConfig(config("theme/styles.json"));
+		updateConfig(json("theme/styles.json"));
 	}
 
 	void setCSS(QString& css) {

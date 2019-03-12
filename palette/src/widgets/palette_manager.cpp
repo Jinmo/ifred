@@ -2,6 +2,7 @@
 #include "qpalettecontainer.h"
 
 QPaletteContainer* g_current_widget;
+pathhandler_t pluginPath;
 
 void show_palette(QPaletteInner* inner) {
 	if (!g_current_widget)
@@ -18,4 +19,8 @@ void cleanup_palettes() {
 		delete g_current_widget;
 		g_current_widget = NULL;
 	}
+}
+
+void set_path_handler(pathhandler_t handler) {
+	pluginPath = handler;
 }

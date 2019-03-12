@@ -19,34 +19,40 @@ QString get_random_str() {
 	return result;
 }
 
+QVector<Action> testItems() {
+	QVector<Action> action_list;
+
+	action_list.reserve(COUNT);
+
+	for (int i = 0; i < COUNT; i++) {
+		auto id = get_random_str();
+		action_list.push_back(Action(id, get_random_str(), ""));
+	}
+
+	return action_list;
+}
+
 class TestPalette : public QPaletteInner {
 public:
-	TestPalette() : QPaletteInner(nullptr, nullptr) {
-		populateList();
-	}
-	void populateList() {
-		QVector<Action> action_list;
-
-		action_list.reserve(COUNT);
-
-		for (int i = 0; i < COUNT; i++) {
-			auto id = get_random_str();
-			action_list.push_back(Action(id, get_random_str(), ""));
-		}
-
-		qDebug() << action_list.size();
-
-		entries().model()->populate(action_list);
+	TestPalette() : QPaletteInner(nullptr, std::move(testItems())) {
 	}
 
-	EnterResult enter_callback() override {
-		return true;
+	EnterResult enter_callback(Action &action) override {
+		qDebug() << action.id() << action.description() << action.shortcut();
+		return false;
 	}
 };
+
+const QString TestPluginPath(const char* name) {
+	return QDir::homePath() + "/take/" + name;
+}
 
 int main(int argc, char* argv[])
 {
 	QApplication app(argc, argv);
+
+	set_path_handler(TestPluginPath);
+
 	auto palette = new TestPalette();
 	show_palette(palette);
 	return app.exec();

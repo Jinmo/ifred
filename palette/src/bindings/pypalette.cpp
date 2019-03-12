@@ -9,9 +9,10 @@ PYBIND11_MODULE(__palette__, m) {
 	py::class_<PyPalette>(m, "Palette")
 		.def(py::init<py::list&>());
 
-	py::class_<PaletteItem>(m, "PaletteItem")
-		.def_property_readonly("id", &PaletteItem::id)
-		.def_property("handler", &PaletteItem::handler, &PaletteItem::set_handler);
+	py::class_<Action>(m, "Action")
+		.def_property_readonly("id", &Action::id)
+		.def_property_readonly("shortcut", &Action::shortcut)
+		.def_property_readonly("description", &Action::description);
 
 	m.def("show_palette", [](PyPalette & palette) {
 		show_palette(palette.inner());

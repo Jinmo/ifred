@@ -11,7 +11,7 @@ QHash<QString, QDate> g_last_used;
 QVector<Action> cached_actions;
 
 QVector<QRegularExpression> getBlacklist() {
-	auto blacklist = config("config.json")["blacklist"].toArray();
+	auto blacklist = json("config.json")["blacklist"].toArray();
 	QVector<QRegularExpression> blacklist_converted;
 
 	for (auto& i : blacklist) {
@@ -21,19 +21,19 @@ QVector<QRegularExpression> getBlacklist() {
 	return blacklist_converted;
 }
 
-const QVector<Action>* getActions() {
+const QVector<Action> getActions() {
 	qstrvec_t id_list;
 	get_registered_actions(&id_list);
 
 	size_t names_count = get_nlist_size();
 
 	if (cached_actions.size() == id_list.size() + names_count)
-		return &cached_actions;
+		return std::move(QVector<Action>(cached_actions));
 
-	auto * result = new QVector<Action>();
+	QVector<Action> result;
 	auto blacklist = getBlacklist();
 
-	result->reserve(id_list.size());
+	result.reserve(id_list.size());
 
 	// Variables used in the loop below
 	qstring tooltip, shortcut;
@@ -58,38 +58,36 @@ const QVector<Action>* getActions() {
 
 		get_action_tooltip(&tooltip, item.c_str());
 		get_action_shortcut(&shortcut, item.c_str());
-		result->push_back(Action(
+		result.push_back(Action(
 			QString(item.c_str()), QString(tooltip.c_str()), QString(shortcut.c_str())));
 	}
 
 	for (size_t i = 0; i < names_count; i++) {
-		result->push_back(Action(
+		result.push_back(Action(
 			"@ " + QString::number(get_nlist_ea(i), 16).toUpper(),
 			QString("Name: ") + get_nlist_name(i),
 			QString()));
 	}
 
-	cached_actions = *result;
+	cached_actions = result;
 
-	return result;
+	return std::move(result);
 }
 
 class QIDACommandPaletteInner : public QPaletteInner {
 public:
-	QIDACommandPaletteInner(QWidget* parent, QObject* prevItem)
-		: QPaletteInner(parent, prevItem) {
-		populateList();
+	QIDACommandPaletteInner(QWidget* parent, const QVector<Action> &items)
+		: QPaletteInner(parent, std::move(items)) {
 	}
 
-	EnterResult enter_callback() override {
+	EnterResult enter_callback(Action &action) override {
 		processEnterResult(true);
 
 		auto* model = entries_->model();
-		auto id = model->data(model->index(entries_->currentIndex().row(), 2)).toString();
+		auto id = action.id();
 		g_last_used[id] = QDate::currentDate();
 		if (id.startsWith("@ ")) {
 			auto address = id.mid(2).toUInt(nullptr, 16);
-			qDebug() << address << id.mid(2);
 			jumpto(address);
 		}
 		else
@@ -97,15 +95,11 @@ public:
 		// already hidden
 		return false;
 	}
-
-	void populateList() {
-		entries().model()->populate(*getActions());
-	}
 };
 
 class enter_handler : public action_handler_t {
 	int idaapi activate(action_activation_ctx_t*) override {
-		show_palette(new QIDACommandPaletteInner(nullptr, nullptr));
+		show_palette(new QIDACommandPaletteInner(nullptr, std::move(getActions())));
 
 		return 1;
 	}
@@ -167,6 +161,21 @@ ssize_t idaapi load_python(void* user_data, int notification_code, va_list va) {
 	return 0;
 }
 
+const QString IdaPluginPath(const char* filename) {
+	static QString g_plugin_path;
+	if (g_plugin_path.size()) {
+		QString r = g_plugin_path + filename;
+		qDebug() << r;
+		return r;
+	}
+
+	g_plugin_path = (QString(get_user_idadir()).replace("\\", "/") + QString("/plugins/palette/"));
+	QDir plugin_dir(g_plugin_path);
+	plugin_dir.mkpath(".");
+
+	return g_plugin_path + filename;
+}
+
 //--------------------------------------------------------------------------
 int idaapi init(void) {
 	// the plugin works only with idaq
@@ -174,10 +183,14 @@ int idaapi init(void) {
 	if (r == PLUGIN_KEEP) {
 		msg("ifred loading...\n");
 
+		// init libpalette
 		if (!Py_IsInitialized())
 			hook_to_notification_point(HT_UI, load_python, NULL);
 		else
 			init_python_module();
+
+		set_path_handler(IdaPluginPath);
+		// init libpalette complete
 
 		getActions();
 
@@ -194,21 +207,6 @@ int idaapi init(void) {
 //--------------------------------------------------------------------------
 void idaapi term(void) {
 	cleanup_palettes();
-}
-
-const QString pluginPath(const char* filename) {
-	static QString g_plugin_path;
-	if (g_plugin_path.size()) {
-		QString r = g_plugin_path + filename;
-		qDebug() << r;
-		return r;
-	}
-
-	g_plugin_path = (QString(get_user_idadir()).replace("\\", "/") + QString("/plugins/palette/"));
-	QDir plugin_dir(g_plugin_path);
-	plugin_dir.mkpath(".");
-
-	return g_plugin_path + filename;
 }
 
 //--------------------------------------------------------------------------

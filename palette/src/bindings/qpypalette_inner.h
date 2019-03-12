@@ -7,8 +7,8 @@ class PyPalette;
 class QPyPaletteInner : public QPaletteInner {
 	PyPalette* python_side_;
 public:
-	QPyPaletteInner(PyPalette* python_side) : QPaletteInner(nullptr, nullptr), python_side_(python_side) {}
+	QPyPaletteInner(PyPalette* python_side, const QVector<Action> &items) : QPaletteInner(nullptr, std::move(items)), python_side_(python_side) {}
 
-	EnterResult enter_callback() override;
+	EnterResult enter_callback(Action &action) override;
 };
 

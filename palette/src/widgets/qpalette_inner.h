@@ -55,7 +55,7 @@ public:
 
 	QItems& entries() { return *entries_; }
 
-	QPaletteInner(QWidget* parent, QObject*);
+	QPaletteInner(QWidget* parent, const QVector<Action> &items);
 
 	void processEnterResult(EnterResult res);
 
@@ -66,7 +66,8 @@ public:
 	}
 
 	void onEnterPressed() {
-		auto res = enter_callback();
+		auto action = entries().model()->data(entries().model()->index(entries_->currentIndex().row(), 0)).value<Action>();
+		auto res = enter_callback(action);
 		processEnterResult(res);
 	}
 
@@ -87,7 +88,7 @@ public:
 		return true;
 	}
 
-	virtual EnterResult enter_callback() = 0;
+	virtual EnterResult enter_callback(Action &action) = 0;
 
 	bool eventFilter(QObject * obj, QEvent * event) override {
 		switch (event->type()) {
@@ -104,6 +105,9 @@ public:
 				event->ignore();
 				onEnterPressed();
 				return true;
+			}
+			case Qt::Key_Escape: {
+				closeWindow();
 			}
 			default:
 				return QFrame::eventFilter(obj, event);
@@ -122,8 +126,12 @@ public:
 		if (e->key() != Qt::Key_Escape)
 			QFrame::keyPressEvent(e);
 		else {
-			if (window())
-				window()->close();
+			closeWindow();
 		}
+	}
+
+	void closeWindow() {
+		if (window())
+			window()->close();
 	}
 };

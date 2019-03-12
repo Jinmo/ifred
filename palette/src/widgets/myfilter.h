@@ -27,14 +27,18 @@ private:
 
 Q_DECLARE_METATYPE(Action);
 
-class MyFilter : public QStandardItemModel {
+class MyFilter : public QAbstractItemModel {
 	QRegularExpression expression_;
 	QString keyword_;
 
 	QVector<Action> items_;
+	QVector<int> shown_items_;
+	int shown_items_count_;
 
 public:
-	MyFilter(QWidget* parent) : QStandardItemModel(parent) {
+	MyFilter(QWidget* parent, const QVector<Action> &items)
+		: QAbstractItemModel(parent), items_(std::move(items)), shown_items_count_(0), shown_items_(items.size()) {
+		setFilter(QString());
 	}
 
 	bool filterAcceptsRow(int source_row) {
@@ -55,6 +59,8 @@ public:
 		keyword_ = keyword;
 
 		QStringList regexp_before_join;
+		
+		emit layoutAboutToBeChanged();
 
 		for (auto& x : keyword)
 			if (!x.isSpace())
@@ -63,22 +69,36 @@ public:
 		expression_ = QRegularExpression(regexp_before_join.join(".*"),
 			QRegularExpression::CaseInsensitiveOption);
 
-		setRowCount(items_.size());
+		// TODO: do chunk-wise item insertion, and sort using fuzzy match
 		for (long i = 0; i < items_.size(); i++) {
 			if (filterAcceptsRow(i)) {
-				setData(index(count++, 0), QVariant::fromValue(items_[i]));
+				shown_items_[count++] = i;
 			}
 		}
-		setRowCount(count);
+
+		shown_items_count_ = count;
+		emit layoutChanged();
 	}
 
-	void populate(const QVector<Action>& items) {
-		items_ = items;
-		qDebug() << items_.size();
+	QModelIndex index(int row, int column, const QModelIndex& parent = QModelIndex()) const override {
+		return createIndex(row, column);
+	};
 
-		setRowCount(items_.size());
-		setColumnCount(1);
-		setFilter(keyword_);
+	// we don't use this
+	QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override {
+		return QVariant::fromValue(items_[shown_items_[index.row()]]);
+	}
+
+	int	columnCount(const QModelIndex& parent = QModelIndex()) const override {
+		return 1;
+	}
+
+	QModelIndex	parent(const QModelIndex& index) const override {
+		return QModelIndex();
+	}
+
+	virtual int	rowCount(const QModelIndex& parent = QModelIndex()) const override {
+		return shown_items_count_;
 	}
 };
 
