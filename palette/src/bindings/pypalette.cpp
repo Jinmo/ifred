@@ -8,13 +8,16 @@ PYBIND11_MODULE(__palette__, m) {
 	m.doc() = R"()";
 
 	py::class_<PyPalette>(m, "Palette")
-		.def(py::init<std::vector<PyAction>&>());
+		.def(py::init<py::list>());
 
-	py::class_<PyAction>(m, "Action")
-		.def(py::init<std::string &, std::string &, std::string &, py::object &>(), py::arg("id"), py::arg("description"), py::arg("shortcut"), py::arg("handler"))
-		.def_property_readonly("id", &Action::id)
-		.def_property_readonly("shortcut", &Action::shortcut)
-		.def_property_readonly("description", &Action::description);
+	py::exec(R"(
+class Action:
+	def __init__(self, id, description, handler):
+		self.id = id
+		self.description = description
+		self.shortcut = ""
+		self.handler = handler
+)", m.attr("__dict__"));
 
 	m.def("show_palette", [](PyPalette & palette) {
 		show_palette(palette.inner());

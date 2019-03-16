@@ -13,5 +13,6 @@ void QSearch::onTextChanged() {
     QString &keyword = text();
 
     prepareHighlighter(keyword);
+	entries_->setCurrentIndex(entries_->model()->index(0));
     entries_->model()->setFilter(keyword);
 }

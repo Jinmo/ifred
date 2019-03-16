@@ -93,15 +93,13 @@ public:
 		}
 		else
 			process_ui_action(id.toStdString().c_str());
-		// already hidden
 		return false;
 	}
 };
 
-class enter_handler : public action_handler_t {
+class palette_handler : public action_handler_t {
 	int idaapi activate(action_activation_ctx_t*) override {
 		show_palette(new QIDACommandPaletteInner(nullptr, std::move(getActions())));
-
 		return 1;
 	}
 
@@ -112,7 +110,7 @@ class enter_handler : public action_handler_t {
 
 extern plugin_t PLUGIN;
 
-static enter_handler enter_handler_;
+static palette_handler enter_handler_;
 
 static action_desc_t enter_action = ACTION_DESC_LITERAL(
 	"ifred:enter",
@@ -169,7 +167,6 @@ const QString IdaPluginPath(const char* filename) {
 	static QString g_plugin_path;
 	if (g_plugin_path.size()) {
 		QString r = g_plugin_path + filename;
-		qDebug() << r;
 		return r;
 	}
 

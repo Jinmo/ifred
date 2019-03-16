@@ -19,6 +19,8 @@ QPaletteInner::QPaletteInner(QWidget* parent, const QVector<Action> &items)
 	connect(searchbox_, &QSearch::returnPressed, this, &QPaletteInner::onEnterPressed);
 	connect(searchbox_, &QSearch::textChanged, this, &QPaletteInner::onTextChanged);
 
+	connect(entries_, &QListView::clicked, this, &QPaletteInner::itemClicked);
+
 	searchbox_->installEventFilter(this);
 	entries_->installEventFilter(this);
 }

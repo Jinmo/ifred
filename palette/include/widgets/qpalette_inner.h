@@ -135,4 +135,11 @@ public:
 		if (window())
 			window()->close();
 	}
+
+	void itemClicked(const QModelIndex& index) {
+		auto model = entries().model();
+		auto action = model->data(index).value<Action>();
+
+		processEnterResult(enter_callback(action));
+	}
 };

@@ -5,49 +5,51 @@
 #include <string>
 
 #include <pybind11/pybind11.h>
+#include <pybind11/eval.h>
 #include <pybind11/stl.h>
 
 namespace py = pybind11;
 
 #include <bindings/qpypalette_inner.h>
 
-class PyAction : public Action {
-public:
-	PyAction() : Action() {}
-	PyAction(std::string &id, std::string &description, std::string &shortcut, py::object& handler)
-		: Action(QString::fromStdString(id), QString::fromStdString(description), QString::fromStdString(shortcut)),
-		handler_(py::reinterpret_borrow<py::object>(handler)) {}
-	py::object handler_;
-};
-
-static QString py_to_qstring(py::object obj) {
-	std::string resStr = py::str(obj);
-	return QString(resStr.c_str());
+static QString py_to_qstring(const std::string obj) {
+	return QString::fromStdString(obj);
 }
 
 class PyPalette {
 	QPyPaletteInner* inner_;
-	py::dict action_map_;
 public:
-	PyPalette(const std::vector<PyAction> entries)
-		: inner_(new QPyPaletteInner(this, std::move(populateList(std::move(entries))))) {
-	}
-
-	const QVector<Action>& populateList(const std::vector<PyAction>& entries) const {
+	PyPalette(py::list entries) {
 		QVector<Action> result;
 
 		result.reserve(entries.size());
-		for (auto& item : entries) {
-			action_map_[py::str(item.id().toStdString())] = py::reinterpret_borrow<py::object>(item.handler_);
-			result.push_back((Action)item);
+
+		for (int i = 0; i < entries.size(); i++) {
+			py::handle item = entries[i];
+			result.push_back(Action(
+				py_to_qstring(item.attr("id").cast<std::string>()),
+				py_to_qstring(item.attr("description").cast<std::string>()),
+				py_to_qstring(item.attr("shortcut").cast<std::string>())
+			));
 		}
 
-		return result;
+		py::object scope = py::module::import("__main__").attr("__dict__");
+
+		scope["__entries__"] = entries;
+
+		py::exec(
+			"__cur_palette__ = {l.id: l for l in __entries__}",
+			scope);
+
+		inner_ = (new QPyPaletteInner(this, std::move(result)));
 	}
 
-	EnterResult trigger_action(Action& action) {
-		py::object handler = action_map_[py::str(action.id().toStdString())];
-		py::object& res = handler(action);
+	EnterResult trigger_action(Action action) {
+		py::gil_scoped_acquire gil;
+		py::object action_map = py::module::import("__main__").attr("__cur_palette__");
+		auto actionpy = action_map[py::str(action.id().toStdString())];
+
+		auto res = actionpy.attr("handler")(actionpy);
 
 		if (py::isinstance<EnterResult>(res)) {
 			EnterResult enter_result = py::cast<EnterResult>(res);
