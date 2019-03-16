@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.1)
-set(IDA_ENABLE_QT_SUPPORT True)
+
+include("ida-cmake/cmake/QtIDA.cmake")
+# find_package(Qt5Widgets CONFIG REQUIRED)
+
+include("ida-cmake/cmake/IDA.cmake")
 
 # Some required settings
 set(PYTHON_EXECUTABLE "" CACHE PATH "Python executable (x64 if >= 7.0)")
@@ -18,7 +22,7 @@ set(sources src/widgets/myfilter.cpp
 )
 
 add_library(palette STATIC ${sources})
-target_link_libraries(palette PRIVATE Qt5::Widgets pybind11::module)
+target_link_libraries(palette PRIVATE Qt5::Core Qt5::Gui Qt5::Widgets pybind11::module)
 
 target_include_directories(palette
 	PUBLIC
@@ -28,3 +32,11 @@ target_include_directories(palette
 )
 
 GENERATE_EXPORT_HEADER(palette)
+
+# IDA plugins
+
+set(sources src/ida/plugin.cpp)
+
+add_ida_qt_plugin(ida_palette ${sources})
+target_link_libraries(ida_palette
+	PRIVATE Qt5::Core Qt5::Gui Qt5::Widgets palette pybind11::module)
