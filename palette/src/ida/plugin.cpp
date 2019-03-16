@@ -84,12 +84,11 @@ public:
 
 	EnterResult enter_callback(Action &action) override {
 		processEnterResult(true);
-
-		auto* model = entries_->model();
 		auto id = action.id();
+
 		g_last_used[id] = QDate::currentDate();
 		if (id.startsWith("@ ")) {
-			auto address = id.mid(2).toUInt(nullptr, 16);
+			auto address = id.mid(2).toULong(nullptr, 16);
 			jumpto(address);
 		}
 		else
