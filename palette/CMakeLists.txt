@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.1)
-include("ida-cmake/cmake/IDA.cmake")
+set(IDA_ENABLE_QT_SUPPORT True)
+
+# Some required settings
+set(PYTHON_EXECUTABLE "" CACHE PATH "Python executable (x64 if >= 7.0)")
+
 include(GenerateExportHeader)
 
 set(sources src/widgets/myfilter.cpp
@@ -13,18 +17,14 @@ set(sources src/widgets/myfilter.cpp
 			src/bindings/qpypalette_inner.cpp
 )
 
-set(sources_ida src/ida/plugin.cpp)
+add_library(palette STATIC ${sources})
+target_link_libraries(palette PRIVATE Qt5::Widgets pybind11::module)
 
-set(PYTHON_EXECUTABLE "" CACHE PATH "Python executable (x64 if >= 7.0)")
+target_include_directories(palette
+	PUBLIC
+		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+		${CMAKE_BINARY_DIR}/palette
+	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
 
-pybind11_add_module(palette STATIC ${sources})
-
-target_include_directories(palette PUBLIC src)
 GENERATE_EXPORT_HEADER(palette)
-
-set(IDA_SKIP_ADD_LIBRARY ON)
-pybind11_add_module(ida_palette SHARED ${sources_ida})
-add_ida_qt_plugin(ida_palette)
-target_link_libraries(ida_palette PUBLIC palette)
-
-# TODO: Add tests and install targets if needed.

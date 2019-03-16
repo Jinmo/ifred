@@ -5,27 +5,7 @@
 #include <QtGui>
 #include <QtWidgets>
 
-class Action {
-public:
-	Action() {}
-	Action(const Action& other) : id_(other.id_), description_(other.description_), shortcut_(other.shortcut_) {
-	}
-	~Action() {}
-
-	Action(const QString& id, const QString& description, const QString& shortcut)
-		: id_(id),
-		description_(description),
-		shortcut_(shortcut) {}
-
-	QString& id() { return id_; }
-	QString& description() { return description_; }
-	QString& shortcut() { return shortcut_; }
-
-private:
-	QString id_, description_, shortcut_;
-};
-
-Q_DECLARE_METATYPE(Action);
+#include <action.h>
 
 class MyFilter : public QAbstractItemModel {
 	QRegularExpression expression_;

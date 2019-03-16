@@ -1,4 +1,4 @@
-#include "qpalette_inner.h"
+#include <widgets/qpalette_inner.h>
 
 QPaletteInner::QPaletteInner(QWidget* parent, const QVector<Action> &items)
 	: QFrame(parent),

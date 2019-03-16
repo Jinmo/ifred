@@ -3,10 +3,10 @@
 
 #include <QtGui>
 #include <QtWidgets>
+
 #include <widgets/qitem.h>
 #include <widgets/myfilter.h>
-
-class MyFilter;
+#include <action.h>
 
 class QItems : public QListView {
 	MyFilter* model_;

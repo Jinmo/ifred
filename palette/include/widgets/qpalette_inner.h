@@ -5,9 +5,10 @@
 
 #include <widgets/qitems.h>
 #include <widgets/qsearch.h>
+#include <action.h>
 
 #ifndef IMPORTING_PALETTE
-#include <palette_export.h>
+#include "palette_export.h"
 #else
 #define PALETTE_EXPORT
 #define PALETTE_IMPORT

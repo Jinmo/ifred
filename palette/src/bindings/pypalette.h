@@ -5,10 +5,20 @@
 #include <string>
 
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 namespace py = pybind11;
 
 #include <bindings/qpypalette_inner.h>
+
+class PyAction : public Action {
+public:
+	PyAction() : Action() {}
+	PyAction(std::string &id, std::string &description, std::string &shortcut, py::object& handler)
+		: Action(QString::fromStdString(id), QString::fromStdString(description), QString::fromStdString(shortcut)),
+		handler_(py::reinterpret_borrow<py::object>(handler)) {}
+	py::object handler_;
+};
 
 static QString py_to_qstring(py::object obj) {
 	std::string resStr = py::str(obj);
@@ -16,34 +26,27 @@ static QString py_to_qstring(py::object obj) {
 }
 
 class PyPalette {
-	py::list entries_;
 	QPyPaletteInner* inner_;
-	QHash<QString, py::object> action_map_;
+	py::dict action_map_;
 public:
-	PyPalette(py::list& entries)
-		: entries_(entries), inner_(new QPyPaletteInner(this, populateList(entries))) {
+	PyPalette(const std::vector<PyAction> entries)
+		: inner_(new QPyPaletteInner(this, std::move(populateList(std::move(entries))))) {
 	}
 
-	QVector<Action> populateList(py::list entries) const {
+	const QVector<Action>& populateList(const std::vector<PyAction>& entries) const {
 		QVector<Action> result;
-		int i = 0;
 
 		result.reserve(entries.size());
-		for (auto item : entries_) {
-			auto id = py_to_qstring(item["id"]);
-			py::object handler = item["handler"];
-
-			result.push_back(Action(id, py_to_qstring(item["description"]), py_to_qstring(item["shortcut"])));
-
-			//action_map_[id] = handler;
-			i += 1;
+		for (auto& item : entries) {
+			action_map_[py::str(item.id().toStdString())] = py::reinterpret_borrow<py::object>(item.handler_);
+			result.push_back((Action)item);
 		}
 
 		return result;
 	}
 
-	EnterResult trigger_action(Action &action) {
-		py::object handler = action_map_[action.id()]();
+	EnterResult trigger_action(Action& action) {
+		py::object handler = action_map_[py::str(action.id().toStdString())];
 		py::object& res = handler(action);
 
 		if (py::isinstance<EnterResult>(res)) {

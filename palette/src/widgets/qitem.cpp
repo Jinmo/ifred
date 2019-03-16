@@ -1,10 +1,10 @@
-#include "qitem.h"
-#include "myfilter.h"
+#include <widgets/qitem.h>
+#include <widgets/myfilter.h>
 
 QCache<QPair<QString, QString>, QString> hlCache;
 extern QString g_keyword;
 
-QString& highlight(QString& keyword, QString& tooltip) {
+QString& highlight(QString& keyword, const QString& tooltip) {
 	static QString em_("<em>"), emEnd_("</em>");
 	auto cache_key = QPair<QString, QString>(keyword, tooltip);
 

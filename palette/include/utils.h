@@ -5,7 +5,7 @@
 
 #include <QFileSystemWatcher>
 
-extern bool static_updated;
+static bool static_updated;
 
 QJsonObject json(const char* filename, bool force_update = false);
 

@@ -1,4 +1,4 @@
-#include "qitems.h"
+#include <widgets/qitems.h>
 
 QItems::QItems(QWidget* parent, const QVector<Action> &items)
 	: QListView(parent),

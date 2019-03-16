@@ -3,8 +3,8 @@
 #include <QWidget>
 #include <QRect>
 
-#include "qpalette_inner.h"
-#include "utils.h"
+#include <widgets/qpalette_inner.h>
+#include <utils.h>
 
 static void centerWidgets(QWidget* widget, QWidget* host = nullptr) {
 	if (!host)

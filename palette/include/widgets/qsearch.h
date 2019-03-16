@@ -20,10 +20,6 @@ public:
 	}
 
 	void onTextChanged();
-
-	void keyPressEvent(QKeyEvent* event) override {
-		QLineEdit::keyPressEvent(event);
-	}
 };
 
 #endif // QSEARCH_H

@@ -3,11 +3,8 @@
 
 #include <widgets/palette_manager.h>
 
-bool static_updated;
-
 QString loadFile(const char* filename, bool force_update, bool& updated) {
 	static QHash<QString, QString> last_loaded;
-	static time_t last_load_timer;
 
 	auto absolutePath = pluginPath(filename);
 	QFile file(absolutePath);
@@ -29,7 +26,6 @@ QString loadFile(const char* filename, bool force_update, bool& updated) {
 
 	auto content = QString::fromUtf8(file.readAll());
 	last_loaded[absolutePath] = content;
-	last_load_timer = timestamp;
 
 	updated = true;
 

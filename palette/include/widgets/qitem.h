@@ -4,7 +4,7 @@
 #include <QtGui>
 #include <QtWidgets>
 
-#include "utils.h"
+#include <utils.h>
 
 class QItem : public QStyledItemDelegate {
 public:

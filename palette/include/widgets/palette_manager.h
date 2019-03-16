@@ -1,7 +1,9 @@
 #pragma once
 
-#include "qpalette_inner.h"
-#include "utils.h"
+#include <utils.h>
+#include <palette_export.h>
+
+class QPaletteInner;
 
 void PALETTE_EXPORT show_palette(QPaletteInner* inner);
 void PALETTE_EXPORT cleanup_palettes();

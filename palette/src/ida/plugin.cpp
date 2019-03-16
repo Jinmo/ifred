@@ -1,4 +1,5 @@
 #include "plugin.h"
+#include <pybind11/pybind11.h>
 
 #include <QtGui>
 #include <QtWidgets>
@@ -142,19 +143,15 @@ char wanted_name[] = "ifred";
 
 void init_python_module();
 
-#include <Python.h>
-
 ssize_t idaapi load_python(void* user_data, int notification_code, va_list va) {
 	auto info = va_arg(va, plugin_info_t *);
 
 	if (notification_code == ui_plugin_loaded && !strcmp(info->org_name, "IDAPython")) {
-		PyGILState_STATE state;
+		{
+			pybind11::gil_scoped_acquire gil;
+			init_python_module();
+		}
 
-		state = PyGILState_Ensure();
-
-		init_python_module();
-
-		PyGILState_Release(state);
 		unhook_from_notification_point(HT_UI, load_python, NULL);
 	}
 

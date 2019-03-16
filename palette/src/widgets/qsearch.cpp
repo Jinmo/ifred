@@ -1,4 +1,6 @@
-#include "qsearch.h"
+#include <widgets/myfilter.h>
+
+#include "widgets/qsearch.h"
 #include "common_defs.h"
 
 QString g_keyword;

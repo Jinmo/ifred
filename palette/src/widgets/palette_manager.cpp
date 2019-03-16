@@ -1,5 +1,5 @@
-#include "palette_manager.h"
-#include "qpalettecontainer.h"
+#include <widgets/palette_manager.h>
+#include <widgets/qpalettecontainer.h>
 
 QPaletteContainer* g_current_widget;
 pathhandler_t pluginPath;
