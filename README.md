@@ -1,15 +1,29 @@
-## IDA command palette & further
+# IDA command palette & further
 
-### How to build
+[![Build status](https://ci.appveyor.com/api/projects/status/64ye84uag1v9rpn6?svg=true)](https://ci.appveyor.com/project/Jinmo/ifred)
 
-Currently tested on windows only, but maybe working with other OSes too.
+## How to build
 
-```shell
-git clone --recursive https://github.com/Jinmo/ifred.git
-cd ifred
+Currently tested on Windows. Install Qt 5.6.3 and IDA SDK, and follow steps in .appveyor.yml.
 
-# you can use CMakeSettings.json for Visual Studio
-# or wrapper script
-ida-cmake/build.py -i <ida-sdk-path> -t 6.95 \
-    --idaq-path "/Applications/IDA Pro 6.95.app/Contents/MacOS/"
+You can download [prebuilt plugins](https://ci.appveyor.com/project/Jinmo/ifred/build/artifacts) from appveyor.
+
+## Python API
+
+You can make a custom palette in IDAPython.
+
+```py
+from __palette__ import show_palette, Palette, Action
+import random, string
+
+myhandler = lambda item: sys.stdout.write('You selected: %s\n' % item.description)
+random_str = lambda: "".join(random.choice(string.lowercase) for i in range(20))
+
+entries = [Action(description=random_str(),
+    handler=myhandler,
+    id='action1') for i in range(20)]
+
+show_palette(Palette(entries))
 ```
+
+Currently cleaning up C++ API.
