@@ -23,6 +23,7 @@ set(sources src/widgets/myfilter.cpp
 
 add_library(palette STATIC ${sources})
 target_link_libraries(palette PRIVATE Qt5::Core Qt5::Gui Qt5::Widgets pybind11::module)
+target_compile_definitions(palette PUBLIC "QT_NAMESPACE=QT")
 
 target_include_directories(palette
 	PUBLIC
