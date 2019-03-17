@@ -9,16 +9,18 @@ QScrollBar:vertical * {
     background-color: #000;
 }
 
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: rgb(245,246,246);
+}
+
 QScrollBar:vertical {
     border: none;
-    background: none;
-    background-color: #000;
     width: 12px;
     border-radius: 6px;
 }
 
 QScrollBar::handle:vertical {
-    background: rgba(255,255,255,0.3);
+    background: rgb(219,220,221);
     min-height: 20px;
     border-radius: 6px;
 }

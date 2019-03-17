@@ -30,3 +30,11 @@ show_palette(Palette(entries))
 ```
 
 Currently cleaning up C++ API.
+
+## Changing theme
+
+You can copy css, json files from `palette/res/theme/<name>/*` to `%APPDATA%/Hex-rays/IDA Pro/plugins/palette/theme/`, like the existing css, json files.
+
+ayu white:
+
+![screenshot](screenshots/2.png)
