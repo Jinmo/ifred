@@ -5,14 +5,14 @@
 
 QString g_keyword;
 
-void prepareHighlighter(QString &str) {
+void prepareHighlighter(const QString& str) {
     g_keyword = str;
 }
 
 void QSearch::onTextChanged() {
-    QString &keyword = text();
+    QString& keyword = text();
 
     prepareHighlighter(keyword);
-	entries_->setCurrentIndex(entries_->model()->index(0));
+    entries_->setCurrentIndex(entries_->model()->index(0));
     entries_->model()->setFilter(keyword);
 }

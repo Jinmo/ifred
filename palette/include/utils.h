@@ -17,21 +17,21 @@ extern pathhandler_t pluginPath;
 
 class JSONObserver : public QFileSystemWatcher {
 private:
-	const char* filename_;
+    const char* filename_;
 public:
-	JSONObserver(QWidget* parent, const char* filename = "settings.json")
-		: QFileSystemWatcher(parent), filename_(filename) {
-		addPath(pluginPath(filename));
-	}
+    JSONObserver(QWidget* parent, const char* filename = "settings.json")
+        : QFileSystemWatcher(parent), filename_(filename) {
+        addPath(pluginPath(filename));
+    }
 
-	void updated() {
-		onUpdated(json(filename_, true));
-	}
+    void updated() {
+        onUpdated(json(filename_, true));
+    }
 
-	void activate() {
-		connect(this, &QFileSystemWatcher::fileChanged, this, &JSONObserver::updated);
-		updated();
-	}
+    void activate() {
+        connect(this, &QFileSystemWatcher::fileChanged, this, &JSONObserver::updated);
+        updated();
+    }
 
-	virtual void onUpdated(const QJsonObject& config) = 0;
+    virtual void onUpdated(const QJsonObject& config) = 0;
 };
