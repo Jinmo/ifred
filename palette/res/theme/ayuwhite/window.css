@@ -1,0 +1,44 @@
+* {
+	font-family: Segoe UI;
+	font-size: 15px;
+	background: #fff;
+	border-radius: 6px;
+}
+
+QScrollBar:vertical * {
+    background-color: #000;
+}
+
+QScrollBar:vertical {
+    border: none;
+    background: none;
+    background-color: #000;
+    width: 12px;
+    border-radius: 6px;
+}
+
+QScrollBar::handle:vertical {
+    background: rgba(255,255,255,0.3);
+    min-height: 20px;
+    border-radius: 6px;
+}
+
+QScrollBar::add-line:vertical {
+    width: 0;
+    height: 0;
+    subcontrol-position: bottom;
+    subcontrol-origin: margin;
+}
+
+QScrollBar::sub-line:vertical {
+    width: 0;
+    height: 0;
+    subcontrol-position: top;
+    subcontrol-origin: margin;
+}
+
+QListView {
+	border: none;
+	min-height: 300px;
+	max-height: 300px;
+}

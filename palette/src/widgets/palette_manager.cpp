@@ -19,6 +19,8 @@ void cleanup_palettes() {
 		delete g_current_widget;
 		g_current_widget = NULL;
 	}
+
+	Q_CLEANUP_RESOURCE(theme_bundle);
 }
 
 void set_path_handler(pathhandler_t handler) {

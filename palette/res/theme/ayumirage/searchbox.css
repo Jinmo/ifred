@@ -1,0 +1,11 @@
+QLineEdit {
+	font-family: Segoe UI;
+	height: 62px !important;
+	font-size: 25px;
+	color: rgb(255, 204, 102);
+	border: none;
+	width: 500px;
+	padding-left: 60px;
+	background: url(C:/Users/berry/take/theme/bg.png) no-repeat;
+	background-color: rgb(38, 44, 56);
+}

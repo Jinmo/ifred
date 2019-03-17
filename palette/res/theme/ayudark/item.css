@@ -1,0 +1,19 @@
+div {
+	font-size: 18px;
+	font-family: Segoe UI;
+	color: rgb(191, 186, 176);
+	color: rgb(71, 83, 89);
+}
+
+em {
+	font-weight: bold;
+	font-style: normal;
+	color: #ff8f40;
+}
+
+span {
+	font-size: 13px;
+	font-family: Segoe UI;
+	color: transparent;
+	display: none;
+}

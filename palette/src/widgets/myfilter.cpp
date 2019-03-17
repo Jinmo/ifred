@@ -3,14 +3,19 @@
 #define FTS_FUZZY_MATCH_IMPLEMENTATION
 #include "fts_fuzzy_match.h"
 
-static QHash<QPair<QString, QString>, int> distances;
-
+typedef QHash<QPair<QString, QString>, int> DistanceHash;
+QThreadStorage<DistanceHash *> distances;
 int distance(const QString& s1_, const QString& s2_) {
-	QString s1 = s1_.toLower();
-	QPair<QString, QString> pair(s1, s2_);
 
-	if (distances.contains(pair))
-		return distances[pair];
+	QString s1 = s1_.toLower();
+	QPair<QString, QString> pair(s1, s2_.toLower());
+
+	if (!distances.hasLocalData()) {
+		distances.setLocalData(new DistanceHash());
+	}
+
+	if (distances.localData()->contains(pair))
+		return (*distances.localData())[pair];
 
 	QByteArray s1b = s1.toUtf8();
 	QByteArray s2b = s2_.toUtf8();
@@ -18,7 +23,7 @@ int distance(const QString& s1_, const QString& s2_) {
 	int score;
 	fts::fuzzy_match(s1b.data(), s2b.data(), score);
 
-	distances[pair] = -score;
+	distances.localData()->insert(pair, -score);
 	return -score;
 }
 

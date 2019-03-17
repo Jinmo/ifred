@@ -10,31 +10,32 @@
 
 #include <action.h>
 
-class MyFilter : public QAbstractItemModel {
-	QRegularExpression expression_;
-	QString keyword_;
+int distance(const QString& s1_, const QString& s2_);
 
+class MyFilter : public QAbstractItemModel {
 public:
-	QVector<Action> items_;
+	const QVector<Action> items_;
 	QVector<int> shown_items_;
+	QVector<int> shown_items_temp_;
 	int shown_items_count_;
 
-	QFutureWatcher<bool> *watcher_;
+	QFutureWatcher<bool>* watcher_;
 	QFuture<bool> future_;
 
 	MyFilter(QWidget* parent, const QVector<Action>& items)
-		: QAbstractItemModel(parent), items_(std::move(items)), shown_items_count_(0), shown_items_(items.size()), future_(), watcher_(new QFutureWatcher<bool>()) {
+		: QAbstractItemModel(parent), items_(std::move(items)), shown_items_count_(0),
+		shown_items_(items.size()), shown_items_temp_(items.size()), future_(), watcher_(new QFutureWatcher<bool>()) {
 		setFilter(QString());
 
 		connect(watcher_, &QFutureWatcher<bool>::finished, this, &MyFilter::filteringDone);
 	}
 
-	bool filterAcceptsRow(int source_row) {
-		if (keyword_.isEmpty())
+	bool filterAcceptsRow(const QString& keyword, QRegularExpression regexp, int source_row) {
+		if (keyword.isEmpty())
 			return true;
 
 		const QString& str = items_[source_row].description();
-		bool result = str.contains(expression_);
+		bool result = str.contains(regexp);
 		return result;
 	}
 
@@ -45,42 +46,56 @@ public:
 		return createIndex(row, 0, nullptr);
 	}
 
-	void setFilter(QString& keyword) {
-		static QRegExp emptyRegExp;
-		keyword_ = keyword;
-
+	QRegularExpression genRegexp(const QString& keyword) {
 		QStringList regexp_before_join;
-
-		emit layoutAboutToBeChanged();
 
 		for (auto& x : keyword)
 			if (!x.isSpace())
 				regexp_before_join.push_back(x);
 
-		expression_ = QRegularExpression(regexp_before_join.join(".*"),
+		return QRegularExpression(regexp_before_join.join(".*"),
 			QRegularExpression::CaseInsensitiveOption);
-
-		startFiltering();
 	}
 
-	void startFiltering() {
+	void setFilter(QString & keyword) {
+		static QRegExp emptyRegExp;
+
+		emit layoutAboutToBeChanged();
+
+		startFiltering(keyword);
+	}
+
+	void startFiltering(const QString keyword) {
+		auto future = QtConcurrent::run(this, &MyFilter::update_filter, keyword);
+
 		watcher_->cancel();
-		watcher_->setFuture(QtConcurrent::run(this, &MyFilter::update_filter, keyword_));
+		watcher_->setFuture(future);
 	}
 
 	void filteringDone() {
 		emit layoutChanged();
 	}
 
-	bool update_filter(QString& keyword) {
+	bool update_filter(const QString & keyword) {
 		long count = 0;
+		auto expression = genRegexp(keyword);
 
-		// TODO: do chunk-wise item insertion, and sort using fuzzy match
+		// TODO: do chunk-wise item insertion
 		for (long i = 0; i < items_.size(); i++) {
-			if (filterAcceptsRow(i)) {
-				shown_items_[count++] = i;
+			if (filterAcceptsRow(keyword, expression, i)) {
+				shown_items_temp_[count++] = i;
 			}
 		}
+
+		if (keyword.size())
+			std::stable_sort(shown_items_temp_.begin(), shown_items_temp_.begin() + count, [=](int lhs, int rhs) -> bool {
+			return false;
+			//const Action *lhs_ = &items_.at(lhs);
+			//const Action *rhs_ = &items_.at(rhs);
+			//return distance(keyword, (lhs_->description())) < distance(keyword, (rhs_->description()));
+				});
+
+		shown_items_ = shown_items_temp_;
 
 		shown_items_count_ = count;
 		return true;

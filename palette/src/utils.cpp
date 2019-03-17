@@ -5,6 +5,7 @@
 
 QString loadFile(const char* filename, bool force_update, bool& updated) {
 	static QHash<QString, QString> last_loaded;
+	Q_INIT_RESOURCE(theme_bundle);
 
 	auto absolutePath = pluginPath(filename);
 	QFile file(absolutePath);
@@ -18,7 +19,25 @@ QString loadFile(const char* filename, bool force_update, bool& updated) {
 	}
 
 	if (!file.exists()) {
-		return QString();
+		// Check if it exists in bundle resoucre
+		QFile resFile(QString(":/bundle/") + filename);
+		if (resFile.exists()) {
+			if (!resFile.open(QIODevice::ReadOnly)) return QString();
+			auto bytes = resFile.readAll();
+			auto content = QString::fromUtf8(bytes);
+
+			auto dir = QDir(file.fileName());
+			dir.mkpath("..");
+
+			if (file.open(QIODevice::WriteOnly)) {
+				file.write(bytes);
+				file.close();
+			}
+
+			return content;
+		}
+		else
+			return QString();
 	}
 
 	if (!file.open(QIODevice::ReadOnly))
