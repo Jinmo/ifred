@@ -2,6 +2,8 @@
 
 [![Build status](https://ci.appveyor.com/api/projects/status/64ye84uag1v9rpn6?svg=true)](https://ci.appveyor.com/project/Jinmo/ifred)
 
+![screenshot](screenshots/1.png)
+
 ## How to build
 
 Currently tested on Windows. Install Qt 5.6.3 and IDA SDK, and follow steps in .appveyor.yml.
