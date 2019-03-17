@@ -41,7 +41,7 @@ protected:
 	public:
 		StylesObserver(QPaletteInner* parent) : JSONObserver(parent, "theme/styles.json") {}
 
-		void onUpdated(QJsonObject& data) override {
+		void onUpdated(const QJsonObject& data) override {
 			auto width = data["width"].toInt();
 			auto parentWidget = static_cast<QPaletteInner *>(parent());
 

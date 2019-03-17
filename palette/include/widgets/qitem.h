@@ -38,11 +38,11 @@ public:
 		updateConfig(json("theme/styles.json"));
 	}
 
-	void setCSS(QString& css) {
+	void setCSS(const QString& css) {
 		style_sheet_ = css;
 	}
 
-	void updateConfig(QJsonObject& styles) {
+	void updateConfig(const QJsonObject& styles) {
 		item_height_ = styles["itemHeight"].toInt();
 		item_hover_background_ = QBrush(styles["itemHoverBackground"].toString().toStdString().c_str());
 		item_margin_left_ = styles["itemMarginLeft"].toInt();

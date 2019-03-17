@@ -53,7 +53,7 @@ QString loadFile(const char* filename, bool force_update, bool& updated) {
 
 QHash<QString, QJsonDocument> cached_json;
 
-QJsonObject json(const char* filename, bool force_update) {
+const QJsonObject json(const char* filename, bool force_update) {
 	bool updated;
 	auto& content_str = loadFile(filename, force_update, updated);
 

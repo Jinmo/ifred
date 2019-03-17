@@ -7,7 +7,7 @@
 
 static bool static_updated;
 
-QJsonObject json(const char* filename, bool force_update = false);
+const QJsonObject json(const char* filename, bool force_update = false);
 
 QString loadFile(const char* filename, bool force_update = false, bool& updated = static_updated);
 
@@ -33,5 +33,5 @@ public:
 		updated();
 	}
 
-	virtual void onUpdated(QJsonObject& config) = 0;
+	virtual void onUpdated(const QJsonObject& config) = 0;
 };

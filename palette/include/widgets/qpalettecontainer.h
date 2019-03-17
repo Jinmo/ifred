@@ -29,7 +29,7 @@ class QPaletteContainer : public QMainWindow {
 	public:
 		ShadowObserver(QPaletteContainer* parent) : JSONObserver(parent, "theme/styles.json") {}
 
-		void onUpdated(QJsonObject& config) override {
+		void onUpdated(const QJsonObject& config) override {
 			int kShadow = config["shadow"].toInt();
 
 			if (kShadow == 0) {
