@@ -16,11 +16,11 @@ QVector<QRegularExpression> getBlacklist() {
     auto blacklist = json("config.json")["blacklist"].toArray();
     QVector<QRegularExpression> blacklist_converted;
 
-    for (auto& i : blacklist) {
-        if (i.toString().size())
-            blacklist_converted.push_back(QRegularExpression(i.toString()));
-    }
-    return blacklist_converted;
+	for (auto&& i : blacklist) {
+		if (i.toString().size())
+			blacklist_converted.push_back(QRegularExpression(i.toString()));
+	}
+	return blacklist_converted;
 }
 
 const QVector<Action> getActions() {

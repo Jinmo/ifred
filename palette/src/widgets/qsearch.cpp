@@ -5,12 +5,12 @@
 
 QString g_keyword;
 
-void prepareHighlighter(const QString& str) {
+void prepareHighlighter(const QString &str) {
     g_keyword = str;
 }
 
 void QSearch::onTextChanged() {
-    QString& keyword = text();
+    const QString &keyword = text();
 
     prepareHighlighter(keyword);
     entries_->setCurrentIndex(entries_->model()->index(0));
