@@ -78,7 +78,6 @@ public:
         long count = 0;
         auto expression = genRegexp(keyword);
 
-        while(canceled_) QThread::sleep(0);
         canceled_ = false;
 
         // TODO: do chunk-wise item insertion
