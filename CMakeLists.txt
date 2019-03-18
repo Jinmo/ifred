@@ -12,4 +12,4 @@ add_subdirectory(palette/pybind11)
 add_subdirectory ("palette")
 
 enable_testing()
-add_subdirectory ("benchmark")
+add_subdirectory ("standalone")

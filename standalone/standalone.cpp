@@ -44,7 +44,7 @@ public:
 };
 
 const QString TestPluginPath(const char* name) {
-	return QDir::homePath() + "/take/" + name;
+	return QDir::homePath() + "/palette_test/" + name;
 }
 
 int main(int argc, char* argv[])

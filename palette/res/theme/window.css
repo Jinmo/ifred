@@ -15,7 +15,7 @@ QScrollBar:vertical * {
 QScrollBar:vertical {
     border: none;
     width: 12px;
-    border-radius: 6px;
+    background: rgb(37, 37, 38);
 }
 
 QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {

@@ -8,16 +8,14 @@ void show_palette(QPaletteInner* inner) {
     if (!g_current_widget)
         g_current_widget = new QPaletteContainer();
 
-    g_current_widget->clear();
-    g_current_widget->add(inner);
-    g_current_widget->show();
-    g_current_widget->showWidget(0);
+    g_current_widget->set_inner(inner);
+    g_current_widget->show(true);
 }
 
 void cleanup_palettes() {
     if (g_current_widget) {
         delete g_current_widget;
-        g_current_widget = NULL;
+        g_current_widget = nullptr;
     }
 
     Q_CLEANUP_RESOURCE(theme_bundle);

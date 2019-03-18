@@ -14,6 +14,7 @@ set(sources src/widgets/myfilter.cpp
 			src/widgets/qsearch.cpp
 			src/utils.cpp
 			src/widgets/qpalette_inner.cpp
+			src/widgets/qpalettecontainer.cpp
 			src/widgets/qitems.cpp
 			src/widgets/qitem.cpp
 			src/widgets/palette_manager.cpp

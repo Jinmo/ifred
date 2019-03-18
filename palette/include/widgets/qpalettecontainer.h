@@ -51,36 +51,29 @@ class QPaletteContainer : public QMainWindow {
     } *shadow_observer_;
 
 public:
-    QPaletteContainer()
-        : inner_stacked_(new QStackedWidget(this)), shadow_observer_(new ShadowObserver(this)) {
-        setWindowFlags(Qt::Tool | Qt::FramelessWindowHint);
-        setAttribute(Qt::WA_TranslucentBackground); //enable MainWindow to be transparent
+    QPaletteContainer();
 
-        shadow_observer_->activate();
-        setCentralWidget(inner_stacked_);
-    }
-
-    void clear() {
+    void set_inner(QPaletteInner * delegate) {
         while (inner_stacked_->count())
             inner_stacked_->removeWidget(inner_stacked_->widget(0));
-    }
-
-    void add(QPaletteInner * delegate) {
         inner_stacked_->addWidget(delegate);
     }
 
-    void show() {
+    void show(bool focus) {
         centerWidgets(this);
         QMainWindow::show();
+
+        if(focus)
+            activate();
     }
 
-    void showWidget(int index = 0) {
+    void activate() {
         activateWindow();
 
-        if (inner_stacked_->count() <= index)
+        if (!inner_stacked_->count())
             return;
 
-        auto * inner = static_cast<QPaletteInner*>(inner_stacked_->widget(index));
+        auto * inner = static_cast<QPaletteInner*>(inner_stacked_->widget(0));
 
         inner->searchbox().selectAll();
         inner->searchbox().setFocus();

@@ -43,3 +43,10 @@ bool MyFilter::lessThan(const QModelIndex & left, const QModelIndex & right) con
     return distance(filterText, leftData) < distance(filterText, rightData);
 #endif
 }
+
+QString g_keyword;
+
+void prepareHighlighter(const QString &str) {
+    g_keyword = str;
+}
+

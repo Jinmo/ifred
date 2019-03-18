@@ -30,6 +30,8 @@ public:
     QPaletteInner* nextPalette() { return nextPalette_; }
 };
 
+class QPaletteContainer;
+
 class PALETTE_EXPORT QPaletteInner : public QFrame {
 protected:
     QItems* entries_;
@@ -73,18 +75,14 @@ public:
     }
 
     bool onArrowPressed(int key) {
-        int delta;
-        if (key == Qt::Key_Down) {
-            delta = 1;
-        }
-        else {
-            delta = -1;
-        }
+        int delta = key == Qt::Key_Down ? 1: -1;
         auto new_row = entries_->currentIndex().row() + delta;
+
         if (new_row == -1)
             new_row = 0;
         else if (new_row == entries_->model()->rowCount())
             new_row = 0;
+
         entries_->setCurrentIndex(entries_->model()->index(new_row, 0));
         return true;
     }
@@ -94,7 +92,7 @@ public:
     bool eventFilter(QObject * obj, QEvent * event) override {
         switch (event->type()) {
         case QEvent::KeyPress: {
-            auto* ke = static_cast<QKeyEvent*>(event);
+            auto* ke = dynamic_cast<QKeyEvent*>(event);
             switch (ke->key()) {
             case Qt::Key_Down:
             case Qt::Key_Up: {
@@ -131,10 +129,7 @@ public:
         }
     }
 
-    void closeWindow() {
-        if (window())
-            window()->close();
-    }
+    void closeWindow();
 
     void itemClicked(const QModelIndex & index) {
         auto model = entries().model();
@@ -142,4 +137,6 @@ public:
 
         processEnterResult(enter_callback(action));
     }
+
+    QPaletteContainer *container();
 };

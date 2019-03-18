@@ -9,7 +9,6 @@ QString loadFile(const char* filename, bool force_update, bool& updated) {
 
     auto absolutePath = pluginPath(filename);
     QFile file(absolutePath);
-    time_t timestamp = time(NULL);
 
     updated = false;
 
@@ -19,7 +18,7 @@ QString loadFile(const char* filename, bool force_update, bool& updated) {
     }
 
     if (!file.exists()) {
-        // Check if it exists in bundle resoucre
+        // Check if it exists in bundle resource
         QFile resFile(QString(":/bundle/") + filename);
         if (resFile.exists()) {
             if (!resFile.open(QIODevice::ReadOnly)) return QString();
@@ -33,6 +32,8 @@ QString loadFile(const char* filename, bool force_update, bool& updated) {
                 file.write(bytes);
                 file.close();
             }
+
+            updated = true;
 
             return content;
         }

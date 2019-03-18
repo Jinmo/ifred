@@ -10,8 +10,6 @@
 
 QHash<QString, QDate> g_last_used;
 
-QVector<Action> cached_actions;
-
 QVector<QRegularExpression> getBlacklist() {
     auto blacklist = json("config.json")["blacklist"].toArray();
     QVector<QRegularExpression> blacklist_converted;
@@ -29,13 +27,10 @@ const QVector<Action> getActions() {
 
     size_t names_count = get_nlist_size();
 
-    if (cached_actions.size() == id_list.size() + names_count)
-        return std::move(QVector<Action>(cached_actions));
-
     QVector<Action> result;
     auto blacklist = getBlacklist();
 
-    result.reserve(id_list.size());
+    result.reserve(static_cast<int>(id_list.size()));
 
     // Variables used in the loop below
     qstring tooltip, shortcut;
@@ -71,9 +66,7 @@ const QVector<Action> getActions() {
             QString()));
     }
 
-    cached_actions = result;
-
-    return std::move(result);
+    return result;
 }
 
 class QIDACommandPaletteInner : public QPaletteInner {
@@ -88,7 +81,7 @@ public:
 
         g_last_used[id] = QDate::currentDate();
         if (id.startsWith("@ ")) {
-            auto address = id.mid(2).toULong(nullptr, 16);
+            auto address = id.midRef(2).toULongLong(nullptr, 16);
             jumpto(address);
         }
         else
@@ -192,8 +185,6 @@ int idaapi init(void) {
 
         set_path_handler(IdaPluginPath);
         // init libpalette complete
-
-        getActions();
 
         if (!register_action(enter_action)) {
             msg("ifred action loading error");

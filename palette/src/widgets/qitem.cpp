@@ -68,10 +68,11 @@ void QItem::paint(QPainter * painter,
 
     auto model = index.model();
     Action action = model->data(model->index(index.row(), 0)).value<Action>();
+    QString keyword = model->data(model->index(index.row(), 0), Qt::UserRole).value<QString>();
 
     doc.setDefaultStyleSheet(style_sheet_);
 
-    auto html = highlight(g_keyword, action.description()) + "<span>" + action.id() + "</span>";
+    auto html = highlight(keyword, action.description()) + "<span>" + action.id() + "</span>";
     doc.setHtml(html);
 
     painter->save();

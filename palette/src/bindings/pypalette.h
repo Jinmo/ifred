@@ -22,7 +22,7 @@ public:
 	PyPalette(py::list entries) {
 		QVector<Action> result;
 
-		result.reserve(entries.size());
+		result.reserve(static_cast<int>(entries.size()));
 
 		for (int i = 0; i < entries.size(); i++) {
 			py::handle item = entries[i];

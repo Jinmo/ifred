@@ -19,7 +19,7 @@ class JSONObserver : public QFileSystemWatcher {
 private:
     const char* filename_;
 public:
-    JSONObserver(QWidget* parent, const char* filename = "settings.json")
+    JSONObserver(QObject* parent, const char* filename = "settings.json")
         : QFileSystemWatcher(parent), filename_(filename) {
         addPath(pluginPath(filename));
     }

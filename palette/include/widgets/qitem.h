@@ -10,31 +10,33 @@ class QItem : public QStyledItemDelegate {
 public:
     QBrush item_hover_background_;
     QString style_sheet_;
-    int item_height_, item_margin_left_, item_margin_top_;
+    int item_height_{}, item_margin_left_{}, item_margin_top_{};
 
     class ItemStyleObserver : public JSONObserver {
     public:
-        ItemStyleObserver(QWidget* parent) : JSONObserver(parent, "theme/styles.json") {}
+        explicit ItemStyleObserver(QItem* parent) : JSONObserver(parent, "theme/styles.json") {}
 
-        void onUpdated(QJsonObject& styles) {
-            QItem* owner = static_cast<QItem*>(parent());
+        void onUpdated(const QJsonObject& styles) override {
+            auto * owner = dynamic_cast<QItem*>(parent());
             owner->updateConfig(styles);
         }
-    };
+    } *item_style_observer_;
 
     class ItemStyleSheetObserver : public QFileSystemWatcher {
-        ItemStyleSheetObserver(QWidget* parent) {
+    public:
+        explicit ItemStyleSheetObserver(QItem* parent): QFileSystemWatcher(parent) {
             addPath("theme/item.css");
-            connect(this, &QFileSystemWatcher::fileChanged, this, &ItemStyleSheetObserver::updated);
+            connect(this, &QFileSystemWatcher::fileChanged, this, &ItemStyleSheetObserver::onUpdated);
         }
 
-        void updated() {
-            QItem* owner = static_cast<QItem*>(parent());
+        void onUpdated() {
+            auto * owner = dynamic_cast<QItem*>(parent());
             owner->setCSS(loadFile("theme/item.css"));
         }
-    };
+    } *item_stylesheet_observer_;
 
-    QItem(QWidget* parent) : QStyledItemDelegate(parent) {
+    explicit QItem(QWidget* parent)
+    : QStyledItemDelegate(parent), item_style_observer_(new ItemStyleObserver(this)), item_stylesheet_observer_(new ItemStyleSheetObserver(this)) {
         updateConfig(json("theme/styles.json"));
     }
 
@@ -53,9 +55,8 @@ public:
     void paint(QPainter* painter,
         const QStyleOptionViewItem& option, const QModelIndex& index) const override;
 
-    QSize sizeHint(const QStyleOptionViewItem&,
-        const QModelIndex&) const override {
-        return QSize(0, item_height_);
+    QSize sizeHint(const QStyleOptionViewItem&, const QModelIndex&) const override {
+        return {0, item_height_};
     }
 };
 
