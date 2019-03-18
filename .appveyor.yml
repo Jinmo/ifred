@@ -27,15 +27,21 @@ build_script:
 
     call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
 
-    mkdir build-7.0
+    mkdir build-7.0-x64
 
-    pushd build-7.0
+    pushd build-7.0-x64
 
     set IS64=True
 
     cmake .. -DCMAKE_PREFIX_PATH=C:\Qt\5.6.3\msvc2015_64 -DPYTHON_EXECUTABLE=C:/Python27-x64/python.exe -DIDA_EA_64=%IS64% -DIDA_BINARY_64=True -DIDA_SDK=C:\idasdk70 -DIDA_VERSION=700 -DCMAKE_BUILD_TYPE=RelWithDebInfo -GNinja
 
     ninja
+
+    cd ..
+
+    mkdir build-7.0-x32
+
+    pushd build-7.0-x32
 
     set IS64=False
 
@@ -45,7 +51,7 @@ build_script:
 
     cd ..
 artifacts:
-- path: build-7.0\palette\ida_palette.dll
+- path: build-7.0-x32\palette\ida_palette.dll
   name: IDA 7.0 EA32
-- path: build-7.0\palette\ida_palette64.dll
+- path: build-7.0-x64\palette\ida_palette64.dll
   name: IDA 7.0 EA64
