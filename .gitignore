@@ -1,2 +1,7 @@
+# Visual Studio Files (for 2019, cmake project)
 .vs
-theme/*/
+# for test
+build
+# CLion files
+.idea
+cmake-build-*
