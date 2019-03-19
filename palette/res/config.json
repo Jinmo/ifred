@@ -1,13 +1,13 @@
 {
-	"itemHeight": 28,
-	"itemMarginLeft": 19,
-	"itemMarginTop": 1,
-	"itemHoverBackground": "#062f4a",
-	"shadow": 30,
 	"blacklist": [
 		"^Window.",
 		"^navbox.",
 		"^Jump",
-		"ifred:enter"
+		"ifred:enter",
+		"FormsTest",
+		"^sle:",
+		"TestDesktop",
+		"FocusCLI2",
+		"^msglist:"
 	]
 }

@@ -14,14 +14,14 @@ QVector<QRegularExpression> getBlacklist() {
     auto blacklist = json("config.json")["blacklist"].toArray();
     QVector<QRegularExpression> blacklist_converted;
 
-	for (auto&& i : blacklist) {
-		if (i.toString().size())
-			blacklist_converted.push_back(QRegularExpression(i.toString()));
-	}
-	return blacklist_converted;
+    for (auto&& i : blacklist) {
+        if (i.toString().size())
+            blacklist_converted.push_back(QRegularExpression(i.toString()));
+    }
+    return blacklist_converted;
 }
 
-void addActions(QVector<Action> &result, const qstrvec_t &actions) {
+void addActions(QVector<Action>& result, const qstrvec_t& actions) {
     qstring tooltip, shortcut;
     action_state_t state;
 
@@ -54,7 +54,7 @@ void addActions(QVector<Action> &result, const qstrvec_t &actions) {
     }
 }
 
-void addNames(QVector<Action> &result, size_t names) {
+void addNames(QVector<Action>& result, size_t names) {
     for (size_t i = 0; i < names; i++) {
         const char* name = get_nlist_name(i);
         qstring demangled_name = demangle_name(name, 0);
@@ -91,26 +91,27 @@ class QIDACommandPaletteInner : public QPaletteInner {
 public:
     QIDACommandPaletteInner(QWidget* parent, const QVector<Action>& items)
         : QPaletteInner(parent, "command palette", std::move(items)) {
+
     }
 
-    EnterResult enter_callback(Action& action) override {
-        processEnterResult(true);
-        auto id = action.id();
-
-        g_last_used[id] = QDate::currentDate();
-        if (id.startsWith("@ ")) {
-            auto address = id.midRef(2).toULongLong(nullptr, 16);
-            jumpto(address);
-        }
-        else
-            process_ui_action(id.toStdString().c_str());
-        return false;
-    }
 };
 
 class palette_handler : public action_handler_t {
     int idaapi activate(action_activation_ctx_t*) override {
-        show_palette(new QIDACommandPaletteInner(nullptr, std::move(getActions())));
+        show_palette("command palette", getActions(), [](const Action & action) {
+            auto id = action.id();
+
+            g_last_used[id] = QDate::currentDate();
+            if (id.startsWith("@ ")) {
+                auto address = id.midRef(2).toULongLong(nullptr, 16);
+                jumpto(address);
+            }
+            else
+            {
+                process_ui_action(id.toStdString().c_str());
+            }
+            return true;
+            });
         return 1;
     }
 

@@ -19,9 +19,10 @@ set(sources src/widgets/myfilter.cpp
 			src/widgets/qitem.cpp
 			src/widgets/palette_manager.cpp
 			src/bindings/pypalette.cpp
-			src/bindings/qpypalette_inner.cpp
 			res/theme_bundle.qrc
             include/widgets/myfilter.h
+            include/widgets/qpalettecontainer.h
+            include/widgets/qpalette_inner.h
 )
 
 add_library(palette STATIC ${sources})

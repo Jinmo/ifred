@@ -27,16 +27,11 @@ QPaletteInner::QPaletteInner(QWidget* parent, const QString& name, const QVector
 
 void QPaletteInner::processEnterResult(EnterResult res) {
     if (res.hide()) {
-        if (res.nextPalette()) {
-            container()->set_inner(res.nextPalette());
-        }
-        else {
-            container()->close();
-        }
+        container()->close();
     }
     else {
         // hide=true if nextPalette != NULL
-        Q_ASSERT(!res.nextPalette());
+        Q_ASSERT(res.nextPalette().empty());
     }
 }
 

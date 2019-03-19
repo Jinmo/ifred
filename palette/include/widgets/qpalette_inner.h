@@ -16,23 +16,30 @@
 
 class QPaletteInner;
 
-struct EnterResult {
+class EnterResult {
     bool hide_;
-    QPaletteInner* nextPalette_;
+    QVector<Action> nextPalette_;
 
 public:
-    EnterResult(bool hide) : hide_(hide), nextPalette_(nullptr) {}
+    EnterResult() : hide_(true), nextPalette_() {}
+    EnterResult(bool hide) : hide_(hide), nextPalette_() {}
+    EnterResult(const EnterResult& other) : hide_(other.hide_), nextPalette_(other.nextPalette_) {}
 
-    EnterResult(QPaletteInner* nextPalette) : hide_(true), nextPalette_(nextPalette) {}
+    EnterResult(const QVector<Action> &nextPalette) : hide_(true), nextPalette_(nextPalette) {}
 
     bool hide() { return hide_; }
 
-    QPaletteInner* nextPalette() { return nextPalette_; }
+    const QVector<Action> &nextPalette() { return nextPalette_; }
+    EnterResult &operator =(const EnterResult& other) {
+        return EnterResult(other);
+    }
 };
 
 class QPaletteContainer;
 
 class PALETTE_EXPORT QPaletteInner : public QFrame {
+    Q_OBJECT;
+
     class StylesObserver : public JSONObserver {
     public:
         StylesObserver(QPaletteInner* parent) : JSONObserver(parent, "theme/styles.json") {}
@@ -53,11 +60,13 @@ protected:
     QSearch* searchbox_;
 
     QString name_;
+    QThreadPool thread_pool_;
 
     CSSObserver* css_observer_;
-    QPaletteInner(QWidget* parent, const QString& name, const QVector<Action>& items);
 
 public:
+    QPaletteInner(QWidget* parent, const QString& name, const QVector<Action>& items);
+
     QSearch& searchbox() { return *searchbox_; }
 
     QItems& entries() { return *entries_; }
@@ -66,21 +75,22 @@ public:
 
     bool onArrowPressed(int key);
 
-    virtual EnterResult enter_callback(Action & action) = 0;
+    bool eventFilter(QObject* obj, QEvent* event) override;
 
-    bool eventFilter(QObject * obj, QEvent * event) override;
-
-    void keyPressEvent(QKeyEvent * e) override;
+    void keyPressEvent(QKeyEvent* e) override;
 
     void closeWindow();
 
     void onEnterPressed() {
         auto action = (entries_->currentIndex()).data().value<Action>();
-        auto res = enter_callback(action);
-        processEnterResult(res);
+        processEnterResult(true);
+        emit enter_callback(action);
     }
 
-    void onItemClicked(const QModelIndex & index);
+    void onItemClicked(const QModelIndex& index);
 
-    QPaletteContainer *container();
+    QPaletteContainer* container();
+
+signals:
+    bool enter_callback(const Action& action);
 };

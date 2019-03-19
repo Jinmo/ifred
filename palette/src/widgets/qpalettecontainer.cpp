@@ -22,20 +22,20 @@ QPaletteContainer::QPaletteContainer()
     setAttribute(Qt::WA_TranslucentBackground); //enable MainWindow to be transparent
 
     setCentralWidget(inner_stacked_);
+    connect(this, &QPaletteContainer::show, this, &QPaletteContainer::onShow);
 }
 
-void QPaletteContainer::set_inner(QPaletteInner *delegate) {
+void QPaletteContainer::onShow(const QString &name, const QVector<Action> &actions_, ActionHandler handler) {
     while (inner_stacked_->count())
         inner_stacked_->removeWidget(inner_stacked_->widget(0));
+
+    auto delegate = new QPaletteInner(this, name, actions_);
+    connect(delegate, &QPaletteInner::enter_callback, handler);
     inner_stacked_->addWidget(delegate);
-}
-
-void QPaletteContainer::show(bool focus) {
     centerWidgets(this);
-    QMainWindow::show();
 
-    if(focus)
-        activate();
+    QMainWindow::show();
+    activate();
 }
 
 void QPaletteContainer::activate() {

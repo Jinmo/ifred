@@ -34,21 +34,6 @@ QVector<Action> testItems() {
 	return action_list;
 }
 
-class TestPalette : public QPaletteInner {
-public:
-	TestPalette() : QPaletteInner(nullptr, "<test palette>", std::move(testItems())) {
-	}
-
-	EnterResult enter_callback(Action &action) override {
-        if (action.id() == "std::runtime_error") {
-            throw std::runtime_error("raised!");
-        }
-		qDebug() << action.id() << action.description() << action.shortcut();
-
-		return false;
-	}
-};
-
 const QString TestPluginPath(const char* name) {
 	return QDir::homePath() + "/palette_test/" + name;
 }
@@ -59,7 +44,13 @@ int main(int argc, char* argv[])
 
 	set_path_handler(TestPluginPath);
 
-	auto palette = new TestPalette();
-	show_palette(palette);
+	show_palette("<test palette>", testItems(), [](const Action& action) {
+            if (action.id() == "std::runtime_error") {
+                throw std::runtime_error("raised!");
+            }
+            qDebug() << action.id() << action.description() << action.shortcut();
+
+            return false;
+        });
 	return app.exec();
 }
