@@ -21,22 +21,14 @@ QVector<QRegularExpression> getBlacklist() {
 	return blacklist_converted;
 }
 
-const QVector<Action> getActions() {
-    qstrvec_t id_list;
-    get_registered_actions(&id_list);
-
-    size_t names_count = get_nlist_size();
-
-    QVector<Action> result;
-    auto blacklist = getBlacklist();
-
-    result.reserve(static_cast<int>(id_list.size()));
-
-    // Variables used in the loop below
+void addActions(QVector<Action> &result, const qstrvec_t &actions) {
     qstring tooltip, shortcut;
     action_state_t state;
 
-    for (auto& item : id_list) {
+    auto blacklist = getBlacklist();
+
+    for (auto& item : actions) {
+        // Check blacklist
         bool skip = false;
         for (auto& pattern : blacklist)
             if (pattern.match(item.c_str()).hasMatch()) {
@@ -47,24 +39,50 @@ const QVector<Action> getActions() {
         if (skip)
             continue;
 
+        // Enabled actions only
         if (!get_action_state(item.c_str(), &state))
             continue;
 
         if (state > AST_ENABLE)
             continue;
 
+        // Get metadata for the action
         get_action_tooltip(&tooltip, item.c_str());
         get_action_shortcut(&shortcut, item.c_str());
         result.push_back(Action(
             QString(item.c_str()), QString(tooltip.c_str()), QString(shortcut.c_str())));
     }
+}
 
-    for (size_t i = 0; i < names_count; i++) {
+void addNames(QVector<Action> &result, size_t names) {
+    for (size_t i = 0; i < names; i++) {
+        const char* name = get_nlist_name(i);
+        qstring demangled_name = demangle_name(name, 0);
+
         result.push_back(Action(
             "@ " + QString::number(get_nlist_ea(i), 16).toUpper(),
-            QString("Name: ") + get_nlist_name(i),
+            QString("Name: ") + (demangled_name.empty() ? name : demangled_name.c_str()),
             QString()));
     }
+}
+
+// Get command palette items from IDA: 1. actions, 2. names
+const QVector<Action> getActions() {
+    QVector<Action> result;
+
+    qstrvec_t actions;
+    get_registered_actions(&actions);
+
+    size_t names = get_nlist_size();
+
+    // 0. Reserve vector to avoid multiple allocations
+    result.reserve(static_cast<int>(actions.size()) + names);
+
+    // 1. Add actions from IDA except blacklisted identifiers
+    addActions(result, actions);
+
+    // 2. Add names from IDA
+    addNames(result, names);
 
     return result;
 }
@@ -72,7 +90,7 @@ const QVector<Action> getActions() {
 class QIDACommandPaletteInner : public QPaletteInner {
 public:
     QIDACommandPaletteInner(QWidget* parent, const QVector<Action>& items)
-        : QPaletteInner(parent, std::move(items)) {
+        : QPaletteInner(parent, "command palette", std::move(items)) {
     }
 
     EnterResult enter_callback(Action& action) override {
@@ -141,7 +159,7 @@ public:
     ~gil_scoped_acquire() { PyGILState_Release(state); }
 };
 
-ssize_t idaapi load_python(void* user_data, int notification_code, va_list va) {
+ssize_t idaapi load_python(void*, int notification_code, va_list va) {
     auto info = va_arg(va, plugin_info_t*);
 
     if (notification_code == ui_plugin_loaded && !strcmp(info->org_name, "IDAPython")) {

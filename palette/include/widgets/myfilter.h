@@ -11,12 +11,17 @@
 #include <action.h>
 
 int distance(const QString& s1_, const QString& s2_);
+QRegularExpression genRegexp(const QString& keyword);
+QRegularExpression genCapturingRegexp(const QString& keyword);
 
 class MyFilter : public QAbstractItemModel {
+    Q_OBJECT;
 public:
     const QVector<Action> items_;
     QVector<int> shown_items_;
     QVector<int> shown_items_temp_;
+
+    QVector<int> initial_range_;
     int shown_items_count_;
 
     QFutureWatcher<bool>* watcher_;
@@ -25,12 +30,19 @@ public:
     QString keyword_;
     bool canceled_;
 
+    long preferred_index_;
+
     MyFilter(QWidget* parent, const QVector<Action>& items)
-        : QAbstractItemModel(parent), items_(std::move(items)), shown_items_count_(0), canceled_(false),
-        shown_items_(items.size()), shown_items_temp_(items.size()), future_(), watcher_(new QFutureWatcher<bool>()) {
+        : QAbstractItemModel(parent), items_(std::move(items)), shown_items_count_(0), preferred_index_(0), canceled_(false),
+        shown_items_(items.size()), shown_items_temp_(items.size()), future_(), watcher_(new QFutureWatcher<bool>()),
+        initial_range_(items.size()) {
         setFilter(QString());
 
-        connect(watcher_, &QFutureWatcher<bool>::finished, this, &MyFilter::filteringDone);
+        for (int i = 0; i < items.size(); i++) {
+            initial_range_[i] = i;
+        }
+
+        connect(watcher_, &QFutureWatcher<bool>::finished, this, &MyFilter::doneFiltering);
     }
 
     bool filterAcceptsRow(const QString& keyword, QRegularExpression regexp, int source_row) {
@@ -42,67 +54,33 @@ public:
         return result;
     }
 
-    bool lessThan(const QModelIndex& left,
-        const QModelIndex& right) const;
+    bool MyFilter::lessThan(const QString& keyword, const QString& left, const QString& right) const;
 
-    QRegularExpression genRegexp(const QString& keyword) {
-        QStringList regexp_before_join;
-
-        for (auto& x : keyword)
-            if (!x.isSpace())
-                regexp_before_join.push_back(x);
-
-        return QRegularExpression(regexp_before_join.join(".*"),
-            QRegularExpression::CaseInsensitiveOption);
-    }
-
-    void setFilter(const QString & keyword) {
+    void setFilter(const QString& keyword) {
         keyword_ = keyword;
         emit layoutAboutToBeChanged();
 
-        startFiltering(keyword);
-    }
-
-    void startFiltering(const QString keyword) {
-        auto future = QtConcurrent::run(this, &MyFilter::update_filter, keyword);
-
         canceled_ = true;
-        watcher_->setFuture(future);
+
+        auto future = QtConcurrent::run(this, &MyFilter::update_filter, keyword);
+        future.waitForFinished();
+        doneFiltering();
     }
 
-    void filteringDone() {
+    void doneFiltering() {
+        emit filteringDone(preferred_index_);
         emit layoutChanged();
     }
 
-    bool update_filter(const QString & keyword) {
-        long count = 0;
-        auto expression = genRegexp(keyword);
+    bool update_filter(const QString& keyword);
 
-        canceled_ = false;
-
-        // TODO: do chunk-wise item insertion
-        for (long i = 0; i < items_.size(); i++) {
-            if (filterAcceptsRow(keyword, expression, i)) {
-                shown_items_temp_[count++] = i;
-            }
-
-            if (canceled_)
-                return true;
-        }
-
-        shown_items_ = shown_items_temp_;
-        shown_items_count_ = count;
-
-        return true;
-    }
-
-    QModelIndex index(int row, int column, const QModelIndex & parent = QModelIndex()) const override {
+    QModelIndex index(int row, int column, const QModelIndex& parent = QModelIndex()) const override {
         return createIndex(row, column);
     };
 
     // we don't use this
-    QVariant data(const QModelIndex & index, int role = Qt::DisplayRole) const override {
-        if(role == Qt::DisplayRole)
+    QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override {
+        if (role == Qt::DisplayRole)
             return QVariant::fromValue(items_[shown_items_[index.row()]]);
         else
             return keyword_;
@@ -119,6 +97,8 @@ public:
     int rowCount(const QModelIndex & parent = QModelIndex()) const override {
         return shown_items_count_;
     }
+signals:
+    void filteringDone(int preferred_index);
 };
 
 #endif // MYFILTER_H

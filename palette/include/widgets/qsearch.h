@@ -5,7 +5,7 @@
 #include <QtWidgets>
 
 #include <widgets/qitems.h>
-#include "cssobserver.h"
+#include "observers.h"
 
 class QSearch : public QLineEdit {
     QItems* entries_;
@@ -16,10 +16,10 @@ public:
         : QLineEdit(parent), entries_(entries),
         css_observer_(new CSSObserver(this, "theme/searchbox.css")) {
         connect(this, &QLineEdit::textChanged, this, &QSearch::onTextChanged);
-        onTextChanged();
+        onTextChanged(QString());
     }
 
-    void onTextChanged();
+    void onTextChanged(const QString &keyword);
 };
 
 #endif // QSEARCH_H

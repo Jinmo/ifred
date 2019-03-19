@@ -9,7 +9,7 @@
 #define COUNT 200000
 #define LENGTH 20
 
-const char key[] = "abcdefghjiklmnopqrstuvwxyz";
+const uchar key[] = "abcdefghjiklmnopqrstuvwxyz";
 
 QString get_random_str() {
 	QString result;
@@ -22,7 +22,9 @@ QString get_random_str() {
 QVector<Action> testItems() {
 	QVector<Action> action_list;
 
-	action_list.reserve(COUNT);
+	action_list.reserve(COUNT + 1);
+
+    action_list.push_back(Action("std::runtime_error", "raise exception", ""));
 
 	for (int i = 0; i < COUNT; i++) {
 		auto id = get_random_str();
@@ -34,11 +36,15 @@ QVector<Action> testItems() {
 
 class TestPalette : public QPaletteInner {
 public:
-	TestPalette() : QPaletteInner(nullptr, std::move(testItems())) {
+	TestPalette() : QPaletteInner(nullptr, "<test palette>", std::move(testItems())) {
 	}
 
 	EnterResult enter_callback(Action &action) override {
+        if (action.id() == "std::runtime_error") {
+            throw std::runtime_error("raised!");
+        }
 		qDebug() << action.id() << action.description() << action.shortcut();
+
 		return false;
 	}
 };

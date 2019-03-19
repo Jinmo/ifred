@@ -11,4 +11,8 @@ QItems::QItems(QWidget* parent, const QVector<Action>& items)
 
     setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
     setUniformItemSizes(true);
+
+    connect(model_, &MyFilter::filteringDone, this, [=](int index) {
+        setCurrentIndex(model_->index(index, 0));
+        });
 }

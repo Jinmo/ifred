@@ -26,7 +26,7 @@ entries = [Action(description=random_str(), # displayed text
     id='action%d' % i # must be unique
     ) for i in range(20)]
 
-show_palette(Palette(entries))
+show_palette(Palette('palette name here', entries))
 ```
 
 Currently cleaning up C++ API.

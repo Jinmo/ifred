@@ -1,78 +1,43 @@
 #include <widgets/qitem.h>
 #include <widgets/myfilter.h>
 
-QCache<QPair<QString, QString>, QString> hlCache;
-extern QString g_keyword;
-
-QString& highlight(QString& keyword, const QString& tooltip) {
+const QString highlight(const QString& keyword, const QString& tooltip) {
     static QString em_("<em>"), emEnd_("</em>");
     auto cache_key = QPair<QString, QString>(keyword, tooltip);
 
-    if (hlCache.contains(cache_key))
-        return *hlCache[cache_key];
-
     QStringList highlights;
-    int i, j = 0, start = 0;
-    bool toggle = false;
 
-    highlights.push_back("<div>");
+    highlights << ("<div>");
 
     if (keyword.size()) {
-        for (i = 0; i < tooltip.size(); i++) {
-            auto c = tooltip[i];
-            if (c.toLower() == keyword[j].toLower()) {
-                // start of highlighted text
-                if (!toggle) {
-                    highlights << (tooltip.mid(start, i - start));
-                    start = i;
-                }
-                ++j;
-                if (j == keyword.size()) {
-                    highlights << (em_);
-                    highlights << tooltip.mid(start, i++ + 1 - start);
-                    highlights << (emEnd_);
-                    toggle = false;
-                    break;
-                }
-                toggle = true;
-            }
-            else {
-                if (toggle) {
-                    highlights << (em_);
-                    highlights << tooltip.mid(start, i - start);
-                    highlights << (emEnd_);
-                    start = i;
-                }
-                toggle = false;
-            }
+        auto regexp = genCapturingRegexp(keyword);
+        auto match = regexp.match(tooltip).capturedTexts();
+
+        int i = -1;
+        for (auto&& word : match) {
+            if (++i == 0) continue;
+            if (i % 2 == 0) highlights << em_ << word << emEnd_;
+            else highlights << word;
         }
-        if (toggle)
-            highlights << (em_);
-        highlights << tooltip.mid(i, tooltip.size() - i);
-        if (toggle)
-            highlights << (emEnd_);
     }
     else {
         highlights << tooltip;
     }
-    highlights << ("</div>");
 
-    QString* result = new QString(highlights.join(""));
-    hlCache.insert(cache_key, result);
-    return *result;
+    return QString(highlights.join(""));
+    //hlCache.insert(cache_key, result);
 }
 
-void QItem::paint(QPainter * painter,
-    const QStyleOptionViewItem & option, const QModelIndex & index) const {
+void QItem::paint(QPainter* painter,
+    const QStyleOptionViewItem& option, const QModelIndex& index) const {
     QTextDocument doc;
 
-    auto model = index.model();
-    Action action = model->data(model->index(index.row(), 0)).value<Action>();
-    QString keyword = model->data(model->index(index.row(), 0), Qt::UserRole).value<QString>();
+    Action action = index.data().value<Action>();
+    QString keyword = index.data(Qt::UserRole).value<QString>();
 
     doc.setDefaultStyleSheet(style_sheet_);
 
-    auto html = highlight(keyword, action.description()) + "<span>" + action.id() + "</span>";
+    auto html = highlight(keyword, action.description()) + "<span>" + action.id() + "</span></div>";
     doc.setHtml(html);
 
     painter->save();

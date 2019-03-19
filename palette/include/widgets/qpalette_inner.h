@@ -33,12 +33,6 @@ public:
 class QPaletteContainer;
 
 class PALETTE_EXPORT QPaletteInner : public QFrame {
-protected:
-    QItems* entries_;
-    QVBoxLayout* layout_;
-    QSearch* searchbox_;
-
-    CSSObserver* css_observer_;
     class StylesObserver : public JSONObserver {
     public:
         StylesObserver(QPaletteInner* parent) : JSONObserver(parent, "theme/styles.json") {}
@@ -53,90 +47,40 @@ protected:
 
     } *styles_observer_;
 
+protected:
+    QItems* entries_;
+    QVBoxLayout* layout_;
+    QSearch* searchbox_;
+
+    QString name_;
+
+    CSSObserver* css_observer_;
+    QPaletteInner(QWidget* parent, const QString& name, const QVector<Action>& items);
+
 public:
     QSearch& searchbox() { return *searchbox_; }
 
     QItems& entries() { return *entries_; }
 
-    QPaletteInner(QWidget* parent, const QVector<Action>& items);
-
     void processEnterResult(EnterResult res);
 
-    void onTextChanged(const QString&) {
-        entries_->setCurrentIndex(entries_->model()->index(0, 0));
-        entries_->scrollToTop();
-        entries_->repaint();
-    }
+    bool onArrowPressed(int key);
+
+    virtual EnterResult enter_callback(Action & action) = 0;
+
+    bool eventFilter(QObject * obj, QEvent * event) override;
+
+    void keyPressEvent(QKeyEvent * e) override;
+
+    void closeWindow();
 
     void onEnterPressed() {
-        auto action = entries().model()->data(entries().model()->index(entries_->currentIndex().row(), 0)).value<Action>();
+        auto action = (entries_->currentIndex()).data().value<Action>();
         auto res = enter_callback(action);
         processEnterResult(res);
     }
 
-    bool onArrowPressed(int key) {
-        int delta = key == Qt::Key_Down ? 1: -1;
-        auto new_row = entries_->currentIndex().row() + delta;
-
-        if (new_row == -1)
-            new_row = 0;
-        else if (new_row == entries_->model()->rowCount())
-            new_row = 0;
-
-        entries_->setCurrentIndex(entries_->model()->index(new_row, 0));
-        return true;
-    }
-
-    virtual EnterResult enter_callback(Action & action) = 0;
-
-    bool eventFilter(QObject * obj, QEvent * event) override {
-        switch (event->type()) {
-        case QEvent::KeyPress: {
-            auto* ke = dynamic_cast<QKeyEvent*>(event);
-            switch (ke->key()) {
-            case Qt::Key_Down:
-            case Qt::Key_Up: {
-                event->ignore();
-                return onArrowPressed(ke->key());
-            }
-            case Qt::Key_Enter:
-            case Qt::Key_Return: {
-                event->ignore();
-                onEnterPressed();
-                return true;
-            }
-            case Qt::Key_Escape: {
-                closeWindow();
-            }
-            default:
-                return QFrame::eventFilter(obj, event);
-            }
-        }
-        case QEvent::ShortcutOverride: {
-            event->accept();
-            return true;
-        }
-        default:
-            return QFrame::eventFilter(obj, event);
-        }
-    }
-
-    void keyPressEvent(QKeyEvent * e) override {
-        if (e->key() != Qt::Key_Escape)
-            QFrame::keyPressEvent(e);
-        else {
-            closeWindow();
-        }
-    }
-
-    void closeWindow();
-
-    void itemClicked(const QModelIndex & index) {
-        auto model = entries().model();
-        auto action = model->data(index).value<Action>();
-
-        processEnterResult(enter_callback(action));
-    }
+    void onItemClicked(const QModelIndex & index);
 
     QPaletteContainer *container();
 };

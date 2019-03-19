@@ -4,10 +4,9 @@
 #include <QtGui>
 #include <QtWidgets>
 
-#include <utils.h>
+#include <observers.h>
 
 class QItem : public QStyledItemDelegate {
-public:
     QBrush item_hover_background_;
     QString style_sheet_;
     int item_height_{}, item_margin_left_{}, item_margin_top_{};
@@ -35,6 +34,7 @@ public:
         }
     } *item_stylesheet_observer_;
 
+public:
     explicit QItem(QWidget* parent)
     : QStyledItemDelegate(parent), item_style_observer_(new ItemStyleObserver(this)), item_stylesheet_observer_(new ItemStyleSheetObserver(this)) {
         updateConfig(json("theme/styles.json"));
