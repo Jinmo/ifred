@@ -1,14 +1,10 @@
 #include "plugin.h"
 #include <Python.h>
-#include <pybind11/pybind11.h>
 
 #include <QtGui>
 #include <QtWidgets>
 
-#include <widgets/qpalettecontainer.h>
 #include <widgets/palette_manager.h>
-
-QHash<QString, QDate> g_last_used;
 
 QVector<QRegularExpression> getBlacklist() {
     auto blacklist = json("config.json")["blacklist"].toArray();
@@ -87,21 +83,11 @@ const QVector<Action> getActions() {
     return result;
 }
 
-class QIDACommandPaletteInner : public QPaletteInner {
-public:
-    QIDACommandPaletteInner(QWidget* parent, const QVector<Action>& items)
-        : QPaletteInner(parent, "command palette", std::move(items)) {
-
-    }
-
-};
-
 class palette_handler : public action_handler_t {
     int idaapi activate(action_activation_ctx_t*) override {
         show_palette("command palette", getActions(), [](const Action & action) {
             auto id = action.id();
 
-            g_last_used[id] = QDate::currentDate();
             if (id.startsWith("@ ")) {
                 auto address = id.midRef(2).toULongLong(nullptr, 16);
                 jumpto(address);

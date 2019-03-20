@@ -1,32 +1,6 @@
-#include <widgets/qpalette_inner.h>
 #include <widgets/palette_manager.h>
 
 #include <bindings/pypalette.h>
-
-namespace detail {
-    template <typename F>
-    struct FEvent : public QEvent {
-        using Fun = typename std::decay<F>::type;
-        Fun fun;
-        FEvent(Fun&& fun) : QEvent(QEvent::None), fun(std::move(fun)) {}
-        FEvent(const Fun& fun) : QEvent(QEvent::None), fun(fun) {}
-        ~FEvent() { fun(); }
-    };
-}
-
-template <typename F>
-static void postToObject(F&& fun, QObject* obj = qApp) {
-    if (qobject_cast<QThread*>(obj))
-        qWarning() << "posting a call to a thread object - consider using postToThread";
-    QCoreApplication::postEvent(obj, new detail::FEvent<F>(std::forward<F>(fun)));
-}
-
-template <typename F>
-static void postToThread(F&& fun, QThread* thread = qApp->thread()) {
-    QObject* obj = QAbstractEventDispatcher::instance(thread);
-    Q_ASSERT(obj);
-    QCoreApplication::postEvent(obj, new detail::FEvent<F>(std::forward<F>(fun)));
-}
 
 PyPalette::PyPalette(std::string& name, py::list entries) {
     QVector<Action> result;

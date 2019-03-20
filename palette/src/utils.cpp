@@ -3,6 +3,33 @@
 
 #include <widgets/palette_manager.h>
 
+QString loadFileFromBundle(const char* filename, QFile &file, bool& updated) {
+    // Check if it exists in bundle resource
+    QFile resFile(QString(":/bundle/") + filename);
+
+    updated = false;
+
+    if (resFile.exists()) {
+        if (!resFile.open(QIODevice::ReadOnly)) return QString();
+        auto bytes = resFile.readAll();
+        auto content = QString::fromUtf8(bytes);
+
+        auto dir = QDir(file.fileName());
+        dir.mkpath("..");
+
+        if (file.open(QIODevice::WriteOnly)) {
+            file.write(bytes);
+            file.close();
+        }
+
+        updated = true;
+
+        return content;
+    }
+    else
+        return QString();
+}
+
 QString loadFile(const char* filename, bool force_update, bool& updated) {
     static QHash<QString, QString> last_loaded;
     Q_INIT_RESOURCE(theme_bundle);
@@ -18,27 +45,7 @@ QString loadFile(const char* filename, bool force_update, bool& updated) {
     }
 
     if (!file.exists()) {
-        // Check if it exists in bundle resource
-        QFile resFile(QString(":/bundle/") + filename);
-        if (resFile.exists()) {
-            if (!resFile.open(QIODevice::ReadOnly)) return QString();
-            auto bytes = resFile.readAll();
-            auto content = QString::fromUtf8(bytes);
-
-            auto dir = QDir(file.fileName());
-            dir.mkpath("..");
-
-            if (file.open(QIODevice::WriteOnly)) {
-                file.write(bytes);
-                file.close();
-            }
-
-            updated = true;
-
-            return content;
-        }
-        else
-            return QString();
+        return loadFileFromBundle(filename, file, updated);
     }
 
     if (!file.open(QIODevice::ReadOnly))
