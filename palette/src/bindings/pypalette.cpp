@@ -2,7 +2,7 @@
 
 #include <bindings/pypalette.h>
 
-PyPalette::PyPalette(std::string& name, py::list entries) {
+PyPalette::PyPalette(const std::string& name, py::list entries) {
     QVector<Action> result;
 
     name_ = QString::fromStdString(name);

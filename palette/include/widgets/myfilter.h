@@ -54,7 +54,7 @@ public:
         return result;
     }
 
-    bool MyFilter::lessThan(const QString& keyword, const QString& left, const QString& right) const;
+    bool lessThan(const QString& keyword, const QString& left, const QString& right) const;
 
     void setFilter(const QString& keyword) {
         keyword_ = keyword;

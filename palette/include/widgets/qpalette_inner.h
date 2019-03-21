@@ -31,7 +31,10 @@ public:
 
     const QVector<Action> &nextPalette() { return nextPalette_; }
     EnterResult &operator =(const EnterResult& other) {
-        return EnterResult(other);
+        hide_ = other.hide_;
+        nextPalette_ = other.nextPalette_;
+
+        return *this;
     }
 };
 

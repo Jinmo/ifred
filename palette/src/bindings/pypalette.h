@@ -15,7 +15,7 @@ class PyPalette {
     QVector<Action> actions_;
     QString name_;
 public:
-	PyPalette(std::string &name, py::list entries);
+	PyPalette(const std::string &name, py::list entries);
 
     const QVector<Action>& actions() { return actions_; }
     const QString& name() { return name_; }
