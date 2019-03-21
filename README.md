@@ -69,6 +69,8 @@ int main() {
         qDebug() << action.id() << action.description() << action.shortcut();
         return false;
     });
+
+    app.exec();
 }
 ```
 

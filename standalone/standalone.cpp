@@ -33,4 +33,6 @@ int main(int argc, char **argv) {
         qDebug() << action.id() << action.description() << action.shortcut();
         return false;
         });
+    
+    app.exec();
 }
