@@ -52,8 +52,8 @@ QVector<Action> testItems() {
 }
 
 const QString TestPluginPath(const char* name) {
-	// Don't worry! also packaged with bundle theme!
-	// Just point a writable path
+    // Don't worry! also packaged with bundle theme!
+    // Just point a writable path
     return QString("./path_to_plugin_theme/") + name;
 }
 
@@ -62,13 +62,13 @@ int main() {
 
     set_path_handler(TestPluginPath);
 
-	show_palette("<test palette>", testItems(), [](const Action & action) {
-	    if (action.id() == "std::runtime_error") {
-	        throw std::runtime_error("raised!");
-	    }
-	    qDebug() << action.id() << action.description() << action.shortcut();
-	    return false;
-	});
+    show_palette("<test palette>", testItems(), [](const Action & action) {
+        if (action.id() == "std::runtime_error") {
+            throw std::runtime_error("raised!");
+        }
+        qDebug() << action.id() << action.description() << action.shortcut();
+        return false;
+    });
 }
 ```
 
