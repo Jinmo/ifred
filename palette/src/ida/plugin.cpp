@@ -146,9 +146,11 @@ void init_python_module();
 
 class gil_scoped_acquire {
     PyGILState_STATE state;
+    bool reset;
 public:
-    gil_scoped_acquire() { state = PyGILState_Ensure(); }
-    ~gil_scoped_acquire() { PyGILState_Release(state); }
+    gil_scoped_acquire() { reset = false; state = PyGILState_Ensure(); }
+    void resetThis() { reset = true; }
+    ~gil_scoped_acquire() { if(!reset) PyGILState_Release(state); }
 };
 
 void postToMainThread(const std::function<void()> & fun) {
@@ -221,8 +223,14 @@ int idaapi init(void) {
 
 //--------------------------------------------------------------------------
 void idaapi term(void) {
-    if(Py_IsInitialized())
-        PyImport_Cleanup();
+    if(Py_IsInitialized()) {
+        gil_scoped_acquire acquire;
+        // this cleans module reference earlier than module unload
+        // XXX: is this safe?
+        Py_Finalize();
+        acquire.resetThis();
+        return;
+    }
     cleanup_palettes();
 }
 
