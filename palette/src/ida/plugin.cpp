@@ -221,6 +221,8 @@ int idaapi init(void) {
 
 //--------------------------------------------------------------------------
 void idaapi term(void) {
+    if(Py_IsInitialized())
+        PyImport_Cleanup();
     cleanup_palettes();
 }
 
