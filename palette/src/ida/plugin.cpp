@@ -110,6 +110,7 @@ extern plugin_t PLUGIN;
 
 static palette_handler enter_handler_;
 
+#ifndef __APPLE__
 static action_desc_t enter_action = ACTION_DESC_LITERAL(
     "ifred:enter",
     "ifred command palette",
@@ -118,6 +119,16 @@ static action_desc_t enter_action = ACTION_DESC_LITERAL(
     "command palette",
     -1);
 
+#else
+static action_desc_t enter_action_mac = ACTION_DESC_LITERAL(
+    "ifred:enter",
+    "ifred command palette",
+    &enter_handler_,
+    "Ctrl+Shift+P",
+    "command palette",
+    -1);
+
+#endif
 //--------------------------------------------------------------------------
 bool idaapi run(size_t) {
     return true;
@@ -153,15 +164,19 @@ void postToMainThread(const std::function<void()> & fun) {
         });
 }
 
+void initpy() {
+    postToMainThread([]() {
+        gil_scoped_acquire gil;
+        init_python_module();
+        });
+}
+
 ssize_t idaapi load_python(void*, int notification_code, va_list va) {
     auto info = va_arg(va, plugin_info_t*);
 
     if (notification_code == ui_plugin_loaded && !strcmp(info->org_name, "IDAPython")) {
         {
-            postToMainThread([]() {
-                gil_scoped_acquire gil;
-                init_python_module();
-                });
+            initpy();
         }
 
         unhook_from_notification_point(HT_UI, load_python, NULL);
@@ -195,7 +210,7 @@ int idaapi init(void) {
         if (!Py_IsInitialized())
             hook_to_notification_point(HT_UI, load_python, NULL);
         else
-            init_python_module();
+            initpy();
 
         set_path_handler(IdaPluginPath);
         // init libpalette complete
