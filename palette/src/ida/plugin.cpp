@@ -111,24 +111,18 @@ extern plugin_t PLUGIN;
 static palette_handler enter_handler_;
 
 #ifndef __APPLE__
+#define SHORTCUT "Ctrl+Shift+P"
+#else
+#define SHORTCUT "Command+Shift+P"
+#endif
 static action_desc_t enter_action = ACTION_DESC_LITERAL(
     "ifred:enter",
     "ifred command palette",
     &enter_handler_,
-    "Ctrl+Shift+P",
+    SHORTCUT,
     "command palette",
     -1);
 
-#else
-static action_desc_t enter_action_mac = ACTION_DESC_LITERAL(
-    "ifred:enter",
-    "ifred command palette",
-    &enter_handler_,
-    "Ctrl+Shift+P",
-    "command palette",
-    -1);
-
-#endif
 //--------------------------------------------------------------------------
 bool idaapi run(size_t) {
     return true;
