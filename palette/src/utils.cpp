@@ -3,6 +3,13 @@
 
 #include <widgets/palette_manager.h>
 
+void postToMainThread(const std::function<void()>& fun) {
+    QObject signalSource;
+    QObject::connect(&signalSource, &QObject::destroyed, qApp, [=](QObject*) {
+        fun();
+        });
+}
+
 QString loadFileFromBundle(const char* filename, QFile &file, bool& updated) {
     // Check if it exists in bundle resource
     QFile resFile(QString(":/bundle/") + filename);

@@ -5,6 +5,7 @@
 #include <QtWidgets>
 
 #include <widgets/palette_manager.h>
+#include <utils.h>
 
 QVector<QRegularExpression> getBlacklist() {
     auto blacklist = json("config.json")["blacklist"].toArray();
@@ -153,13 +154,6 @@ public:
     ~gil_scoped_acquire() { if(!reset) PyGILState_Release(state); }
 };
 
-void postToMainThread(const std::function<void()> & fun) {
-    QObject signalSource;
-    QObject::connect(&signalSource, &QObject::destroyed, qApp, [=](QObject*) {
-        fun();
-        });
-}
-
 void initpy() {
     postToMainThread([]() {
         gil_scoped_acquire gil;
@@ -171,9 +165,7 @@ ssize_t idaapi load_python(void*, int notification_code, va_list va) {
     auto info = va_arg(va, plugin_info_t*);
 
     if (notification_code == ui_plugin_loaded && !strcmp(info->org_name, "IDAPython")) {
-        {
-            initpy();
-        }
+        initpy();
 
         unhook_from_notification_point(HT_UI, load_python, NULL);
     }
