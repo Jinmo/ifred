@@ -3,7 +3,6 @@
 #include <QObject>
 
 class Action {
-    //Q_OBJECT
 public:
     Action() {}
     Action(const Action& other) : id_(other.id_), description_(other.description_), shortcut_(other.shortcut_) {

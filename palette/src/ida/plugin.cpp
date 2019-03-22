@@ -94,7 +94,7 @@ class palette_handler : public action_handler_t {
             }
             else
             {
-                QtConcurrent::run([=]() {process_ui_action(id.toStdString().c_str()); });
+                process_ui_action(id.toStdString().c_str());
             }
             return true;
             });
@@ -146,13 +146,22 @@ public:
     ~gil_scoped_acquire() { PyGILState_Release(state); }
 };
 
+void postToMainThread(const std::function<void()> & fun) {
+    QObject signalSource;
+    QObject::connect(&signalSource, &QObject::destroyed, qApp, [=](QObject*) {
+        fun();
+        });
+}
+
 ssize_t idaapi load_python(void*, int notification_code, va_list va) {
     auto info = va_arg(va, plugin_info_t*);
 
     if (notification_code == ui_plugin_loaded && !strcmp(info->org_name, "IDAPython")) {
         {
-            gil_scoped_acquire gil;
-            init_python_module();
+            postToMainThread([]() {
+                gil_scoped_acquire gil;
+                init_python_module();
+                });
         }
 
         unhook_from_notification_point(HT_UI, load_python, NULL);
