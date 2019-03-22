@@ -113,7 +113,7 @@ static palette_handler enter_handler_;
 #ifndef __APPLE__
 #define SHORTCUT "Ctrl+Shift+P"
 #else
-#define SHORTCUT "Command+Shift+P"
+#define SHORTCUT "Meta+Shift+P"
 #endif
 static action_desc_t enter_action = ACTION_DESC_LITERAL(
     "ifred:enter",
