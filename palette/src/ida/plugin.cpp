@@ -229,7 +229,6 @@ void idaapi term(void) {
         // XXX: is this safe?
         Py_Finalize();
         acquire.resetThis();
-        return;
     }
     cleanup_palettes();
 }
