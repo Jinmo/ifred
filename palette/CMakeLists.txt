@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.1)
 
+set(CMAKE_AUTOMOC True)
+set(CMAKE_AUTORCC True)
+
 include("ida-cmake/cmake/QtIDA.cmake")
 # find_package(Qt5Widgets CONFIG REQUIRED)
 
@@ -23,6 +26,7 @@ set(sources src/widgets/myfilter.cpp
             include/widgets/myfilter.h
             include/widgets/qpalettecontainer.h
             include/widgets/qpalette_inner.h
+            include/action.h
 )
 
 add_library(palette STATIC ${sources})

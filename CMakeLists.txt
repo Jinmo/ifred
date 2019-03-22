@@ -11,6 +11,4 @@ add_subdirectory(palette/pybind11)
 
 # Include sub-projects.
 add_subdirectory ("palette")
-
-enable_testing()
 add_subdirectory ("standalone")

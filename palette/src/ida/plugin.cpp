@@ -94,7 +94,7 @@ class palette_handler : public action_handler_t {
             }
             else
             {
-                process_ui_action(id.toStdString().c_str());
+                QtConcurrent::run([=]() {process_ui_action(id.toStdString().c_str()); });
             }
             return true;
             });

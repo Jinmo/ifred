@@ -4,6 +4,13 @@
 QPaletteContainer* g_current_widget;
 pathhandler_t pluginPath;
 
+void show_palette(const QString& name, const QVector<Action>& actions, ActionHandler func) {
+    if (!g_current_widget) {
+        g_current_widget = new QPaletteContainer();
+    }
+    emit g_current_widget->show(name, actions, func);
+}
+
 void cleanup_palettes() {
     if (g_current_widget) {
         delete g_current_widget;

@@ -6,7 +6,10 @@
 #include <widgets/qpalette_inner.h>
 #include <utils.h>
 
-typedef bool (*ActionHandler)(const Action& action);
+#include <functional>
+
+typedef std::function<bool(const Action& action)> ActionHandler;
+Q_DECLARE_METATYPE(ActionHandler);
 
 class ShadowObserver;
 
@@ -21,10 +24,10 @@ public:
 
     void activate();
 
-    void onShow(const QString& name, const QVector<Action>& actions_, ActionHandler handler);
+    void onShow(const QString& name, const QVector<Action>& actions_, ActionHandler func);
 
 signals:
-    void show(const QString& name, const QVector<Action>& actions, ActionHandler handler);
+    void show(const QString& name, const QVector<Action>& actions, ActionHandler func);
 };
 
 class ShadowObserver : public JSONObserver {
