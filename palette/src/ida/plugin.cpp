@@ -6,6 +6,23 @@
 
 #include <widgets/palette_manager.h>
 
+#ifdef __MAC__
+#include <dlfcn.h>
+bool mac_dlopen_workaround() {
+    Dl_info res;
+    if(dladdr(&PLUGIN, &res) == 0) {
+        return false;
+    }
+    
+    auto res_open = dlopen(res.dli_fname, RTLD_NODELETE);
+    if(!res_open) {
+        return false;
+    }
+    
+    return true;
+}
+#endif
+
 QVector<QRegularExpression> getBlacklist() {
     auto blacklist = json("config.json")["blacklist"].toArray();
     QVector<QRegularExpression> blacklist_converted;
@@ -215,6 +232,12 @@ int idaapi init(void) {
             msg("ifred action loading error");
             return PLUGIN_SKIP;
         };
+        
+#ifdef __MAC__
+        if(!mac_dlopen_workaround()) {
+            msg("ifred mac dlopen workaround error");
+        }
+#endif
 
         update_action_shortcut("CommandPalette", "");
     }
@@ -223,14 +246,7 @@ int idaapi init(void) {
 
 //--------------------------------------------------------------------------
 void idaapi term(void) {
-    if(Py_IsInitialized()) {
-        gil_scoped_acquire acquire;
-        // this cleans module reference earlier than module unload
-        // XXX: is this safe?
-        Py_Finalize();
-        acquire.resetThis();
-    }
-    cleanup_palettes();
+//    cleanup_palettes();
 }
 
 //--------------------------------------------------------------------------
