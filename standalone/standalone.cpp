@@ -1,5 +1,5 @@
 #include <widgets/palette_manager.h>
-#define COUNT 100
+#define COUNT 20000
 
 QVector<Action> testItems() {
     QVector<Action> action_list;
