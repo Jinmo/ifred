@@ -35,9 +35,9 @@ QRegularExpression genCapturingRegexp(const QString & keyword) {
 
     for (auto& x : keyword)
         if (!x.isSpace())
-            regexp_before_join << (QString("(.*)(") + x + ")");
+            regexp_before_join << (QString("(.*?)(") + x + ")");
 
-    regexp_before_join.push_back("(.*)$");
+    regexp_before_join.push_back("(.*?)$");
 
     QRegularExpression result(regexp_before_join.join(""),
         QRegularExpression::CaseInsensitiveOption);
