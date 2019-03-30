@@ -45,11 +45,32 @@ public:
         connect(watcher_, &QFutureWatcher<bool>::finished, this, &MyFilter::doneFiltering);
     }
 
+    // Public interface
+    static bool fuzzy_match_simple(const QString &pattern, const QString &str) {
+        auto it = pattern.begin();
+        auto itEnd = pattern.end();
+
+        if (it == itEnd)
+            return true;
+
+        for (auto&& c : str) {
+            if (it->toLower() == c.toLower()) {
+                ++it;
+                if (it == itEnd) {
+                    break;
+                }
+            }
+        }
+
+        return it == itEnd;
+    }
+
     bool filterAcceptsRow(const QString& keyword, QRegularExpression regexp, int source_row) {
         if (keyword.isEmpty())
             return true;
 
         const QString& str = items_[source_row].description();
+        return fuzzy_match_simple(keyword, str);
         bool result = str.contains(regexp);
         return result;
     }
