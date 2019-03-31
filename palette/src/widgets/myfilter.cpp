@@ -6,24 +6,6 @@
 QHash<QString, QRegularExpression> regexp_cache;
 QHash<QString, QRegularExpression> capturing_regexp_cache;
 
-QRegularExpression genRegexp(const QString& keyword) {
-    QStringList regexp_before_join;
-
-    if (regexp_cache.contains(keyword)) {
-        return regexp_cache[keyword];
-    }
-
-    for (auto& x : keyword)
-        if (!x.isSpace())
-            regexp_before_join << x;
-
-    QRegularExpression result(regexp_before_join.join(".*"),
-        QRegularExpression::CaseInsensitiveOption);
-
-    regexp_cache[keyword] = result;
-    return result;
-}
-
 QRegularExpression genCapturingRegexp(const QString & keyword) {
     QStringList regexp_before_join;
 
@@ -77,13 +59,12 @@ bool MyFilter::lessThan(const QString & keyword, const QString & left, const QSt
 
 bool MyFilter::update_filter(const QString & keyword) {
     long count = 0, preferred_index = 0;
-    auto expression = genRegexp(keyword);
 
     canceled_ = false;
 
     // TODO: do chunk-wise item insertion
     for (long i = 0; i < items_.size(); i++) {
-        if (filterAcceptsRow(keyword, expression, i)) {
+        if (filterAcceptsRow(keyword, i)) {
             shown_items_temp_[count++] = i;
         }
 
@@ -91,20 +72,21 @@ bool MyFilter::update_filter(const QString & keyword) {
             return true;
     }
 
-    if(keyword.size())
+    if (keyword.size() > 1)
         try {
-            std::sort(shown_items_temp_.begin(), shown_items_temp_.begin() + count, [=](int lhs, int rhs) -> bool {
-                if (canceled_)
-                    throw std::exception();
-                auto&& l = items_[lhs];
-                auto&& r = items_[rhs];
-                return lessThan(keyword_, l.description(), r.description());
-                });
-        }
-        catch (std::exception&) {
-            return true;
-        }
+        std::sort(shown_items_temp_.begin(), shown_items_temp_.begin() + count, [=](int lhs, int rhs) -> bool {
+            if (canceled_)
+                throw std::exception();
+            auto&& l = items_[lhs];
+            auto&& r = items_[rhs];
+            return lessThan(keyword_, l.description(), r.description());
+            });
+    }
+    catch (std::exception&) {
+        return true;
+    }
 
+    std::copy(shown_items_temp_.begin(), shown_items_temp_.begin() + count, shown_items_.begin());
     shown_items_ = shown_items_temp_;
     shown_items_count_ = count;
     preferred_index_ = preferred_index;

@@ -10,16 +10,15 @@
 
 #include <action.h>
 
-int distance(const QString& s1_, const QString& s2_);
 QRegularExpression genRegexp(const QString& keyword);
 QRegularExpression genCapturingRegexp(const QString& keyword);
 
 class MyFilter : public QAbstractItemModel {
     Q_OBJECT;
 public:
-    const QVector<Action> items_;
-    QVector<int> shown_items_;
-    QVector<int> shown_items_temp_;
+    QVector<Action> items_;
+    std::vector<int> shown_items_;
+    std::vector<int> shown_items_temp_;
 
     QVector<int> initial_range_;
     int shown_items_count_;
@@ -65,14 +64,11 @@ public:
         return it == itEnd;
     }
 
-    bool filterAcceptsRow(const QString& keyword, QRegularExpression regexp, int source_row) {
+    bool filterAcceptsRow(const QString& keyword, int source_row) {
         if (keyword.isEmpty())
             return true;
 
-        const QString& str = items_[source_row].description();
-        return fuzzy_match_simple(keyword, str);
-        bool result = str.contains(regexp);
-        return result;
+        return fuzzy_match_simple(keyword, items_[source_row].description());
     }
 
     bool lessThan(const QString& keyword, const QString& left, const QString& right) const;

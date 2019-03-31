@@ -26,7 +26,7 @@ entries = [Action(description=random_str(), # displayed text
     id='action%d' % i # must be unique
     ) for i in range(20)]
 
-show_palette(Palette('palette name here', entries))
+show_palette(Palette('palette name here', 'placeholder here...', entries))
 ```
 
 ## C++ API
@@ -62,7 +62,7 @@ int main() {
 
     set_path_handler(TestPluginPath);
 
-    show_palette("<test palette>", testItems(), [](const Action & action) {
+    show_palette("<test palette>", "Enter item name...", testItems(), [](const Action & action) {
         if (action.id() == "std::runtime_error") {
             throw std::runtime_error("raised!");
         }

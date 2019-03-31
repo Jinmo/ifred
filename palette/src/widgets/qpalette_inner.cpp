@@ -27,7 +27,7 @@ QPaletteInner::QPaletteInner(QWidget* parent, const QString& name, const QVector
 
 void QPaletteInner::processEnterResult(EnterResult res) {
     if (res.hide()) {
-        container()->close();
+        closeWindow();
     }
     else {
         // hide=true if nextPalette != NULL
@@ -67,13 +67,17 @@ bool QPaletteInner::eventFilter(QObject *obj, QEvent *event) {
                     return onArrowPressed(ke->key());
                 case Qt::Key_Enter:
                 case Qt::Key_Return:
-                    onEnterPressed();
-                    return true;
+                    return onEnterPressed();
                 case Qt::Key_Escape:
                     closeWindow();
                     return true;
+                case Qt::Key_PageDown:
+                case Qt::Key_PageUp:
+                    event->ignore();
+                    entries_->keyPressEvent(ke);
+                    return true;
                 default:
-                    return QFrame::eventFilter(obj, event);
+                    return obj->eventFilter(obj, event);
             }
         }
         case QEvent::ShortcutOverride: {
@@ -92,7 +96,7 @@ bool QPaletteInner::onArrowPressed(int key) {
     if (new_row == -1)
         new_row = 0;
     else if (new_row == entries_->model()->rowCount())
-        new_row = 0;
+        new_row--;
 
     entries_->setCurrentIndex(entries_->model()->index(new_row, 0));
     return true;

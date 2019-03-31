@@ -12,7 +12,7 @@ void postToMainThread(const std::function<void()>& fun) {
 
 QString loadFileFromBundle(const char* filename, QFile &file, bool& updated) {
     // Check if it exists in bundle resource
-    QFile resFile(QString(":/bundle/") + filename);
+    QFile resFile(QStringLiteral(":/bundle/") + filename);
 
     updated = false;
 

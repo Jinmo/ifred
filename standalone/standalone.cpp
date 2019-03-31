@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
 
     set_path_handler(TestPluginPath);
 
-    show_palette("<test palette>", testItems(), [](const Action & action) {
+    show_palette("<test palette>", "Enter item name...", testItems(), [](Action & action) {
         if (action.id() == "std::runtime_error") {
             throw std::runtime_error("raised!");
         }

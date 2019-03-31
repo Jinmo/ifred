@@ -5,7 +5,7 @@ QItems::QItems(QWidget* parent, const QVector<Action>& items)
     model_(new MyFilter(this, std::move(items))),
     item_delegate_(new QItem(this)) {
 
-    setModel(model_);
+    QAbstractItemView::setModel(model_);
     setItemDelegate(item_delegate_);
     setLineWidth(0);
 
