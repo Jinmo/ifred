@@ -16,7 +16,6 @@ public:
         : QLineEdit(parent), entries_(entries),
         css_observer_(new CSSObserver(this, "theme/searchbox.css")) {
         connect(this, &QLineEdit::textChanged, this, &QSearch::onTextChanged);
-        setPlaceholderText("Enter action or option name...");
         onTextChanged(QString());
     }
 

@@ -16,6 +16,7 @@ public:
     MyFilter* model() { return model_; }
 
     explicit QItems(QWidget* parent, const QVector<Action>& items);
+    using QAbstractItemView::keyPressEvent;
 };
 
 #endif // QITEMS_H

@@ -25,12 +25,12 @@ public:
     EnterResult(bool hide) : hide_(hide), nextPalette_() {}
     EnterResult(const EnterResult& other) : hide_(other.hide_), nextPalette_(other.nextPalette_) {}
 
-    EnterResult(const QVector<Action> &nextPalette) : hide_(true), nextPalette_(nextPalette) {}
+    EnterResult(const QVector<Action>& nextPalette) : hide_(true), nextPalette_(nextPalette) {}
 
     bool hide() { return hide_; }
 
-    const QVector<Action> &nextPalette() { return nextPalette_; }
-    EnterResult &operator =(const EnterResult& other) {
+    const QVector<Action>& nextPalette() { return nextPalette_; }
+    EnterResult& operator =(const EnterResult& other) {
         hide_ = other.hide_;
         nextPalette_ = other.nextPalette_;
 
@@ -63,7 +63,6 @@ protected:
     QSearch* searchbox_;
 
     QString name_;
-    QThreadPool thread_pool_;
 
     CSSObserver* css_observer_;
 
@@ -84,10 +83,14 @@ public:
 
     void closeWindow();
 
-    void onEnterPressed() {
-        auto action = (entries_->currentIndex()).data().value<Action>();
-        processEnterResult(true);
-        emit enter_callback(action);
+    bool onEnterPressed() {
+        if (entries_->model()->rowCount())
+        {
+            auto action = (entries_->currentIndex()).data().value<Action>();
+            processEnterResult(true);
+            emit enter_callback(action);
+        }
+        return true;
     }
 
     void onItemClicked(const QModelIndex& index);
@@ -95,5 +98,5 @@ public:
     QPaletteContainer* container();
 
 signals:
-    bool enter_callback(const Action& action);
+    bool enter_callback(Action& action);
 };

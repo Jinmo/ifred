@@ -2,10 +2,11 @@
 
 #include <bindings/pypalette.h>
 
-PyPalette::PyPalette(const std::string& name, py::list entries) {
+PyPalette::PyPalette(const std::string& name, const std::string &placeholer, const py::list &entries) {
     QVector<Action> result;
 
     name_ = QString::fromStdString(name);
+    placeholder_ = QString::fromStdString(placeholer);
     result.reserve(static_cast<int>(entries.size()));
 
     for (int i = 0; i < entries.size(); i++) {
@@ -32,10 +33,10 @@ PYBIND11_MODULE(__palette__, m) {
     m.doc() = R"()";
 
     py::class_<PyPalette>(m, "Palette")
-        .def(py::init<std::string, py::list>());
+        .def(py::init<std::string, std::string, py::list>());
 
     m.def("show_palette", [](PyPalette & palette) {
-        show_palette(palette.name(), palette.actions(), [](const Action & action) {
+        show_palette(palette.name(), palette.placeholder(), palette.actions(), [](const Action & action) {
             py::gil_scoped_acquire gil;
 
             try {

@@ -8,7 +8,7 @@
 
 #include <functional>
 
-typedef std::function<bool(const Action& action)> ActionHandler;
+typedef std::function<bool(Action& action)> ActionHandler;
 Q_DECLARE_METATYPE(ActionHandler);
 
 class ShadowObserver;
@@ -24,10 +24,10 @@ public:
 
     void activate();
 
-    void onShow(const QString& name, const QVector<Action>& actions_, ActionHandler func);
+    void onShow(const QString& name, const QString &placeholder, const QVector<Action>& actions_, ActionHandler func);
 
 signals:
-    void show(const QString& name, const QVector<Action>& actions, ActionHandler func);
+    void show(const QString& name, const QString &placeholder, const QVector<Action>& actions, ActionHandler func);
 };
 
 class ShadowObserver : public JSONObserver {
