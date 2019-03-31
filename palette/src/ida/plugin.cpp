@@ -7,19 +7,25 @@
 #include <widgets/palette_manager.h>
 #include <utils.h>
 
+template <>
+void std::swap(Action& lhs, Action& rhs) {
+    lhs.swap(rhs);
+}
+
+// some algorithm in your code
 #ifdef __MAC__
 #include <dlfcn.h>
 bool mac_dlopen_workaround() {
     Dl_info res;
-    if(dladdr(&PLUGIN, &res) == 0) {
+    if (dladdr(&PLUGIN, &res) == 0) {
         return false;
     }
-    
+
     auto res_open = dlopen(res.dli_fname, RTLD_NODELETE);
-    if(!res_open) {
+    if (!res_open) {
         return false;
     }
-    
+
     return true;
 }
 #endif
@@ -93,24 +99,30 @@ const QVector<Action> getActions() {
     // 1. Add actions from IDA except blacklisted identifiers
     addActions(result, actions);
 
+    qDebug() << result.size();
+
+    std::sort(result.begin(), result.begin() + result.size(), [](Action & lhs, Action & rhs) {
+        return lhs.description().compare(rhs.description()) < 0;
+    });
+
     return result;
 }
 
 const QVector<Action> getNames() {
     QVector<Action> result;
     size_t names = get_nlist_size();
-    
+
     result.reserve(names);
-    
+
     // 2. Add names from IDA
     addNames(result, names);
-    
+
     return result;
 }
 
 class command_palette_handler : public action_handler_t {
     int idaapi activate(action_activation_ctx_t*) override {
-        show_palette("command palette", getActions(), [](const Action & action) {
+        show_palette("command palette", "Enter action or option name...", getActions(), [](Action & action) {
             auto id = action.id();
 
             process_ui_action(id.toStdString().c_str());
@@ -126,17 +138,17 @@ class command_palette_handler : public action_handler_t {
 
 class name_palette_handler : public action_handler_t {
     int idaapi activate(action_activation_ctx_t*) override {
-        show_palette("name palette", getNames(), [](const Action & action) {
+        show_palette("name palette", "Enter symbol name...", getNames(), [](Action & action) {
             auto id = action.id();
-            
+
             auto address = id.toULongLong(nullptr, 16);
             jumpto(address);
-            
+
             return true;
-        });
+            });
         return 1;
     }
-    
+
     action_state_t idaapi update(action_update_ctx_t*) override {
         return AST_ENABLE_ALWAYS;
     }
@@ -163,12 +175,12 @@ static action_desc_t command_palette_action = ACTION_DESC_LITERAL(
     -1);
 
 static action_desc_t name_palette_action = ACTION_DESC_LITERAL(
-                                                                  "ifred:name_palette",
-                                                                  "ifred name palette",
-                                                                  &name_palette_handler_,
-                                                                  NAME_PALETTE_SHORTCUT,
-                                                                  "name palette",
-                                                                  -1);
+    "ifred:name_palette",
+    "ifred name palette",
+    &name_palette_handler_,
+    NAME_PALETTE_SHORTCUT,
+    "name palette",
+    -1);
 
 //--------------------------------------------------------------------------
 bool idaapi run(size_t) {
@@ -197,7 +209,7 @@ class gil_scoped_acquire {
 public:
     gil_scoped_acquire() { reset = false; state = PyGILState_Ensure(); }
     void resetThis() { reset = true; }
-    ~gil_scoped_acquire() { if(!reset) PyGILState_Release(state); }
+    ~gil_scoped_acquire() { if (!reset) PyGILState_Release(state); }
 };
 
 void initpy() {
@@ -226,7 +238,7 @@ const QString IdaPluginPath(const char* filename) {
         return r;
     }
 
-    g_plugin_path = (QString(get_user_idadir()).replace("\\", "/") + QString("/plugins/palette/"));
+    g_plugin_path = (QString(get_user_idadir()).replace("\\", "/") + QStringLiteral("/plugins/palette/"));
     QDir plugin_dir(g_plugin_path);
     plugin_dir.mkpath(".");
 
@@ -253,20 +265,20 @@ int idaapi init(void) {
             msg("ifred command palette action loading error");
             return PLUGIN_SKIP;
         };
-        
+
         if (!register_action(name_palette_action)) {
             msg("ifred name palette action loading error");
             return PLUGIN_SKIP;
         };
-        
+
 #ifdef __MAC__
-        if(!mac_dlopen_workaround()) {
+        if (!mac_dlopen_workaround()) {
             msg("ifred mac dlopen workaround error");
-        }
+    }
 #endif
 
         update_action_shortcut("CommandPalette", "");
-    }
+}
     return r;
 }
 

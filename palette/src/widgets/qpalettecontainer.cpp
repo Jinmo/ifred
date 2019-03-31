@@ -25,14 +25,16 @@ QPaletteContainer::QPaletteContainer()
     connect(this, &QPaletteContainer::show, this, &QPaletteContainer::onShow, Qt::QueuedConnection);
 }
 
-void QPaletteContainer::onShow(const QString &name, const QVector<Action> &actions_, ActionHandler func) {
+void QPaletteContainer::onShow(const QString &name, const QString &placeholder, const QVector<Action> &actions, ActionHandler func) {
     while (inner_stacked_->count())
         inner_stacked_->removeWidget(inner_stacked_->widget(0));
 
-    auto delegate = new QPaletteInner(this, name, actions_);
+    auto delegate = new QPaletteInner(this, name, actions);
     connect(delegate, &QPaletteInner::enter_callback, func);
     inner_stacked_->addWidget(delegate);
     centerWidgets(this);
+
+    delegate->searchbox().setPlaceholderText(placeholder);
 
     QMainWindow::show();
     activate();
