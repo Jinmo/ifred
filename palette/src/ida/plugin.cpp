@@ -7,12 +7,6 @@
 #include <widgets/palette_manager.h>
 #include <utils.h>
 
-template <>
-void std::swap(Action& lhs, Action& rhs) {
-    lhs.swap(rhs);
-}
-
-// some algorithm in your code
 #ifdef __MAC__
 #include <dlfcn.h>
 bool mac_dlopen_workaround() {

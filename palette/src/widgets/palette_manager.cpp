@@ -4,6 +4,13 @@
 QPaletteContainer* g_current_widget;
 pathhandler_t pluginPath;
 
+template <>
+void std::swap(Action& lhs, Action& rhs)
+noexcept(is_nothrow_move_constructible<Action>::value && is_nothrow_move_assignable<Action>::value)
+{
+    lhs.swap(rhs);
+}
+
 void show_palette(const QString& name, const QString &placeholder, const QVector<Action>& actions, ActionHandler func) {
     if (!g_current_widget) {
         g_current_widget = new QPaletteContainer();
