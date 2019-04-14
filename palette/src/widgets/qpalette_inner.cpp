@@ -3,11 +3,11 @@
 
 QPaletteInner::QPaletteInner(QWidget* parent, const QString& name, const QVector<Action>& items)
     : QFrame(parent),
-    css_observer_(new CSSObserver(this, "theme/window.css")),
     styles_observer_(new StylesObserver(this)),
-    layout_(new QVBoxLayout(this)),
-    entries_(new QItems(this, items)),
     name_(name),
+    entries_(new QItems(this, items)),
+    css_observer_(new CSSObserver(this, "theme/window.css")),
+    layout_(new QVBoxLayout(this)),
     searchbox_(new QSearch(this, entries_)) {
 
     // Add widgets
@@ -61,7 +61,7 @@ bool QPaletteInner::onArrowPressed(int key) {
 }
 
 void QPaletteInner::onItemClicked(const QModelIndex & index) {
-    auto &action = index.data().value<Action>();
+    auto action = index.data().value<Action>();
 
     processEnterResult(enter_callback(action));
 }
@@ -106,7 +106,7 @@ bool QPaletteInner::eventFilter(QObject* obj, QEvent* event) {
 bool QPaletteInner::onEnterPressed() {
     if (entries_->model()->rowCount())
     {
-        Action &action = (entries_->currentIndex()).data().value<Action>();
+        Action action = (entries_->currentIndex()).data().value<Action>();
         processEnterResult(true);
         emit enter_callback(action);
     }

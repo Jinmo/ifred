@@ -36,13 +36,12 @@ class PALETTE_EXPORT QPaletteInner : public QFrame {
     } *styles_observer_;
 
 protected:
-    QItems* entries_;
-    QVBoxLayout* layout_;
-    QSearch* searchbox_;
-
     QString name_;
 
+    QItems* entries_;
     CSSObserver* css_observer_;
+    QVBoxLayout* layout_;
+    QSearch* searchbox_;
 
 public:
     QPaletteInner(QWidget* parent, const QString& name, const QVector<Action>& items);

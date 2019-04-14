@@ -4,21 +4,13 @@
 
 class Action {
 public:
-    void swap(Action& rhs) {
-        id_.swap(rhs.id_);
-        description_.swap(rhs.description_);
-        shortcut_.swap(rhs.shortcut_);
-    }
-
-
     Action() {}
     ~Action() {}
 
-    Action(const Action& other) : id_(other.id_), description_(other.description_), shortcut_(other.shortcut_) {
-    }
-
     Action(Action&& other) = default;
 
+    Action(const Action &other) = default;
+    
     Action(const QString& id, const QString& description, const QString& shortcut)
         : id_(id),
         description_(description),
@@ -42,12 +34,20 @@ public:
         return *this;
     }
 
+    void swap(Action& rhs) {
+        id_.swap(rhs.id_);
+        description_.swap(rhs.description_);
+        shortcut_.swap(rhs.shortcut_);
+    }
+    
 protected:
     QString id_, description_, shortcut_;
 };
 
 template<>
-void std::swap(Action& lhs, Action& rhs) noexcept;
+inline void std::swap(Action& lhs, Action& rhs) noexcept {
+    lhs.swap(rhs);
+}
 
 Q_DECLARE_METATYPE(Action);
 
