@@ -18,7 +18,7 @@
         },
         {
           "name": "PYTHON_EXECUTABLE",
-          "value": "C:/Python27-x64/python.exe",
+          "value": "C:/Python27/python.exe",
           "type": "PATH"
         },
         {

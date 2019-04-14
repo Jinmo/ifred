@@ -8,7 +8,7 @@ void show_palette(const QString& name, const QString &placeholder, const QVector
     if (!g_current_widget) {
         g_current_widget = new QPaletteContainer();
     }
-    emit g_current_widget->show(name, placeholder, actions, func);
+    emit g_current_widget->show(name, placeholder, actions, std::move(func));
 }
 
 void cleanup_palettes() {

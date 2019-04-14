@@ -1,6 +1,30 @@
 #include <widgets/qitem.h>
 #include <widgets/myfilter.h>
 
+QHash<QString, QRegularExpression> capturing_regexp_cache;
+
+QRegularExpression genCapturingRegexp(const QString & keyword) {
+    QStringList regexp_before_join;
+
+    if (capturing_regexp_cache.contains(keyword)) {
+        return capturing_regexp_cache[keyword];
+    }
+
+    regexp_before_join << ("^");
+
+    for (auto& x : keyword)
+        if (!x.isSpace())
+            regexp_before_join << (QString("(.*?)(") + x + ")");
+
+    regexp_before_join.push_back("(.*?)$");
+
+    QRegularExpression result(regexp_before_join.join(""),
+                              QRegularExpression::CaseInsensitiveOption);
+
+    capturing_regexp_cache[keyword] = result;
+    return result;
+}
+
 const QString highlight(const QString& keyword, const QString& tooltip) {
     static QString em_("<em>"), emEnd_("</em>");
     auto cache_key = QPair<QString, QString>(keyword, tooltip);
@@ -25,7 +49,6 @@ const QString highlight(const QString& keyword, const QString& tooltip) {
     }
 
     return QString(highlights.join(""));
-    //hlCache.insert(cache_key, result);
 }
 
 void QItem::paint(QPainter* painter,

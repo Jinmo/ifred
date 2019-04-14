@@ -25,13 +25,9 @@ QPaletteInner::QPaletteInner(QWidget* parent, const QString& name, const QVector
     entries_->installEventFilter(this);
 }
 
-void QPaletteInner::processEnterResult(EnterResult res) {
-    if (res.hide()) {
+void QPaletteInner::processEnterResult(bool res) {
+    if (res) {
         closeWindow();
-    }
-    else {
-        // hide=true if nextPalette != NULL
-        Q_ASSERT(res.nextPalette().empty());
     }
 }
 
@@ -43,13 +39,7 @@ QPaletteContainer* QPaletteInner::container() {
     return dynamic_cast<QPaletteContainer*>(window());
 }
 
-void QPaletteInner::onItemClicked(const QModelIndex &index) {
-    auto action = index.data().value<Action>();
-
-    processEnterResult(enter_callback(action));
-}
-
-void QPaletteInner::keyPressEvent(QKeyEvent *e) {
+void QPaletteInner::keyPressEvent(QKeyEvent* e) {
     if (e->key() != Qt::Key_Escape)
         QFrame::keyPressEvent(e);
     else {
@@ -57,40 +47,8 @@ void QPaletteInner::keyPressEvent(QKeyEvent *e) {
     }
 }
 
-bool QPaletteInner::eventFilter(QObject *obj, QEvent *event) {
-    switch (event->type()) {
-        case QEvent::KeyPress: {
-            auto* ke = dynamic_cast<QKeyEvent*>(event);
-            switch (ke->key()) {
-                case Qt::Key_Down:
-                case Qt::Key_Up:
-                    return onArrowPressed(ke->key());
-                case Qt::Key_Enter:
-                case Qt::Key_Return:
-                    return onEnterPressed();
-                case Qt::Key_Escape:
-                    closeWindow();
-                    return true;
-                case Qt::Key_PageDown:
-                case Qt::Key_PageUp:
-                    event->ignore();
-                    entries_->keyPressEvent(ke);
-                    return true;
-                default:
-                    return obj->eventFilter(obj, event);
-            }
-        }
-        case QEvent::ShortcutOverride: {
-            event->accept();
-            return true;
-        }
-        default:
-            return QFrame::eventFilter(obj, event);
-    }
-}
-
 bool QPaletteInner::onArrowPressed(int key) {
-    int delta = key == Qt::Key_Down ? 1: -1;
+    int delta = key == Qt::Key_Down ? 1 : -1;
     auto new_row = entries_->currentIndex().row() + delta;
 
     if (new_row == -1)
@@ -99,5 +57,58 @@ bool QPaletteInner::onArrowPressed(int key) {
         new_row--;
 
     entries_->setCurrentIndex(entries_->model()->index(new_row, 0));
+    return true;
+}
+
+void QPaletteInner::onItemClicked(const QModelIndex & index) {
+    auto action = index.data().value<Action>();
+
+    processEnterResult(enter_callback(action));
+}
+
+bool QPaletteInner::eventFilter(QObject* obj, QEvent* event) {
+    switch (event->type()) {
+    case QEvent::KeyPress: {
+        auto* ke = dynamic_cast<QKeyEvent*>(event);
+        switch (ke->key()) {
+        case Qt::Key_Down:
+        case Qt::Key_Up:
+            /* We manually process Up/Down key to handle corner cases and for ease of edits */
+            return onArrowPressed(ke->key());
+        case Qt::Key_Enter:
+        case Qt::Key_Return:
+            /* Both key should select an action and trigger enter callback */
+            return onEnterPressed();
+        case Qt::Key_Escape:
+            /* This key closes the window */
+            closeWindow();
+            return true;
+        case Qt::Key_PageDown:
+        case Qt::Key_PageUp:
+            /* Forward QKeyEvent for PageDown/PageUp key since QAbstractListView already implemented the procedure */
+            event->ignore();
+            entries_->keyPressEvent(ke);
+            return true;
+        default:
+            return obj->eventFilter(obj, event);
+        }
+    }
+    case QEvent::ShortcutOverride: {
+        /* Handling ShortcutOverride prevents UI from hooking the shortcuts used in the command palette */
+        event->accept();
+        return true;
+    }
+    default:
+        return QFrame::eventFilter(obj, event);
+    }
+}
+
+bool QPaletteInner::onEnterPressed() {
+    if (entries_->model()->rowCount())
+    {
+        auto action = (entries_->currentIndex()).data().value<Action>();
+        processEnterResult(true);
+        emit enter_callback(action);
+    }
     return true;
 }

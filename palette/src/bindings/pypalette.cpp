@@ -9,8 +9,7 @@ PyPalette::PyPalette(const std::string& name, const std::string &placeholer, con
     placeholder_ = QString::fromStdString(placeholer);
     result.reserve(static_cast<int>(entries.size()));
 
-    for (int i = 0; i < entries.size(); i++) {
-        py::handle item = entries[i];
+    for (py::handle item : entries) {
         result.push_back(Action(
             QString::fromStdString(item.attr("id").cast<std::string>()),
             QString::fromStdString(item.attr("description").cast<std::string>()),
@@ -35,7 +34,7 @@ PYBIND11_MODULE(__palette__, m) {
     py::class_<PyPalette>(m, "Palette")
         .def(py::init<std::string, std::string, py::list>());
 
-    m.def("show_palette", [](PyPalette & palette) {
+    m.def("show_palette", [](PyPalette & palette) -> bool {
         show_palette(palette.name(), palette.placeholder(), palette.actions(), [](const Action & action) {
             py::gil_scoped_acquire gil;
 
@@ -62,7 +61,9 @@ PYBIND11_MODULE(__palette__, m) {
             }
 
             return true;
-            }); });
+            });
+        return true;
+    });
 
     m.attr("threading") = py::module::import("threading");
 

@@ -16,28 +16,6 @@
 
 class QPaletteInner;
 
-class EnterResult {
-    bool hide_;
-    QVector<Action> nextPalette_;
-
-public:
-    EnterResult() : hide_(true), nextPalette_() {}
-    EnterResult(bool hide) : hide_(hide), nextPalette_() {}
-    EnterResult(const EnterResult& other) : hide_(other.hide_), nextPalette_(other.nextPalette_) {}
-
-    EnterResult(const QVector<Action>& nextPalette) : hide_(true), nextPalette_(nextPalette) {}
-
-    bool hide() { return hide_; }
-
-    const QVector<Action>& nextPalette() { return nextPalette_; }
-    EnterResult& operator =(const EnterResult& other) {
-        hide_ = other.hide_;
-        nextPalette_ = other.nextPalette_;
-
-        return *this;
-    }
-};
-
 class QPaletteContainer;
 
 class PALETTE_EXPORT QPaletteInner : public QFrame {
@@ -73,7 +51,7 @@ public:
 
     QItems& entries() { return *entries_; }
 
-    void processEnterResult(EnterResult res);
+    void processEnterResult(bool res);
 
     bool onArrowPressed(int key);
 
@@ -83,15 +61,7 @@ public:
 
     void closeWindow();
 
-    bool onEnterPressed() {
-        if (entries_->model()->rowCount())
-        {
-            auto action = (entries_->currentIndex()).data().value<Action>();
-            processEnterResult(true);
-            emit enter_callback(action);
-        }
-        return true;
-    }
+    bool onEnterPressed();
 
     void onItemClicked(const QModelIndex& index);
 

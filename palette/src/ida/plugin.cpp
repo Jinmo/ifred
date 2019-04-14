@@ -99,8 +99,6 @@ const QVector<Action> getActions() {
     // 1. Add actions from IDA except blacklisted identifiers
     addActions(result, actions);
 
-    qDebug() << result.size();
-
     std::sort(result.begin(), result.begin() + result.size(), [](Action & lhs, Action & rhs) {
         return lhs.description().compare(rhs.description()) < 0;
     });
@@ -123,7 +121,7 @@ const QVector<Action> getNames() {
 class command_palette_handler : public action_handler_t {
     int idaapi activate(action_activation_ctx_t*) override {
         show_palette("command palette", "Enter action or option name...", getActions(), [](Action & action) {
-            auto id = action.id();
+            auto &&id = action.id();
 
             process_ui_action(id.toStdString().c_str());
             return true;
@@ -139,9 +137,9 @@ class command_palette_handler : public action_handler_t {
 class name_palette_handler : public action_handler_t {
     int idaapi activate(action_activation_ctx_t*) override {
         show_palette("name palette", "Enter symbol name...", getNames(), [](Action & action) {
-            auto id = action.id();
+            auto &&id = action.id();
 
-            auto address = id.toULongLong(nullptr, 16);
+            ea_t address = static_cast<ea_t>(id.toULongLong(nullptr, 16));
             jumpto(address);
 
             return true;
@@ -187,17 +185,16 @@ bool idaapi run(size_t) {
     return true;
 }
 
-extern char comment[], help[], wanted_name[], wanted_hotkey[];
+extern char comment[], help[], wanted_name[];
 
 //--------------------------------------------------------------------------
 char comment[] = "ifred";
 
-char help[] =
-"IDA palette";
+char help[] = "IDA palette";
 
 //--------------------------------------------------------------------------
 // This is the preferred name of the plugin module in the menu system
-// The preferred name may be overriden in plugins.cfg file
+// The preferred name may be overridden in plugins.cfg file
 
 char wanted_name[] = "ifred";
 
@@ -208,7 +205,6 @@ class gil_scoped_acquire {
     bool reset;
 public:
     gil_scoped_acquire() { reset = false; state = PyGILState_Ensure(); }
-    void resetThis() { reset = true; }
     ~gil_scoped_acquire() { if (!reset) PyGILState_Release(state); }
 };
 
@@ -225,7 +221,7 @@ ssize_t idaapi load_python(void*, int notification_code, va_list va) {
     if (notification_code == ui_plugin_loaded && !strcmp(info->org_name, "IDAPython")) {
         initpy();
 
-        unhook_from_notification_point(HT_UI, load_python, NULL);
+        unhook_from_notification_point(HT_UI, load_python, nullptr);
     }
 
     return 0;
@@ -246,44 +242,45 @@ const QString IdaPluginPath(const char* filename) {
 }
 
 //--------------------------------------------------------------------------
-int idaapi init(void) {
-    // the plugin works only with idaq
-    int r = is_idaq() ? PLUGIN_KEEP : PLUGIN_SKIP;
-    if (r == PLUGIN_KEEP) {
-        msg("ifred loading...\n");
+int idaapi init() {
+    if(!is_idaq())
+        // the plugin works only with idaq
+        return PLUGIN_SKIP;
 
-        // init libpalette
-        if (!Py_IsInitialized())
-            hook_to_notification_point(HT_UI, load_python, NULL);
-        else
-            initpy();
+    msg("ifred loading...\n");
 
-        set_path_handler(IdaPluginPath);
-        // init libpalette complete
+    // 1. init IDAPython
+    if (!Py_IsInitialized())
+        hook_to_notification_point(HT_UI, load_python, nullptr);
+    else
+        initpy();
 
-        if (!register_action(command_palette_action)) {
-            msg("ifred command palette action loading error");
-            return PLUGIN_SKIP;
-        };
+    // 2. init theme path handler
+    set_path_handler(IdaPluginPath);
 
-        if (!register_action(name_palette_action)) {
-            msg("ifred name palette action loading error");
-            return PLUGIN_SKIP;
-        };
+    if (!register_action(command_palette_action)) {
+        msg("ifred command palette action loading error");
+        return PLUGIN_SKIP;
+    };
+
+    if (!register_action(name_palette_action)) {
+        msg("ifred name palette action loading error");
+        return PLUGIN_SKIP;
+    };
 
 #ifdef __MAC__
-        if (!mac_dlopen_workaround()) {
-            msg("ifred mac dlopen workaround error");
+    if (!mac_dlopen_workaround()) {
+        msg("ifred mac dlopen workaround error");
+        return PLUGIN_SKIP;
     }
 #endif
 
-        update_action_shortcut("CommandPalette", "");
-}
-    return r;
+    update_action_shortcut("CommandPalette", "");
+    return PLUGIN_KEEP;
 }
 
 //--------------------------------------------------------------------------
-void idaapi term(void) {
+void idaapi term() {
     cleanup_palettes();
 }
 
@@ -309,5 +306,5 @@ plugin_t PLUGIN =
         help, // multiline help about the plugin
 
         wanted_name, // the preferred short name of the plugin
-        ""           // wanted_hotkey; the preferred hotkey to run the plugin
+        ""           // the preferred hotkey to run the plugin
 };

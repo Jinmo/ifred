@@ -30,7 +30,7 @@ void QPaletteContainer::onShow(const QString &name, const QString &placeholder, 
         inner_stacked_->removeWidget(inner_stacked_->widget(0));
 
     auto delegate = new QPaletteInner(this, name, actions);
-    connect(delegate, &QPaletteInner::enter_callback, func);
+    connect(delegate, &QPaletteInner::enter_callback, std::move(func));
     inner_stacked_->addWidget(delegate);
     centerWidgets(this);
 
