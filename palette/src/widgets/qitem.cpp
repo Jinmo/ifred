@@ -55,7 +55,7 @@ void QItem::paint(QPainter* painter,
     const QStyleOptionViewItem& option, const QModelIndex& index) const {
     QTextDocument doc;
 
-    Action action = index.data().value<Action>();
+    Action &action = index.data().value<Action>();
     QString keyword = index.data(Qt::UserRole).value<QString>();
 
     doc.setDefaultStyleSheet(style_sheet_);
