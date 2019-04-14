@@ -47,9 +47,7 @@ protected:
 };
 
 template<>
-static void std::swap(Action& lhs, Action& rhs) noexcept {
-    lhs.swap(rhs);
-}
+void std::swap(Action& lhs, Action& rhs) noexcept;
 
 Q_DECLARE_METATYPE(Action);
 
