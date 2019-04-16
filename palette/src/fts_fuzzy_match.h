@@ -147,7 +147,7 @@ namespace fts {
 			const int sequential_bonus = 80;            // bonus for adjacent matches
 			const int separator_bonus = 30;             // bonus if match occurs after a separator
 			const int camel_bonus = 30;                 // bonus if match is uppercase and prev is lower
-			const int first_letter_bonus = 15;          // bonus if the first letter is matched
+			const int first_letter_bonus = 50;          // bonus if the first letter is matched
 
 			const int leading_letter_penalty = -5;      // penalty applied for every letter in str before the first match
 			const int max_leading_letter_penalty = -15; // maximum penalty for leading letters
