@@ -1,6 +1,6 @@
 # IDA command palette & further
 
-[![Build status](https://ci.appveyor.com/api/projects/status/64ye84uag1v9rpn6?svg=true)](https://ci.appveyor.com/project/Jinmo/ifred)
+[![Build status](https://ci.appveyor.com/api/projects/status/0r5q5196f730tpl8/branch/master?svg=true)](https://ci.appveyor.com/project/Jinmo/ifred/branch/master) [![Build Status](https://jinmo123.visualstudio.com/idapkg/_apis/build/status/Jinmo.ifred?branchName=master)](https://jinmo123.visualstudio.com/idapkg/_build/latest?definitionId=1&branchName=master)
 
 ![screenshot](screenshots/1.png)
 
