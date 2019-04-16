@@ -1,0 +1,44 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+
+jobs:
+- job: Linux
+  pool:
+    vmImage: ubuntu-latest
+  
+  steps:
+  - task: DownloadSecureFile@1
+    name: idafree70
+    inputs:
+      secureFile: 'idafree7.0.zip'
+
+  - task: DownloadSecureFile@1
+    name: idasdk70
+    inputs:
+      secureFile: 'idasdk70-linux.zip'
+
+  - script: |
+      sudo apt-get install -qy qt5-default ninja-build unzip
+    displayName: install dependencies
+
+  - checkout: self
+    submodules: true
+
+  - script: |
+      mkdir $(Build.ArtifactStagingDirectory)/build64
+      cd $(Build.ArtifactStagingDirectory)/build64
+      unzip $(Agent.TempDirectory)/idasdk70-linux.zip -d idasdk70
+      unzip $(Agent.TempDirectory)/idafree7.0.zip -d idafree-7.0
+      cmake $(Build.SourcesDirectory) -DIDA_SDK=$PWD/idasdk70 -DIDA_VERSION=700 -DIDA_BINARY_64=True -DIDA_EA_64=True -GNinja -DPYBIND11_PYTHON_VERSION=2.7 -DIDA_INSTALL_DIR=$PWD/idafree-7.0/
+      ninja
+    displayName: 'Build'
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)/build64/palette/ida_palette64.so'
+      ArtifactName: 'For 7.0 EA64'
