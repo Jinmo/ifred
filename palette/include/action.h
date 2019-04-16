@@ -44,9 +44,11 @@ protected:
     QString id_, description_, shortcut_;
 };
 
-template<>
-inline void std::swap(Action& lhs, Action& rhs) noexcept {
-    lhs.swap(rhs);
+namespace std {
+    template<>
+    inline void swap(Action& lhs, Action& rhs) noexcept {
+        lhs.swap(rhs);
+    }
 }
 
 Q_DECLARE_METATYPE(Action);
