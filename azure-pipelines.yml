@@ -22,14 +22,11 @@ jobs:
     inputs:
       secureFile: 'idasdk70-linux.zip'
 
-  - script: |
-      sudo apt-get install -qy qt5-default ninja-build unzip
-    displayName: install dependencies
-
   - checkout: self
     submodules: true
 
   - script: |
+      sudo apt-get install -qy qt5-default ninja-build unzip
       mkdir $(Build.ArtifactStagingDirectory)/build64
       cd $(Build.ArtifactStagingDirectory)/build64
       unzip $(Agent.TempDirectory)/idasdk70-linux.zip -d idasdk70
@@ -41,4 +38,47 @@ jobs:
   - task: PublishBuildArtifacts@1
     inputs:
       PathtoPublish: '$(Build.ArtifactStagingDirectory)/build64/palette/ida_palette64.so'
-      ArtifactName: 'For 7.0 EA64'
+      ArtifactName: 'Linux 7.x EA64'
+
+- job: MacOSX
+  pool:
+    vmImage: macos-10.14
+  
+  steps:
+  - task: DownloadSecureFile@1
+    inputs:
+      secureFile: 'idasdk70-mac.zip'
+  
+  - task: DownloadSecureFile@1
+    inputs:
+      secureFile: 'idalib-7.0-mac.zip'
+
+  - task: DownloadSecureFile@1
+    inputs:
+      secureFile: 'qt5.6.0.txz'
+
+  - checkout: self
+    submodules: true
+
+  - script: |
+      brew install cmake ninja
+      cd $(Build.SourcesDirectory)
+      unzip $(Agent.TempDirectory)/idasdk70-mac.zip -d idasdk70
+      unzip $(Agent.TempDirectory)/idalib-7.0-mac.zip -d idalib-7.0
+      tar xvf $(Agent.TempDirectory)/qt5.6.0.txz || exit 100
+      mkdir build64
+      cd build64
+      cmake $(Build.SourcesDirectory) -DCMAKE_PREFIX_PATH=$PWD/../qt560/clang_64 -DIDA_SDK=$PWD/../idasdk70 -DIDA_VERSION=700 -DIDA_BINARY_64=True -DIDA_EA_64=True -GNinja -DPYBIND11_PYTHON_VERSION=2.7 -DIDA_INSTALL_DIR=$PWD/../idalib-7.0/MacOS
+      ninja
+      cp palette/ida_palette64.dylib $(Build.ArtifactStagingDirectory)
+      mkdir ../build
+      cd ../build
+      cmake $(Build.SourcesDirectory) -DCMAKE_PREFIX_PATH=$PWD/../qt560/clang_64 -DIDA_SDK=$PWD/../idasdk70 -DIDA_VERSION=700 -DIDA_BINARY_64=True -DIDA_EA_64=False -GNinja -DPYBIND11_PYTHON_VERSION=2.7 -DIDA_INSTALL_DIR=$PWD/../idalib-7.0/MacOS
+      ninja
+      cp palette/ida_palette.dylib $(Build.ArtifactStagingDirectory)
+    displayName: 'Build'
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+      ArtifactName: 'Mac 7.x EA32/64'
