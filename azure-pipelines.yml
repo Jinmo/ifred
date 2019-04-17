@@ -38,7 +38,7 @@ jobs:
   - task: PublishBuildArtifacts@1
     inputs:
       PathtoPublish: '$(Build.ArtifactStagingDirectory)/build64/palette/ida_palette64.so'
-      ArtifactName: 'Linux 7.x EA64'
+      ArtifactName: 'linux-7.x-64'
 
 - job: MacOSX
   pool:
@@ -81,4 +81,4 @@ jobs:
   - task: PublishBuildArtifacts@1
     inputs:
       PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-      ArtifactName: 'Mac 7.x EA32/64'
+      ArtifactName: 'mac-7.x-both'
