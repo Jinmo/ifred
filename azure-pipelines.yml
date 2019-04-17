@@ -38,7 +38,7 @@ jobs:
   - task: PublishBuildArtifacts@1
     inputs:
       PathtoPublish: '$(Build.ArtifactStagingDirectory)/build64/palette/ida_palette64.so'
-      ArtifactName: 'linux-7.x-64'
+      ArtifactName: 'Linux 7.x EA64'
 
 - job: MacOSX
   pool:
@@ -65,7 +65,7 @@ jobs:
       cd $(Build.SourcesDirectory)
       unzip $(Agent.TempDirectory)/idasdk70-mac.zip -d idasdk70
       unzip $(Agent.TempDirectory)/idalib-7.0-mac.zip -d idalib-7.0
-      tar xvf $(Agent.TempDirectory)/qt.txz || exit 100
+      tar xvf $(Agent.TempDirectory)/qt5.6.0.txz || exit 100
       mkdir build64
       cd build64
       cmake $(Build.SourcesDirectory) -DCMAKE_PREFIX_PATH=$PWD/../qt560/clang_64 -DIDA_SDK=$PWD/../idasdk70 -DIDA_VERSION=700 -DIDA_BINARY_64=True -DIDA_EA_64=True -GNinja -DPYBIND11_PYTHON_VERSION=2.7 -DIDA_INSTALL_DIR=$PWD/../idalib-7.0/MacOS
@@ -81,4 +81,4 @@ jobs:
   - task: PublishBuildArtifacts@1
     inputs:
       PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-      ArtifactName: 'mac-7.x-both'
+      ArtifactName: 'Mac 7.x EA32/64'
