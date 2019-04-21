@@ -123,8 +123,9 @@ QModelIndex MyFilter::index(int row, int column, const QModelIndex &parent) cons
 QVariant MyFilter::data(const QModelIndex &index, int role) const {
     if (role == Qt::DisplayRole)
         return QVariant::fromValue(items_[shown_items_[index.row()]]);
-    else
+    else if (role == Qt::UserRole)
         return keyword_;
+    return QVariant();
 }
 
 int MyFilter::rowCount(const QModelIndex &parent) const {

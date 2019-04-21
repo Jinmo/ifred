@@ -27,8 +27,6 @@ QRegularExpression genCapturingRegexp(const QString & keyword) {
 
 const QString highlight(const QString& keyword, const QString& tooltip) {
     static QString em_("<em>"), emEnd_("</em>");
-    auto cache_key = QPair<QString, QString>(keyword, tooltip);
-
     QStringList highlights;
 
     highlights << ("<div>");
@@ -55,25 +53,49 @@ void QItem::paint(QPainter* painter,
     const QStyleOptionViewItem& option, const QModelIndex& index) const {
     QTextDocument doc;
 
+    QStyleOptionViewItem opt = option;
+    initStyleOption(&opt, index);
+
     Action action = index.data().value<Action>();
     QString keyword = index.data(Qt::UserRole).value<QString>();
 
     doc.setDefaultStyleSheet(style_sheet_);
     doc.setDocumentMargin(0);
+    // doc.setTextWidth(opt.rect.width());
 
-    auto html = highlight(keyword, action.description()) + "<span>" + action.id() + "</span></div>";
+    auto html = highlight(keyword, action.description()) + " <span>" + action.id() + "</span></div>";
     doc.setHtml(html);
 
     painter->save();
-    painter->translate(option.rect.left(), option.rect.top());
 
-    if (option.state & (QStyle::State_HasFocus | QStyle::State_Selected)) {
-        painter->fillRect(0, 0, option.rect.width(), option.rect.height(),
-            item_hover_background_);
-    }
+    const QWidget* widget = option.widget;
+    QStyle* style = widget ? widget->style() : QApplication::style();
 
-    painter->translate(item_margin_left_, item_margin_top_);
+    // opt.text = "";
+    opt.state &= ~QStyle::State_HasFocus;
+    opt.state |= QStyle::State_Active;
+    style->drawControl(QStyle::CE_ItemViewItem, &opt, painter, widget);
 
-    doc.drawContents(painter, QRectF(0, 0, option.rect.width(), option.rect.height()));
     painter->restore();
+
+    painter->save();
+
+    auto textRect = style->subElementRect(QStyle::SE_ItemViewItemText, &option, widget);
+    painter->translate(textRect.left(), textRect.top());
+
+    doc.drawContents(painter, QRectF(0, 0, opt.rect.width(), opt.rect.height()));
+    painter->restore();
+}
+
+QSize QItem::sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const {
+    QStyleOptionViewItemV4 options = option;
+    initStyleOption(&options, index);
+
+    Action action = index.data().value<Action>();
+
+    const QWidget* widget = options.widget;
+    QStyle* style = widget ? widget->style() : QApplication::style();
+    QSize res = style->sizeFromContents(QStyle::CT_ItemViewItem, &options, QSize(), widget);
+
+    return res;
 }
