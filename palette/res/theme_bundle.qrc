@@ -1,7 +1,5 @@
 <RCC>
   <qresource prefix="bundle">
-    <file>theme/item.css</file>
-    <file>theme/searchbox.css</file>
     <file>theme/styles.json</file>
     <file>theme/window.css</file>
     <file>config.json</file>

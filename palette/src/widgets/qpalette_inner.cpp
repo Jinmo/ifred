@@ -4,11 +4,15 @@
 QPaletteInner::QPaletteInner(QWidget* parent, const QString& name, const QVector<Action>& items)
     : QFrame(parent),
     styles_observer_(new StylesObserver(this)),
-    name_(name),
-    entries_(new QItems(this, items)),
-    css_observer_(new CSSObserver(this, "theme/window.css")),
-    layout_(new QVBoxLayout(this)),
-    searchbox_(new QSearch(this, entries_)) {
+    name_(name) {
+
+    // Moved from constructor list since MSVC doesn't process member initialization in order
+    // Create widgets
+    entries_ = (new QItems(this, items));
+    layout_ = (new QVBoxLayout(this));
+    searchbox_ = (new QSearch(this, entries_));
+
+    css_observer_ = new CSSObserver(this, "theme/window.css");
 
     // Add widgets
     layout_->addWidget(searchbox_);
@@ -66,7 +70,7 @@ void QPaletteInner::onItemClicked(const QModelIndex & index) {
     processEnterResult(enter_callback(action));
 }
 
-bool QPaletteInner::eventFilter(QObject* obj, QEvent* event) {
+bool QPaletteInner::eventFilter(QObject * obj, QEvent * event) {
     switch (event->type()) {
     case QEvent::KeyPress: {
         auto* ke = dynamic_cast<QKeyEvent*>(event);
