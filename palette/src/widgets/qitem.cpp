@@ -71,7 +71,7 @@ void QItem::paint(QPainter* painter,
     const QWidget* widget = option.widget;
     QStyle* style = widget ? widget->style() : QApplication::style();
 
-    // opt.text = "";
+    opt.text = "";
     opt.state &= ~QStyle::State_HasFocus;
     opt.state |= QStyle::State_Active;
     style->drawControl(QStyle::CE_ItemViewItem, &opt, painter, widget);
@@ -90,8 +90,6 @@ void QItem::paint(QPainter* painter,
 QSize QItem::sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const {
     QStyleOptionViewItemV4 options = option;
     initStyleOption(&options, index);
-
-    Action action = index.data().value<Action>();
 
     const QWidget* widget = options.widget;
     QStyle* style = widget ? widget->style() : QApplication::style();

@@ -42,14 +42,6 @@ PYBIND11_MODULE(__palette__, m) {
                 py::object trigger_action_py = py::module::import("__palette__").attr("execute_action");
                 auto res = trigger_action_py(action.id().toStdString());
 
-                //if (py::isinstance<PyPalette>(res)) {
-                //    EnterResult enter_result = py::cast<EnterResult>(res);
-                //    return enter_result;
-                //}
-                //else {
-                //    return EnterResult(res == Py_True);
-                //}
-
                 return true;
             }
             catch (const std::runtime_error & error) {
@@ -76,7 +68,8 @@ class Action:
 		self.handler = handler
 
 def execute_action(id):
-    threading.Thread(target=__cur_palette__[id].handler, args=(__cur_palette__[id], )).start()
+    # on main thread
+    threading.Thread(target=__cur_palette__[id].handler, args=(__cur_palette__[id], )).run()
 
 )", m.attr("__dict__"));
 

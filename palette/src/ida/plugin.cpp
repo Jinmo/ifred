@@ -104,9 +104,10 @@ const QVector<Action> getNames() {
     QVector<Action> result;
     size_t names = get_nlist_size();
 
+    // 0. Reserve vector to avoid multiple allocations
     result.reserve(names);
 
-    // 2. Add names from IDA
+    // 1. Add names from IDA
     addNames(result, names);
 
     return result;
@@ -265,6 +266,14 @@ int idaapi init() {
 #ifdef __MAC__
     if (!mac_dlopen_workaround()) {
         msg("ifred mac dlopen workaround error");
+        return PLUGIN_SKIP;
+    }
+#endif
+
+#ifdef _WIN32
+    HMODULE hModule;
+    if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCSTR)& init, &hModule)) {
+        msg("ifred windows loadlibrary workaround error");
         return PLUGIN_SKIP;
     }
 #endif
