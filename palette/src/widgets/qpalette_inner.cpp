@@ -66,6 +66,7 @@ bool QPaletteInner::onArrowPressed(int key) {
 
 void QPaletteInner::onItemClicked(const QModelIndex & index) {
     auto action = index.data().value<Action>();
+    processEnterResult(true);
     emit enter_callback(action);
 }
 
@@ -110,6 +111,7 @@ bool QPaletteInner::onEnterPressed() {
     if (entries_->model()->rowCount())
     {
         Action action = (entries_->currentIndex()).data().value<Action>();
+        processEnterResult(true);
         emit enter_callback(action);
     }
     return true;
