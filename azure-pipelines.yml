@@ -54,7 +54,7 @@ jobs:
       mkdir build
       cd build
 
-      cmake .. "-DCMAKE_PREFIX_PATH=$(Agent.TempDirectory)\\qt563" -DIDA_BINARY_64=True -DIDA_EA_64=True "-DIDA_SDK=$(Agent.TempDirectory)\\idasdk70" -DIDA_VERSION:INT=700 -G Ninja -DCMAKE_CXX_COMPILER:FILEPATH="C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Tools/MSVC/14.20.27508/bin/HostX64/x64/cl.exe" -DCMAKE_C_COMPILER:FILEPATH="C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Tools/MSVC/14.20.27508/bin/HostX64/x64/cl.exe" -DCMAKE_BUILD_TYPE=RelWithDebInfo
+      cmake .. "-DCMAKE_PREFIX_PATH=$(Agent.TempDirectory)\\qt563" -DIDA_BINARY_64=True -DIDA_EA_64=False "-DIDA_SDK=$(Agent.TempDirectory)\\idasdk70" -DIDA_VERSION:INT=700 -G Ninja -DCMAKE_CXX_COMPILER:FILEPATH="C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Tools/MSVC/14.20.27508/bin/HostX64/x64/cl.exe" -DCMAKE_C_COMPILER:FILEPATH="C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Tools/MSVC/14.20.27508/bin/HostX64/x64/cl.exe" -DCMAKE_BUILD_TYPE=RelWithDebInfo
       ninja
 
       copy palette\\ida_palette.dll $(Build.ArtifactStagingDirectory)
