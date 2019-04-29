@@ -25,8 +25,9 @@ jobs:
       choco install 7zip.install ninja -y
 
       cd $(Agent.TempDirectory)
-      7z x qt.7z -o qt563
-      7z x "$(Agent.TempDirectory)\\idasdk70-win.7z" -o .
+      7z x qt.7z '-oqt563'
+      7z x "$(Agent.TempDirectory)\\idasdk70-win.7z" '-o.'
+
     displayName: Install dependencies
 
   - script: |
