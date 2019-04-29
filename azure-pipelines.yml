@@ -14,7 +14,7 @@ jobs:
   steps:
   - task: DownloadSecureFile@1
     inputs:
-      secureFile: 'idasdk70-win.zip'
+      secureFile: 'idasdk70-win.7z'
 
   - task: PowerShell@2
     script: |
