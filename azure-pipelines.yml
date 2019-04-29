@@ -22,15 +22,17 @@ jobs:
   - powershell: |
       Import-Module BitsTransfer
       Start-BitsTransfer -Source https://jinmo123.bintray.com/ci/qt.7z -Destination qt.7z
-      choco install 7zip.install ninja -y
+      Start-BitsTransfer -Source https://github.com/ninja-build/ninja/releases/download/v1.9.0/ninja-win.zip -Destination ninja-win.zip
 
       cd $(Agent.TempDirectory)
       7z x qt.7z '-oqt563'
       7z x "$(Agent.TempDirectory)\\idasdk70-win.7z" '-o.'
+      7z x ninja-win.zip '-o$(Build.SourcesDirectory)'
 
     displayName: Install dependencies
 
   - script: |
+      set PATH=$(Build.SourcesDirectory);%PATH%
       mkdir build64
       cd build64
 
