@@ -1,6 +1,6 @@
 # IDA command palette & further
 
-[![Build status](https://ci.appveyor.com/api/projects/status/0r5q5196f730tpl8/branch/master?svg=true)](https://ci.appveyor.com/project/Jinmo/ifred/branch/master) [![Build Status](https://jinmo123.visualstudio.com/idapkg/_apis/build/status/Jinmo.ifred?branchName=master)](https://jinmo123.visualstudio.com/idapkg/_build/latest?definitionId=1&branchName=master)
+[![Build Status](https://jinmo123.visualstudio.com/idapkg/_apis/build/status/Jinmo.ifred?branchName=master)](https://jinmo123.visualstudio.com/idapkg/_build/latest?definitionId=1&branchName=master)
 
 ![screenshot](screenshots/1.png)
 
@@ -8,7 +8,7 @@
 
 Currently tested on Windows. Install Qt 5.6.3 and IDA SDK, and follow steps in .appveyor.yml.
 
-You can download [prebuilt plugins](https://ci.appveyor.com/project/Jinmo/ifred/build/artifacts) from appveyor.
+You can download [prebuilt plugins](https://jinmo123.visualstudio.com/idapkg/_apis/build/status/Jinmo.ifred?branchName=master) from azure pipelines.
 
 ## Python API
 
