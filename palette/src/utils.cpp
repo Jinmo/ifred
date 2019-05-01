@@ -39,7 +39,12 @@ QString loadFileFromBundle(const char* filename, QFile &file, bool& updated) {
 
 QString loadFile(const char* filename, bool force_update, bool& updated) {
     static QHash<QString, QString> last_loaded;
-    Q_INIT_RESOURCE(theme_bundle);
+    static bool resource_initialized;
+
+    if(!resource_initialized) {
+        Q_INIT_RESOURCE(theme_bundle);
+        resource_initialized = true;
+    }
 
     auto absolutePath = pluginPath(filename);
     QFile file(absolutePath);

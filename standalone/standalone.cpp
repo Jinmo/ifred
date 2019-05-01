@@ -5,11 +5,11 @@ QVector<Action> testItems() {
     QVector<Action> action_list;
 
     action_list.reserve(COUNT + 1);
-    action_list.push_back(Action("std::runtime_error", "raise exception", ""));
+    action_list.push_back(Action{"std::runtime_error", "raise exception", ""});
 
     for (int i = 0; i < COUNT; i++) {
-        auto id = QString::number(rand());
-        action_list.push_back(Action(id, id, ""));
+        auto id = QString::number(rand() * rand());
+        action_list.push_back(Action{id, id, ""});
     }
 
     return action_list;
@@ -27,10 +27,10 @@ int main(int argc, char **argv) {
     set_path_handler(TestPluginPath);
 
     show_palette("<test palette>", "Enter item name...", testItems(), [](Action & action) {
-        if (action.id() == "std::runtime_error") {
+        if (action.id == "std::runtime_error") {
             throw std::runtime_error("raised!");
         }
-        qDebug() << action.id() << action.description() << action.shortcut();
+        qDebug() << action.id << action.description << action.shortcut;
         return false;
         });
     

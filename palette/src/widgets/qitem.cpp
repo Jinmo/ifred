@@ -59,7 +59,7 @@ void QItem::paint(QPainter* painter,
     doc.setDefaultStyleSheet(style_sheet_);
     doc.setDocumentMargin(0);
 
-    auto html = "<div>" + highlight(keyword, action.description()) + " <span>" + action.id() + "</span></div>";
+    auto html = "<div>" + highlight(keyword, action.description) + " <span>" + action.id + "</span></div>";
     doc.setHtml(html);
 
     painter->save();

@@ -6,8 +6,9 @@ QItems::QItems(QWidget* parent, const QVector<Action>& items)
     item_delegate_(new QItem(this)) {
 
     QAbstractItemView::setModel(model_);
+    QAbstractItemView::setItemDelegate(item_delegate_);
 
-    setItemDelegate(item_delegate_);
+    // Border width
     setLineWidth(0);
 
     // Optimization
@@ -15,6 +16,7 @@ QItems::QItems(QWidget* parent, const QVector<Action>& items)
 
     // Smooth scroll
     setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+    setCurrentIndex(model_->index(0, 0));
 
     connect(model_, &PaletteFilter::filteringDone, this, [=](int index) {
         setCurrentIndex(model_->index(index, 0));

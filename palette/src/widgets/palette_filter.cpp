@@ -29,7 +29,7 @@ int distance(const QString & s1_, const QString & s2_) {
 }
 
 bool PaletteFilter::lessThan(const QString & keyword, Action & left, Action &right) const {
-    return distance(keyword, left.description()) < distance(keyword, right.description());
+    return distance(keyword, left.description) < distance(keyword, right.description);
 }
 
 void PaletteFilter::setFilter(const QString &keyword) {
@@ -91,7 +91,7 @@ bool PaletteFilter::match(const QString &keyword, Action &action) {
     if (keyword.isEmpty())
         return true;
 
-    return fts::fuzzy_match_simple(keyword, action.description());
+    return fts::fuzzy_match_simple(keyword, action.description);
 }
 
 PaletteFilter::PaletteFilter(QWidget* parent, const QVector <Action>& items)

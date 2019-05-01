@@ -29,12 +29,15 @@ void QPaletteContainer::onShow(const QString &name, const QString &placeholder, 
     while (inner_stacked_->count())
         inner_stacked_->removeWidget(inner_stacked_->widget(0));
 
-    auto delegate = new QPaletteInner(this, name, actions);
-    connect(delegate, &QPaletteInner::enter_callback, std::move(func));
-    inner_stacked_->addWidget(delegate);
+    auto inner = new QPaletteInner(this, name, actions);
+    connect(inner, &QPaletteInner::itemClicked, std::move(func));
+    connect(inner, &QPaletteInner::closed, [=]() {
+        close();
+    });
+    inner_stacked_->addWidget(inner);
     centerWidgets(this);
 
-    delegate->searchbox().setPlaceholderText(placeholder);
+    inner->setPlaceholderText(placeholder);
 
     QMainWindow::show();
     activateWindow();

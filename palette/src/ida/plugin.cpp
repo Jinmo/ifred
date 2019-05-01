@@ -28,23 +28,23 @@ QVector<QRegularExpression> getBlacklist() {
     auto blacklist = json("config.json")["blacklist"].toArray();
     QVector<QRegularExpression> blacklist_converted;
 
-    for (auto&& i : blacklist) {
+    for (auto &&i : blacklist) {
         if (i.toString().size())
             blacklist_converted.push_back(QRegularExpression(i.toString()));
     }
     return blacklist_converted;
 }
 
-void addActions(QVector<Action>& result, const qstrvec_t& actions) {
+void addActions(QVector<Action> &result, const qstrvec_t &actions) {
     qstring tooltip, shortcut;
     action_state_t state;
 
     auto blacklist = getBlacklist();
 
-    for (auto& item : actions) {
+    for (auto &item : actions) {
         // Check blacklist
         bool skip = false;
-        for (auto& pattern : blacklist)
+        for (auto &pattern : blacklist)
             if (pattern.match(item.c_str()).hasMatch()) {
                 skip = true;
                 break;
@@ -63,20 +63,19 @@ void addActions(QVector<Action>& result, const qstrvec_t& actions) {
         // Get metadata for the action
         get_action_tooltip(&tooltip, item.c_str());
         get_action_shortcut(&shortcut, item.c_str());
-        result.push_back(Action(
-            QString(item.c_str()), QString(tooltip.c_str()), QString(shortcut.c_str())));
+        result.push_back(Action
+                                 {QString(item.c_str()), QString(tooltip.c_str()), QString(shortcut.c_str())});
     }
 }
 
-void addNames(QVector<Action>& result, size_t names) {
+void addNames(QVector<Action> &result, size_t names) {
     for (size_t i = 0; i < names; i++) {
-        const char* name = get_nlist_name(i);
+        const char *name = get_nlist_name(i);
         qstring demangled_name = demangle_name(name, 0);
 
-        result.push_back(Action(
-            QString::number(get_nlist_ea(i), 16).toUpper(),
-            (demangled_name.empty() ? name : demangled_name.c_str()),
-            QString()));
+        result.push_back(Action{QString::number(get_nlist_ea(i), 16).toUpper(),
+                                (demangled_name.empty() ? name : demangled_name.c_str()),
+                                QString()});
     }
 }
 
@@ -93,8 +92,8 @@ const QVector<Action> getActions() {
     // 1. Add actions from IDA except blacklisted identifiers
     addActions(result, actions);
 
-    std::sort(result.begin(), result.begin() + result.size(), [](Action & lhs, Action & rhs) {
-        return lhs.description().compare(rhs.description()) < 0;
+    std::sort(result.begin(), result.begin() + result.size(), [](Action &lhs, Action &rhs) {
+        return lhs.description.compare(rhs.description) < 0;
     });
 
     return result;
@@ -114,35 +113,33 @@ const QVector<Action> getNames() {
 }
 
 class command_palette_handler : public action_handler_t {
-    int idaapi activate(action_activation_ctx_t*) override {
-        show_palette("command palette", "Enter action or option name...", getActions(), [](Action & action) {
-            auto &&id = action.id();
-
-            process_ui_action(id.toStdString().c_str());
+    int idaapi activate(action_activation_ctx_t *) override {
+        show_palette("command palette", "Enter action or option name...", getActions(), [](Action &action) {
+            process_ui_action(action.id.toStdString().c_str());
             return true;
-            });
+        });
         return 1;
     }
 
-    action_state_t idaapi update(action_update_ctx_t*) override {
+    action_state_t idaapi update(action_update_ctx_t *) override {
         return AST_ENABLE_ALWAYS;
     }
 };
 
 class name_palette_handler : public action_handler_t {
-    int idaapi activate(action_activation_ctx_t*) override {
-        show_palette("name palette", "Enter symbol name...", getNames(), [](Action & action) {
-            auto &&id = action.id();
+    int idaapi activate(action_activation_ctx_t *) override {
+        show_palette("name palette", "Enter symbol name...", getNames(), [](Action &action) {
+            auto &&id = action.id;
 
             ea_t address = static_cast<ea_t>(id.toULongLong(nullptr, 16));
             jumpto(address);
 
             return true;
-            });
+        });
         return 1;
     }
 
-    action_state_t idaapi update(action_update_ctx_t*) override {
+    action_state_t idaapi update(action_update_ctx_t *) override {
         return AST_ENABLE_ALWAYS;
     }
 };
@@ -160,20 +157,20 @@ static name_palette_handler name_palette_handler_;
 #define NAME_PALETTE_SHORTCUT "Meta+P"
 #endif
 static action_desc_t command_palette_action = ACTION_DESC_LITERAL(
-    "ifred:command_palette",
-    "ifred command palette",
-    &command_palette_handler_,
-    CMD_PALETTE_SHORTCUT,
-    "command palette",
-    -1);
+        "ifred:command_palette",
+        "ifred command palette",
+        &command_palette_handler_,
+        CMD_PALETTE_SHORTCUT,
+        "command palette",
+        -1);
 
 static action_desc_t name_palette_action = ACTION_DESC_LITERAL(
-    "ifred:name_palette",
-    "ifred name palette",
-    &name_palette_handler_,
-    NAME_PALETTE_SHORTCUT,
-    "name palette",
-    -1);
+        "ifred:name_palette",
+        "ifred name palette",
+        &name_palette_handler_,
+        NAME_PALETTE_SHORTCUT,
+        "name palette",
+        -1);
 
 //--------------------------------------------------------------------------
 bool idaapi run(size_t) {
@@ -199,7 +196,11 @@ class gil_scoped_acquire {
     PyGILState_STATE state;
     bool reset;
 public:
-    gil_scoped_acquire() { reset = false; state = PyGILState_Ensure(); }
+    gil_scoped_acquire() {
+        reset = false;
+        state = PyGILState_Ensure();
+    }
+
     ~gil_scoped_acquire() { if (!reset) PyGILState_Release(state); }
 };
 
@@ -207,10 +208,10 @@ void initpy() {
     postToMainThread([]() {
         gil_scoped_acquire gil;
         init_python_module();
-        });
+    });
 }
 
-ssize_t idaapi load_python(void*, int notification_code, va_list va) {
+ssize_t idaapi load_python(void *, int notification_code, va_list va) {
     auto info = va_arg(va, plugin_info_t*);
 
     if (notification_code == ui_plugin_loaded && !strcmp(info->org_name, "IDAPython")) {
@@ -222,7 +223,7 @@ ssize_t idaapi load_python(void*, int notification_code, va_list va) {
     return 0;
 }
 
-const QString IdaPluginPath(const char* filename) {
+const QString IdaPluginPath(const char *filename) {
     static QString g_plugin_path;
     if (g_plugin_path.size()) {
         QString r = g_plugin_path + filename;
@@ -238,7 +239,7 @@ const QString IdaPluginPath(const char* filename) {
 
 //--------------------------------------------------------------------------
 int idaapi init() {
-    if(!is_idaq())
+    if (!is_idaq())
         // the plugin works only with idaq
         return PLUGIN_SKIP;
 
@@ -272,7 +273,7 @@ int idaapi init() {
 
 #ifdef _WIN32
     HMODULE hModule;
-    if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCSTR)& init, &hModule)) {
+    if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCSTR) &init, &hModule)) {
         msg("ifred windows loadlibrary workaround error");
         return PLUGIN_SKIP;
     }
@@ -293,21 +294,21 @@ void idaapi term() {
 //
 //--------------------------------------------------------------------------
 plugin_t PLUGIN =
-{
-        IDP_INTERFACE_VERSION,
-        PLUGIN_FIX | PLUGIN_HIDE, // plugin flags
-        init,                     // initialize
+        {
+                IDP_INTERFACE_VERSION,
+                PLUGIN_FIX | PLUGIN_HIDE, // plugin flags
+                init,                     // initialize
 
-        term, // terminate. this pointer may be NULL.
+                term, // terminate. this pointer may be NULL.
 
-        run, // invoke plugin
+                run, // invoke plugin
 
-        comment, // long comment about the plugin
-        // it could appear in the status line
-        // or as a hint
+                comment, // long comment about the plugin
+                // it could appear in the status line
+                // or as a hint
 
-        help, // multiline help about the plugin
+                help, // multiline help about the plugin
 
-        wanted_name, // the preferred short name of the plugin
-        ""           // the preferred hotkey to run the plugin
-};
+                wanted_name, // the preferred short name of the plugin
+                ""           // the preferred hotkey to run the plugin
+        };
