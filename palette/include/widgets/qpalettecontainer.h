@@ -22,8 +22,6 @@ class QPaletteContainer : public QMainWindow {
 public:
     QPaletteContainer();
 
-    void activate();
-
     void onShow(const QString& name, const QString &placeholder, const QVector<Action>& actions_, ActionHandler func);
 
 signals:

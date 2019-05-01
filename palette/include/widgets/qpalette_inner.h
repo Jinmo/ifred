@@ -21,25 +21,9 @@ class QPaletteContainer;
 class PALETTE_EXPORT QPaletteInner : public QFrame {
     Q_OBJECT;
 
-    class StylesObserver : public JSONObserver {
-    public:
-        StylesObserver(QPaletteInner* parent) : JSONObserver(parent, "theme/styles.json") {}
-
-        void onUpdated(const QJsonObject& data) override {
-            auto width = data["width"].toInt();
-            auto parentWidget = static_cast<QPaletteInner*>(parent());
-
-            if (!width) width = 750;
-            parentWidget->resize(width, 0);
-        }
-
-    } *styles_observer_;
-
-protected:
     QString name_;
 
-    QItems* entries_;
-    CSSObserver* css_observer_;
+    QItems* items_;
     QVBoxLayout* layout_;
     QSearch* searchbox_;
 
@@ -47,25 +31,18 @@ public:
     QPaletteInner(QWidget* parent, const QString& name, const QVector<Action>& items);
 
     QSearch& searchbox() { return *searchbox_; }
-
-    QItems& entries() { return *entries_; }
+    QItems& entries() { return *items_; }
 
     void processEnterResult(bool res);
-
     bool onArrowPressed(int key);
-
     bool eventFilter(QObject* obj, QEvent* event) override;
-
     void keyPressEvent(QKeyEvent* e) override;
-
-    void closeWindow();
-
     bool onEnterPressed();
-
     void onItemClicked(const QModelIndex& index);
-
-    QPaletteContainer* container();
-
+    void showEvent(QShowEvent *event) override {
+        searchbox_->selectAll();
+        searchbox_->setFocus();
+    }
 signals:
     bool enter_callback(Action& action);
 };

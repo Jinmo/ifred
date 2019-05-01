@@ -8,18 +8,16 @@
 #include "observers.h"
 
 class QSearch : public QLineEdit {
-    QItems* entries_;
-    CSSObserver* css_observer_;
+    QItems* items_;
+
+    void onTextChanged(const QString& keyword);
 
 public:
-    QSearch(QWidget* parent, QItems* entries)
-        : QLineEdit(parent), entries_(entries),
-        css_observer_(new CSSObserver(this, "theme/searchbox.css")) {
+    QSearch(QWidget* parent, QItems* items)
+        : QLineEdit(parent), items_(items) {
         connect(this, &QLineEdit::textChanged, this, &QSearch::onTextChanged);
         onTextChanged(QString());
     }
-
-    void onTextChanged(const QString& keyword);
 };
 
 #endif // QSEARCH_H

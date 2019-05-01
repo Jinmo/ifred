@@ -13,7 +13,7 @@ set(PYTHON_EXECUTABLE "" CACHE PATH "Python executable (x64 if >= 7.0)")
 
 include(GenerateExportHeader)
 
-set(sources src/widgets/myfilter.cpp
+set(sources src/widgets/palette_filter.cpp
 			src/widgets/qsearch.cpp
 			src/utils.cpp
 			src/widgets/qpalette_inner.cpp
@@ -24,7 +24,7 @@ set(sources src/widgets/myfilter.cpp
 			src/bindings/pypalette.cpp
             src/action.cpp
 			res/theme_bundle.qrc
-            include/widgets/myfilter.h
+            include/widgets/palette_filter.h
             include/widgets/qpalettecontainer.h
             include/widgets/qpalette_inner.h
             include/action.h

@@ -37,17 +37,5 @@ void QPaletteContainer::onShow(const QString &name, const QString &placeholder, 
     delegate->searchbox().setPlaceholderText(placeholder);
 
     QMainWindow::show();
-    activate();
-}
-
-void QPaletteContainer::activate() {
     activateWindow();
-
-    if (!inner_stacked_->count())
-        return;
-
-    auto * inner = static_cast<QPaletteInner*>(inner_stacked_->widget(0));
-
-    inner->searchbox().selectAll();
-    inner->searchbox().setFocus();
 }

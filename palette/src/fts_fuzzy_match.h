@@ -57,17 +57,6 @@ namespace fts {
 			int& recursionCount, int recursionLimit);
 	}
 
-	// Public interface
-	static bool fuzzy_match_simple(char const* pattern, char const* str) {
-		while (*pattern != '\0' && *str != '\0') {
-			if (tolower(*pattern) == tolower(*str))
-				++pattern;
-			++str;
-		}
-
-		return *pattern == '\0' ? true : false;
-	}
-
 	static bool fuzzy_match(char const* pattern, char const* str, int& outScore) {
 
 		uint8_t matches[256];
@@ -218,6 +207,25 @@ namespace fts {
 			return false;
 		}
 	}
+
+    bool fuzzy_match_simple(const QString& pattern, const QString& str) {
+        auto it = pattern.begin();
+        auto itEnd = pattern.end();
+
+        if (it == itEnd)
+            return true;
+
+        for (auto&& c : str) {
+            if (it->toLower() == c.toLower()) {
+                ++it;
+                if (it == itEnd) {
+                    break;
+                }
+            }
+        }
+
+        return it == itEnd;
+    }
 } // namespace fts
 
 #endif // FTS_FUZZY_MATCH_IMPLEMENTATION

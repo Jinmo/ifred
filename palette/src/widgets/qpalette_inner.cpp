@@ -2,65 +2,53 @@
 #include <widgets/qpalettecontainer.h>
 
 QPaletteInner::QPaletteInner(QWidget* parent, const QString& name, const QVector<Action>& items)
-    : QFrame(parent),
-    styles_observer_(new StylesObserver(this)),
-    name_(name) {
+    : QFrame(parent), name_(name) {
 
-    // Moved from constructor list since MSVC doesn't process member initialization in order
     // Create widgets
-    entries_ = (new QItems(this, items));
+    items_ = (new QItems(this, items));
     layout_ = (new QVBoxLayout(this));
-    searchbox_ = (new QSearch(this, entries_));
-
-    css_observer_ = new CSSObserver(this, "theme/window.css");
+    searchbox_ = (new QSearch(this, items_));
 
     // Add widgets
     layout_->addWidget(searchbox_);
-    layout_->addWidget(entries_);
+    layout_->addWidget(items_);
     layout_->setContentsMargins(0, 0, 0, 0);
     layout_->setSpacing(0);
 
     setLayout(layout_);
+    setStyleSheet(loadFile("theme/window.css"));
 
     connect(searchbox_, &QSearch::returnPressed, this, &QPaletteInner::onEnterPressed);
-    connect(entries_, &QListView::clicked, this, &QPaletteInner::onItemClicked);
+    connect(items_, &QListView::clicked, this, &QPaletteInner::onItemClicked);
 
     searchbox_->installEventFilter(this);
-    entries_->installEventFilter(this);
+    items_->installEventFilter(this);
 }
 
 void QPaletteInner::processEnterResult(bool res) {
     if (res) {
-        closeWindow();
+        close();
     }
-}
-
-void QPaletteInner::closeWindow() {
-    container()->close();
-}
-
-QPaletteContainer* QPaletteInner::container() {
-    return dynamic_cast<QPaletteContainer*>(window());
 }
 
 void QPaletteInner::keyPressEvent(QKeyEvent* e) {
     if (e->key() != Qt::Key_Escape)
         QFrame::keyPressEvent(e);
     else {
-        closeWindow();
+        close();
     }
 }
 
 bool QPaletteInner::onArrowPressed(int key) {
     int delta = key == Qt::Key_Down ? 1 : -1;
-    auto new_row = entries_->currentIndex().row() + delta;
+    auto new_row = items_->currentIndex().row() + delta;
 
     if (new_row == -1)
         new_row = 0;
-    else if (new_row == entries_->model()->rowCount())
+    else if (new_row == items_->model()->rowCount())
         new_row--;
 
-    entries_->setCurrentIndex(entries_->model()->index(new_row, 0));
+    items_->setCurrentIndex(items_->model()->index(new_row, 0));
     return true;
 }
 
@@ -85,13 +73,13 @@ bool QPaletteInner::eventFilter(QObject * obj, QEvent * event) {
             return onEnterPressed();
         case Qt::Key_Escape:
             /* This key closes the window */
-            closeWindow();
+            close();
             return true;
         case Qt::Key_PageDown:
         case Qt::Key_PageUp:
             /* Forward QKeyEvent for PageDown/PageUp key since QAbstractListView already implemented the procedure */
             event->ignore();
-            entries_->keyPressEvent(ke);
+            items_->keyPressEvent(ke);
             return true;
         default:
             return obj->eventFilter(obj, event);
@@ -108,9 +96,9 @@ bool QPaletteInner::eventFilter(QObject * obj, QEvent * event) {
 }
 
 bool QPaletteInner::onEnterPressed() {
-    if (entries_->model()->rowCount())
+    if (items_->model()->rowCount())
     {
-        Action action = (entries_->currentIndex()).data().value<Action>();
+        Action action = (items_->currentIndex()).data().value<Action>();
         processEnterResult(true);
         emit enter_callback(action);
     }

@@ -1,9 +1,9 @@
 #include <widgets/qitem.h>
-#include <widgets/myfilter.h>
+#include <widgets/palette_filter.h>
 
-QHash<QString, QRegExp> capturing_regexp_cache;
+QHash<QString, QRegularExpression> capturing_regexp_cache;
 
-QRegExp capturingRegexp(const QString & keyword) {
+QRegularExpression capturingRegexp(const QString & keyword) {
     QStringList regexp_before_join;
 
     if (capturing_regexp_cache.contains(keyword)) {
@@ -16,24 +16,21 @@ QRegExp capturingRegexp(const QString & keyword) {
         if (!x.isSpace())
             regexp_before_join << (QString("(.*?)(") + x + ")");
 
-    regexp_before_join.push_back("(.*?)$");
+    regexp_before_join.push_back("(.*)$");
 
-    QRegExp result(regexp_before_join.join(""), Qt::CaseInsensitive);
+    QRegularExpression result(regexp_before_join.join(""), QRegularExpression::CaseInsensitiveOption);
 
     capturing_regexp_cache[keyword] = result;
     return result;
 }
 
-const QString highlight(const QString& keyword, const QString& tooltip) {
+const QString highlight(const QString& needle, const QString& haystack) {
     static QString em_("<em>"), emEnd_("</em>");
     QStringList highlights;
 
-    highlights << ("<div>");
-
-    if (keyword.size()) {
-        auto regexp = capturingRegexp(keyword);
-        regexp.indexIn(tooltip);
-        auto match = regexp.capturedTexts();
+    if (needle.size()) {
+        auto regexp = capturingRegexp(needle);
+        auto match = regexp.match(haystack).capturedTexts();
 
         int i = -1;
         for (auto&& word : match) {
@@ -43,7 +40,7 @@ const QString highlight(const QString& keyword, const QString& tooltip) {
         }
     }
     else {
-        highlights << tooltip;
+        highlights << haystack;
     }
 
     return QString(highlights.join(""));
@@ -61,9 +58,8 @@ void QItem::paint(QPainter* painter,
 
     doc.setDefaultStyleSheet(style_sheet_);
     doc.setDocumentMargin(0);
-    // doc.setTextWidth(opt.rect.width());
 
-    auto html = highlight(keyword, action.description()) + " <span>" + action.id() + "</span></div>";
+    auto html = "<div>" + highlight(keyword, action.description()) + " <span>" + action.id() + "</span></div>";
     doc.setHtml(html);
 
     painter->save();
