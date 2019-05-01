@@ -1,9 +1,9 @@
 #include <widgets/qitem.h>
 #include <widgets/myfilter.h>
 
-QHash<QString, QRegularExpression> capturing_regexp_cache;
+QHash<QString, QRegExp> capturing_regexp_cache;
 
-QRegularExpression genCapturingRegexp(const QString & keyword) {
+QRegExp capturingRegexp(const QString & keyword) {
     QStringList regexp_before_join;
 
     if (capturing_regexp_cache.contains(keyword)) {
@@ -18,8 +18,7 @@ QRegularExpression genCapturingRegexp(const QString & keyword) {
 
     regexp_before_join.push_back("(.*?)$");
 
-    QRegularExpression result(regexp_before_join.join(""),
-                              QRegularExpression::CaseInsensitiveOption);
+    QRegExp result(regexp_before_join.join(""), Qt::CaseInsensitive);
 
     capturing_regexp_cache[keyword] = result;
     return result;
@@ -32,8 +31,9 @@ const QString highlight(const QString& keyword, const QString& tooltip) {
     highlights << ("<div>");
 
     if (keyword.size()) {
-        auto regexp = genCapturingRegexp(keyword);
-        auto match = regexp.match(tooltip).capturedTexts();
+        auto regexp = capturingRegexp(keyword);
+        regexp.indexIn(tooltip);
+        auto match = regexp.capturedTexts();
 
         int i = -1;
         for (auto&& word : match) {
