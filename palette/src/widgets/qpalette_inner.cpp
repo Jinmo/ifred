@@ -3,40 +3,55 @@
 #include <widgets/qpalette_inner.h>
 #include <widgets/qpalettecontainer.h>
 
-QPaletteInner::QPaletteInner(QWidget* parent, const QString &name, const QVector<Action>& items)
-    : QFrame(parent), name_(name) {
-    QVBoxLayout* layout_;
+QPaletteInner::QPaletteInner(QWidget* parent, const QString& name, const QVector<Action>& items, const QString& closeKey)
+    : QFrame(parent), name_(name), shortcut_(nullptr) {
+    QVBoxLayout* layout;
 
     // Create widgets
     items_ = new QItems(this, items);
-    layout_ = new QVBoxLayout(this);
     searchbox_ = new QLineEdit(this);
 
     // Add widgets
-    layout_->addWidget(searchbox_);
-    layout_->addWidget(items_);
+    layout = new QVBoxLayout(this);
+    layout->addWidget(searchbox_);
+    layout->addWidget(items_);
 
     // Set margin and spacing between widgets
-    layout_->setContentsMargins(0, 0, 0, 0);
-    layout_->setSpacing(0);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(0);
 
-    setLayout(layout_);
+    setLayout(layout);
     setStyleSheet(loadFile("theme/window.css"));
 
-    connect(searchbox_, &QLineEdit::returnPressed, this, &QPaletteInner::onEnterPressed);
-    connect(searchbox_, &QLineEdit::textChanged, [=](const QString &text) {
+    connect(searchbox_, &QLineEdit::returnPressed, [=]() {
+        if (items_->model()->rowCount())
+        {
+            Action action = (items_->currentIndex()).data().value<Action>();
+            emit itemClicked(action);
+        }
+        return true;
+        });
+
+    connect(searchbox_, &QLineEdit::textChanged, [=](const QString & text) {
         items_->scrollToTop();
+        items_->setCurrentIndex(items_->model()->index(0, 0));
         items_->model()->setFilter(text);
-    });
+        });
 
     connect(items_, &QListView::clicked, this, [=](const QModelIndex & index) {
         auto action = index.data().value<Action>();
-        close();
         emit itemClicked(action);
-    });
+        });
+
+    connect(this, &QPaletteInner::itemClicked, [=]() { close(); });
 
     searchbox_->installEventFilter(this);
     items_->installEventFilter(this);
+
+    if (!closeKey.isEmpty()) {
+        shortcut_ = new QShortcut(QKeySequence(closeKey), this);
+        connect(shortcut_, &QShortcut::activated, this, &QPaletteInner::close);
+    }
 }
 
 void QPaletteInner::keyPressEvent(QKeyEvent* e) {
@@ -47,10 +62,16 @@ void QPaletteInner::keyPressEvent(QKeyEvent* e) {
     }
 }
 
-bool QPaletteInner::eventFilter(QObject * obj, QEvent * event) {
+bool QPaletteInner::eventFilter(QObject* obj, QEvent* event) {
     switch (event->type()) {
     case QEvent::KeyPress: {
         auto* ke = dynamic_cast<QKeyEvent*>(event);
+
+        if (shortcut_ && QKeySequence(ke->key() | ke->modifiers()) == shortcut_->key()) {
+            close();
+            return true;
+        }
+
         switch (ke->key()) {
         case Qt::Key_Down:
         case Qt::Key_Up: {
@@ -90,20 +111,14 @@ bool QPaletteInner::eventFilter(QObject * obj, QEvent * event) {
     }
 }
 
-bool QPaletteInner::onEnterPressed() {
-    if (items_->model()->rowCount())
-    {
-        Action action = (items_->currentIndex()).data().value<Action>();
-        close();
-        emit itemClicked(action);
-    }
-    return true;
-}
-
-void QPaletteInner::showEvent(QShowEvent *event) {
+void QPaletteInner::showEvent(QShowEvent * event) {
     searchbox_->setFocus();
 }
 
-void QPaletteInner::setPlaceholderText(const QString &placeholder) {
+void QPaletteInner::closeEvent(QCloseEvent * event) {
+    emit closed();
+}
+
+void QPaletteInner::setPlaceholderText(const QString & placeholder) {
     searchbox_->setPlaceholderText(placeholder);
 }

@@ -12,11 +12,11 @@ class QItem : public QStyledItemDelegate {
 
 public:
     explicit QItem(QWidget* parent)
-    : QStyledItemDelegate(parent) {
+        : QStyledItemDelegate(parent) {
         updateCSS(loadFile("theme/window.css"));
     }
 
-    void updateCSS(const QString &style_sheet) {
+    void updateCSS(const QString& style_sheet) {
         style_sheet_ = style_sheet;
     }
 

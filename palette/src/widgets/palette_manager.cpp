@@ -6,11 +6,11 @@
 QPaletteContainer* g_current_widget;
 pathhandler_t pluginPath;
 
-void show_palette(const QString& name, const QString &placeholder, const QVector<Action>& actions, ActionHandler func) {
+void show_palette(const QString& name, const QString& placeholder, const QVector<Action>& actions, const QString& closeKey, ActionHandler func) {
     if (!g_current_widget) {
         g_current_widget = new QPaletteContainer();
     }
-    emit g_current_widget->show(name, placeholder, actions, std::move(func));
+    emit g_current_widget->show(name, placeholder, actions, closeKey, std::move(func));
 }
 
 void cleanup_palettes() {

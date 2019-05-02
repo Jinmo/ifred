@@ -18,9 +18,7 @@ class PaletteFilter : public QAbstractItemModel {
     std::vector<int> shown_items_temp_;
 
     int shown_items_count_;
-
     QString keyword_;
-    long preferred_index_;
 
 public:
     PaletteFilter(QWidget* parent, const QVector<Action>& items);
@@ -28,12 +26,13 @@ public:
     // Public interface
     void setFilter(const QString& keyword);
 
-    bool match(const QString& keyword, Action &action);
+    bool match(const QString& keyword, Action& action);
     bool lessThan(const QString& keyword, Action& left, Action& right) const;
 
+    // Implementations
     QModelIndex index(int row, int column, const QModelIndex& parent = QModelIndex()) const override;
     QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
-    QModelIndex	parent(const QModelIndex & index) const override { return {}; }
+    QModelIndex	parent(const QModelIndex& index) const override { return {}; }
 
     int	columnCount(const QModelIndex& parent) const override { return 1; }
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;

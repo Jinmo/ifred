@@ -17,21 +17,19 @@ class PALETTE_EXPORT QPaletteInner : public QFrame {
 
     QLineEdit* searchbox_;
     QItems* items_;
-
-    bool onEnterPressed();
-    void onItemClicked(const QModelIndex& index);
+    QShortcut* shortcut_;
 
     bool eventFilter(QObject* obj, QEvent* event) override;
     void keyPressEvent(QKeyEvent* e) override;
-    void showEvent(QShowEvent *event) override;
-    void closeEvent(QCloseEvent *event) override {
-        emit closed();
-    }
-public:
-    QPaletteInner(QWidget* parent, const QString &name, const QVector<Action>& items);
+    void showEvent(QShowEvent* event) override;
+    void closeEvent(QCloseEvent* event) override;
 
-    void setPlaceholderText(const QString &placeholder);
+public:
+    QPaletteInner(QWidget* parent, const QString& name, const QVector<Action>& items, const QString& closeKey);
+
+    void setPlaceholderText(const QString& placeholder);
+
 signals:
-    bool itemClicked(Action &action);
+    bool itemClicked(Action& action);
     void closed();
 };

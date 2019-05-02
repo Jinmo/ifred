@@ -1,5 +1,5 @@
 #include <widgets/palette_manager.h>
-#define COUNT 20000
+#define COUNT 200000
 
 QVector<Action> testItems() {
     QVector<Action> action_list;
@@ -8,7 +8,7 @@ QVector<Action> testItems() {
     action_list.push_back(Action{"std::runtime_error", "raise exception", ""});
 
     for (int i = 0; i < COUNT; i++) {
-        auto id = QString::number(rand() * rand());
+        auto id = QString::number(1LL * rand() * rand() * rand() * rand(), 36);
         action_list.push_back(Action{id, id, ""});
     }
 
@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
 
     set_path_handler(TestPluginPath);
 
-    show_palette("<test palette>", "Enter item name...", testItems(), [](Action & action) {
+    show_palette("<test palette>", "Enter item name...", testItems(), "Ctrl+P", [](Action & action) {
         if (action.id == "std::runtime_error") {
             throw std::runtime_error("raised!");
         }

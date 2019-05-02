@@ -3,7 +3,7 @@
 
 QHash<QString, QRegularExpression> capturing_regexp_cache;
 
-QRegularExpression capturingRegexp(const QString & keyword) {
+QRegularExpression capturingRegexp(const QString& keyword) {
     QStringList regexp_before_join;
 
     if (capturing_regexp_cache.contains(keyword)) {
@@ -24,7 +24,7 @@ QRegularExpression capturingRegexp(const QString & keyword) {
     return result;
 }
 
-const QString highlight(const QString& needle, const QString& haystack) {
+const QString highlight(const QString & needle, const QString & haystack) {
     static QString em_("<em>"), emEnd_("</em>");
     QStringList highlights;
 
@@ -46,8 +46,8 @@ const QString highlight(const QString& needle, const QString& haystack) {
     return QString(highlights.join(""));
 }
 
-void QItem::paint(QPainter* painter,
-    const QStyleOptionViewItem& option, const QModelIndex& index) const {
+void QItem::paint(QPainter * painter,
+    const QStyleOptionViewItem & option, const QModelIndex & index) const {
     QTextDocument doc;
 
     QStyleOptionViewItem opt = option;
@@ -58,6 +58,7 @@ void QItem::paint(QPainter* painter,
 
     doc.setDefaultStyleSheet(style_sheet_);
     doc.setDocumentMargin(0);
+    doc.setTextWidth(option.rect.width());
 
     auto html = "<div>" + highlight(keyword, action.description) + " <span>" + action.id + "</span></div>";
     doc.setHtml(html);
@@ -83,7 +84,7 @@ void QItem::paint(QPainter* painter,
     painter->restore();
 }
 
-QSize QItem::sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const {
+QSize QItem::sizeHint(const QStyleOptionViewItem & option, const QModelIndex & index) const {
     QStyleOptionViewItemV4 options = option;
     initStyleOption(&options, index);
 

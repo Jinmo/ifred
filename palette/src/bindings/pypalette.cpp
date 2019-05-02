@@ -2,7 +2,7 @@
 
 #include <bindings/pypalette.h>
 
-PyPalette::PyPalette(const std::string &name, const std::string &placeholer, const py::list &entries) {
+PyPalette::PyPalette(const std::string& name, const std::string& placeholer, const py::list& entries) {
     QVector<Action> result;
 
     name_ = QString::fromStdString(name);
@@ -10,10 +10,11 @@ PyPalette::PyPalette(const std::string &name, const std::string &placeholer, con
     result.reserve(static_cast<int>(entries.size()));
 
     for (py::handle item : entries) {
-        result.push_back(Action{QString::fromStdString(item.attr("id").cast<std::string>()),
-                                QString::fromStdString(item.attr("description").cast<std::string>()),
-                                QString::fromStdString(item.attr("shortcut").cast<std::string>())
-        });
+        result.push_back(Action{
+            QString::fromStdString(item.attr("id").cast<std::string>()),
+            QString::fromStdString(item.attr("description").cast<std::string>()),
+            QString::fromStdString(item.attr("shortcut").cast<std::string>())
+            });
     }
 
     py::object scope = py::module::import("__palette__").attr("__dict__");
@@ -21,8 +22,8 @@ PyPalette::PyPalette(const std::string &name, const std::string &placeholer, con
     scope["__entries__"] = entries;
 
     py::exec(
-            "__cur_palette__ = {l.id: l for l in __entries__}",
-            scope);
+        "__cur_palette__ = {l.id: l for l in __entries__}",
+        scope);
 
     actions_.swap(result);
 }
@@ -31,10 +32,10 @@ PYBIND11_MODULE(__palette__, m) {
     m.doc() = R"()";
 
     py::class_<PyPalette>(m, "Palette")
-            .def(py::init<std::string, std::string, py::list>());
+        .def(py::init<std::string, std::string, py::list>());
 
-    m.def("show_palette", [](PyPalette &palette) -> bool {
-        show_palette(palette.name(), palette.placeholder(), palette.actions(), [](const Action &action) {
+    m.def("show_palette", [](PyPalette & palette, std::string closeKey) -> bool {
+        show_palette(palette.name(), palette.placeholder(), palette.actions(), QString::fromStdString(closeKey), [](const Action & action) {
             py::gil_scoped_acquire gil;
 
             try {
@@ -43,7 +44,7 @@ PYBIND11_MODULE(__palette__, m) {
 
                 return true;
             }
-            catch (const std::runtime_error &error) {
+            catch (const std::runtime_error & error) {
                 // This should not throw error
                 auto write = py::module::import("sys").attr("stdout").attr("write");
                 write(error.what());
@@ -52,9 +53,9 @@ PYBIND11_MODULE(__palette__, m) {
             }
 
             return true;
-        });
+            });
         return true;
-    });
+        }, py::arg("palette"), py::arg("close_key") = "");
 
     m.attr("threading") = py::module::import("threading");
 

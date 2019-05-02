@@ -1,4 +1,5 @@
 #include <widgets/qpalettecontainer.h>
+#include <widgets/qpalette_inner.h>
 
 static void centerWidgets(QWidget* widget, QWidget* host = nullptr) {
     if (!host)
@@ -17,7 +18,7 @@ static void centerWidgets(QWidget* widget, QWidget* host = nullptr) {
 }
 
 QPaletteContainer::QPaletteContainer()
-        : inner_stacked_(new QStackedWidget(this)), shadow_observer_(new ShadowObserver(this)) {
+    : inner_stacked_(new QStackedWidget(this)), shadow_observer_(new ShadowObserver(this)) {
     setWindowFlags(Qt::Tool | Qt::FramelessWindowHint);
     setAttribute(Qt::WA_TranslucentBackground); //enable MainWindow to be transparent
 
@@ -25,15 +26,15 @@ QPaletteContainer::QPaletteContainer()
     connect(this, &QPaletteContainer::show, this, &QPaletteContainer::onShow, Qt::QueuedConnection);
 }
 
-void QPaletteContainer::onShow(const QString &name, const QString &placeholder, const QVector<Action> &actions, ActionHandler func) {
+void QPaletteContainer::onShow(const QString & name, const QString & placeholder, const QVector<Action> & actions, const QString & closeKey, ActionHandler func) {
     while (inner_stacked_->count())
         inner_stacked_->removeWidget(inner_stacked_->widget(0));
 
-    auto inner = new QPaletteInner(this, name, actions);
+    auto inner = new QPaletteInner(this, name, actions, closeKey);
     connect(inner, &QPaletteInner::itemClicked, std::move(func));
     connect(inner, &QPaletteInner::closed, [=]() {
         close();
-    });
+        });
     inner_stacked_->addWidget(inner);
     centerWidgets(this);
 

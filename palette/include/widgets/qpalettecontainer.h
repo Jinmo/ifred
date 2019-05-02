@@ -3,7 +3,8 @@
 #include <QWidget>
 #include <QRect>
 
-#include <widgets/qpalette_inner.h>
+#include <observers.h>
+#include <action.h>
 #include <utils.h>
 
 #include <functional>
@@ -22,10 +23,10 @@ class QPaletteContainer : public QMainWindow {
 public:
     QPaletteContainer();
 
-    void onShow(const QString& name, const QString &placeholder, const QVector<Action>& actions_, ActionHandler func);
+    void onShow(const QString& name, const QString& placeholder, const QVector<Action>& actions_, const QString& closeKey, ActionHandler func);
 
 signals:
-    void show(const QString& name, const QString &placeholder, const QVector<Action>& actions, ActionHandler func);
+    void show(const QString& name, const QString& placeholder, const QVector<Action>& actions, const QString& closeKey, ActionHandler func);
 };
 
 class ShadowObserver : public JSONObserver {
