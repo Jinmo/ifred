@@ -40,6 +40,7 @@ void QPaletteContainer::onShow(const QString & name, const QString & placeholder
 
     inner->setPlaceholderText(placeholder);
 
+    shadow_observer_->activate();
     QMainWindow::show();
     activateWindow();
 }

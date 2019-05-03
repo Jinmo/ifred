@@ -52,4 +52,6 @@ public:
         owner->setContentsMargins(kShadow, kShadow, kShadow, kShadow);
     }
 
+    using JSONObserver::activate;
+
 };
