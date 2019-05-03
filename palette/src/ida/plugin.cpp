@@ -115,15 +115,29 @@ const QVector<Action> getActions() {
     return result;
 }
 
+void addStructs(QVector<Action> &result) {
+    int idx = get_first_struc_idx();
+    while (idx != BADADDR) {
+        tid_t sid = get_struc_by_idx(idx);
+        result.push_back(Action{ "struct:" + QString::number(sid), QString::fromStdString(get_struc_name(sid).c_str()), "" });
+
+        idx = get_next_struc_idx(idx);
+    }
+}
+
 const QVector<Action> getNames() {
     QVector<Action> result;
     size_t names = get_nlist_size();
+    size_t structs = get_struc_qty();
 
     // 0. Reserve vector to avoid multiple allocations
-    result.reserve(names);
+    result.reserve(names + structs);
 
     // 1. Add names from IDA
     addNames(result, names);
+
+    // 2. Add structs from IDA
+    addStructs(result);
 
     return result;
 }
@@ -147,6 +161,9 @@ class name_palette_handler : public action_handler_t {
         show_palette("name palette", "Enter symbol name...", getNames(), NAME_PALETTE_SHORTCUT, [](Action & action) {
             auto&& id = action.id;
 
+            if (id.startsWith("struct:")) {
+                open_structs_window(id.midRef(7).toULongLong());
+            }
             ea_t address = static_cast<ea_t>(id.toULongLong(nullptr, 16));
             jumpto(address);
 

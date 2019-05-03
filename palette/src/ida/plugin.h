@@ -13,4 +13,5 @@
 #include <kernwin.hpp>
 #include <loader.hpp>
 #include <name.hpp>
+#include <struct.hpp>
 #include <diskio.hpp>
