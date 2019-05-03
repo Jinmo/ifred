@@ -1,0 +1,106 @@
+* {
+    font-family: Segoe UI;
+    font-size: 20px;
+    color: rgb(204, 204, 204);
+    background: transparent;
+}
+
+
+/* Searchbox */
+
+QLineEdit,
+QLineEdit:hover,
+QLineEdit:active {
+    width: 720px;
+    height: 29px;
+    border: 4px solid rgb(77, 136, 255);
+    border-radius: 5px;
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
+    font-size: 18px;
+    background: rgb(51, 54, 63);
+    padding: 6px 0px 6px 12px;
+}
+
+
+/* List view and items */
+
+QListView {
+    background-color: transparent;
+    border: none;
+}
+
+    QListView::item {
+        background: rgb(39, 42, 49);
+        padding-left: 14px;
+        padding-top: 6px;
+        padding-bottom: 13px;
+        border-bottom: 1px solid #000;
+    }
+
+        QListView::item:hover {
+            background: rgb(43, 52, 70);
+            border: 0;
+            border-bottom: 1px solid #000;
+        }
+
+        QListView::item:selected {
+            background: rgb(46, 61, 90) !important;
+        }
+
+div,
+span,
+em {
+    background: transparent;
+}
+
+em {
+    /* Highlighted Text */
+    font-weight: bold;
+    color: rgb(77, 136, 255);
+    font-style: normal;
+}
+
+span {
+    /* Action ID text */
+    color: transparent;
+}
+
+
+/* List scrollbar */
+
+QScrollBar:vertical * {
+    background-color: rgb(56, 59, 65);
+}
+
+QScrollBar:vertical {
+    border: none;
+    width: 12px;
+    background: rgb(56, 59, 65);
+}
+
+QScrollBar::add-page:vertical,
+QScrollBar::sub-page:vertical {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+QScrollBar::handle:vertical {
+    background: rgba(62, 66, 78);
+    border: 1px solid #4d515c;
+    min-height: 20px;
+    border-radius: 6px;
+}
+
+QScrollBar::add-line:vertical {
+    width: 0;
+    height: 0;
+    subcontrol-position: bottom;
+    subcontrol-origin: margin;
+}
+
+QScrollBar::sub-line:vertical {
+    width: 0;
+    height: 0;
+    subcontrol-position: top;
+    subcontrol-origin: margin;
+}
