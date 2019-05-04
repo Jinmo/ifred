@@ -73,8 +73,10 @@ void QItem::paint(QPainter * painter,
 
     auto textRect = style->subElementRect(QStyle::SE_ItemViewItemText, &option, widget);
     painter->translate(textRect.left(), textRect.top());
+    
+    textRect = textRect.intersected(widget->contentsRect());
 
-    document->drawContents(painter, QRectF(0, 0, opt.rect.width(), opt.rect.height()));
+    document->drawContents(painter, QRectF(0, 0, textRect.width(), textRect.height()));
     painter->restore();
 }
 

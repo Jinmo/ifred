@@ -21,7 +21,6 @@ QPaletteContainer::QPaletteContainer()
     : QMainWindow(nullptr), inner_stacked_(new QStackedWidget(this)), shadow_observer_(new ShadowObserver(this)) {
     setWindowFlags(Qt::Tool | Qt::FramelessWindowHint);
     setAttribute(Qt::WA_TranslucentBackground); //enable MainWindow to be transparent
-    setAttribute(Qt::WA_DeleteOnClose);
 
     setCentralWidget(inner_stacked_);
 }
