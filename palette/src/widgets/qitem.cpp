@@ -95,7 +95,7 @@ void QItem::updateCSS(const QString& style_sheet) {
     document_->setDocumentMargin(0);
 }
 
-QTextDocument* QItem::renderAction(bool size_hint, QString& keyword, Action& action) {
+QTextDocument* QItem::renderAction(bool size_hint, const QString& keyword, Action& action) {
     QString html = "<table width=100% cellpadding=0 cellspacing=0><tr><td class=\"name\">" + (!size_hint ? highlight(keyword, action.name) : "keyword") + "</td>";
 
     if (action.shortcut.size())

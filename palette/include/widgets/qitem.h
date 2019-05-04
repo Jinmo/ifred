@@ -24,7 +24,7 @@ public:
 
     QSize sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const override;
 
-    QTextDocument* renderAction(bool just_return, QString& keyword, Action& action);
+    QTextDocument* renderAction(bool just_return, const QString& keyword, Action& action);
 };
 
 #endif // QITEM_H
