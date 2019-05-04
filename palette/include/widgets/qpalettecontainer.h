@@ -23,9 +23,6 @@ class QPaletteContainer : public QMainWindow {
 public:
     QPaletteContainer();
 
-    void onShow(const QString& name, const QString& placeholder, const QVector<Action>& actions_, const QString& closeKey, ActionHandler func);
-
-signals:
     void show(const QString& name, const QString& placeholder, const QVector<Action>& actions, const QString& closeKey, ActionHandler func);
 };
 

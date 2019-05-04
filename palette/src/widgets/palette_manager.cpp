@@ -6,19 +6,23 @@
 QPaletteContainer* g_current_widget;
 pathhandler_t pluginPath;
 
+template <typename F>
+static void postToThread2(F&& fun, QThread* thread = qApp->thread()) {
+    QObject* obj = QAbstractEventDispatcher::instance(thread);
+    Q_ASSERT(obj);
+    QObject src;
+    QObject::connect(&src, &QObject::destroyed, obj, std::forward<F>(fun),
+        Qt::QueuedConnection);
+}
+
 void show_palette(const QString& name, const QString& placeholder, const QVector<Action>& actions, const QString& closeKey, ActionHandler func) {
-    if (!g_current_widget) {
+    postToThread2([=]() {
         g_current_widget = new QPaletteContainer();
-    }
-    emit g_current_widget->show(name, placeholder, actions, closeKey, std::move(func));
+        g_current_widget->show(name, placeholder, actions, closeKey, std::move(func));
+        });
 }
 
 void cleanup_palettes() {
-    if (g_current_widget) {
-        delete g_current_widget;
-        g_current_widget = nullptr;
-    }
-
     Q_CLEANUP_RESOURCE(theme_bundle);
 }
 

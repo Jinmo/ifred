@@ -109,7 +109,7 @@ const QVector<Action> getActions() {
     addActions(result, actions);
 
     std::sort(result.begin(), result.begin() + result.size(), [](Action & lhs, Action & rhs) {
-        return lhs.description.compare(rhs.description) < 0;
+        return lhs.name.compare(rhs.name) < 0;
         });
 
     return result;

@@ -12,6 +12,7 @@ QLineEdit, QLineEdit:hover, QLineEdit:active {
     width: 720px;
     height: 29px;
     margin: 7px 7px 8px 8px;
+    padding-left: 7px;
     border: 1px solid rgb(23,91,137);
     background: rgb(60,60,60);
 }
@@ -24,24 +25,48 @@ QListView {
     margin: 0;
 }
 
-QListView::item {
-    padding-left: 14px;
-    padding-top: 5px;
-    padding-bottom: 2px;
-}
+    QListView::item {
+        padding-left: 14px;
+        padding-top: 3px;
+    }
 
-QListView::item:hover {
-    background: rgb(37, 37, 38);
-    border: 0;
-}
+        QListView::item:hover {
+            background: rgb(42, 45, 46);
+            border: 0;
+        }
 
-QListView::item:selected {
-    background: #062f4a !important;
-}
+        QListView::item:selected {
+            background: #062f4a !important;
+        }
 
-div, span, em {
+table, td, div, p, span, em {
     background: transparent;
 }
+
+table {
+    color: #fff;
+    margin-bottom: 5px;
+}
+
+td.placeholder {
+    font-size: 1px;
+    width: 700px;
+}
+
+td {
+    padding: 0;
+    margin: 0;
+    vertical-align: middle;
+}
+
+    td.shortcut {
+        float: right;
+        padding-right: 18px;
+    }
+
+    td.description {
+        color: #555;
+    }
 
 em { /* Highlighted Text */
     font-weight: bold;
@@ -51,9 +76,8 @@ em { /* Highlighted Text */
 
 span { /* Action ID text */
     font-family: Segoe UI;
-    color: #555;
     padding-left: 20px;
-    display: block;
+    color: transparent;
 }
 
 /* List scrollbar */

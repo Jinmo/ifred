@@ -48,7 +48,6 @@ const QString highlight(const QString & needle, const QString & haystack) {
 
 void QItem::paint(QPainter * painter,
     const QStyleOptionViewItem & option, const QModelIndex & index) const {
-    QTextDocument doc;
 
     QStyleOptionViewItem opt = option;
     initStyleOption(&opt, index);
@@ -56,12 +55,7 @@ void QItem::paint(QPainter * painter,
     Action action = index.data().value<Action>();
     QString keyword = index.data(Qt::UserRole).value<QString>();
 
-    doc.setDefaultStyleSheet(style_sheet_);
-    doc.setDocumentMargin(0);
-    doc.setTextWidth(option.rect.width());
-
-    auto html = "<div>" + highlight(keyword, action.description) + " <span>" + action.id + "</span></div>";
-    doc.setHtml(html);
+    auto document = const_cast<QItem *>(this)->renderAction(false, keyword, action);
 
     painter->save();
 
@@ -80,7 +74,7 @@ void QItem::paint(QPainter * painter,
     auto textRect = style->subElementRect(QStyle::SE_ItemViewItemText, &option, widget);
     painter->translate(textRect.left(), textRect.top());
 
-    doc.drawContents(painter, QRectF(0, 0, opt.rect.width(), opt.rect.height()));
+    document->drawContents(painter, QRectF(0, 0, opt.rect.width(), opt.rect.height()));
     painter->restore();
 }
 
@@ -88,9 +82,32 @@ QSize QItem::sizeHint(const QStyleOptionViewItem & option, const QModelIndex & i
     QStyleOptionViewItemV4 options = option;
     initStyleOption(&options, index);
 
-    const QWidget* widget = options.widget;
-    QStyle* style = widget ? widget->style() : QApplication::style();
-    QSize res = style->sizeFromContents(QStyle::CT_ItemViewItem, &options, QSize(), widget);
+    Action action = index.data().value<Action>();
 
-    return res;
+    auto document = const_cast<QItem *>(this)->renderAction(true, QString(), action);
+    document->setTextWidth(option.rect.width());
+
+    return QSize(option.rect.width(), (int)document->size().height());
 }
+
+void QItem::updateCSS(const QString& style_sheet) {
+    document_->setDefaultStyleSheet(style_sheet);
+    document_->setDocumentMargin(0);
+}
+
+QTextDocument* QItem::renderAction(bool size_hint, QString& keyword, Action& action) {
+    QString html = "<table width=100% cellpadding=0 cellspacing=0><tr><td class=\"name\">" + (!size_hint ? highlight(keyword, action.name) : "keyword") + "</td>";
+
+    if (action.shortcut.size())
+        html += "<td width=50px class=\"shortcut\" align=\"right\">" + action.shortcut + "</td>";
+
+    html += "</tr>";
+
+    if (action.description.size())
+        html += "<tr><td class=\"description\" colspan=2>" + action.description + "</td></tr>";
+
+    html += "</table>";
+    document_->setHtml(html);
+    return document_;
+}
+

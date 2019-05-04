@@ -21,7 +21,7 @@ import random, string
 myhandler = lambda item: sys.stdout.write('You selected: %s\n' % item.description)
 random_str = lambda: "".join(random.choice(string.lowercase) for i in range(20))
 
-entries = [Action(description=random_str(), # displayed text
+entries = [Action(name=random_str(), # displayed text
     handler=myhandler, # callback
     id='action%d' % i # must be unique
     ) for i in range(20)]

@@ -12,8 +12,9 @@ PyPalette::PyPalette(const std::string& name, const std::string& placeholer, con
     for (py::handle item : entries) {
         result.push_back(Action{
             QString::fromStdString(item.attr("id").cast<std::string>()),
-            QString::fromStdString(item.attr("description").cast<std::string>()),
-            QString::fromStdString(item.attr("shortcut").cast<std::string>())
+            QString::fromStdString(item.attr("name").cast<std::string>()),
+            QString::fromStdString(item.attr("shortcut").cast<std::string>()),
+            QString::fromStdString(item.attr("description").cast<std::string>())
             });
     }
 
@@ -61,11 +62,12 @@ PYBIND11_MODULE(__palette__, m) {
 
     py::exec(R"(
 class Action:
-	def __init__(self, id, description, handler):
-		self.id = id
-		self.description = description
-		self.shortcut = ""
-		self.handler = handler
+    def __init__(self, id, name, handler, shortcut="", description=""):
+        self.id = id
+        self.name = name
+        self.shortcut = shortcut
+        self.description = description
+        self.handler = handler
 
 def execute_action(id):
     # on main thread
