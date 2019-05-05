@@ -65,18 +65,18 @@ void QPaletteInner::keyPressEvent(QKeyEvent* e) {
 bool QPaletteInner::eventFilter(QObject* obj, QEvent* event) {
     switch (event->type()) {
     case QEvent::KeyPress: {
-        auto* ke = dynamic_cast<QKeyEvent*>(event);
+        auto* keyEvent = dynamic_cast<QKeyEvent*>(event);
 
-        if (shortcut_ && QKeySequence(ke->key() | ke->modifiers()) == shortcut_->key()) {
+        if (shortcut_ && QKeySequence(keyEvent->key() | keyEvent->modifiers()) == shortcut_->key()) {
             close();
             return true;
         }
 
-        switch (ke->key()) {
+        switch (keyEvent->key()) {
         case Qt::Key_Down:
         case Qt::Key_Up: {
             /* We manually process Up/Down key to handle corner cases and for ease of edits */
-            int delta = ke->key() == Qt::Key_Down ? 1 : -1;
+            int delta = keyEvent->key() == Qt::Key_Down ? 1 : -1;
             auto new_row = items_->currentIndex().row() + delta;
 
             if (new_row == -1)
@@ -95,10 +95,20 @@ bool QPaletteInner::eventFilter(QObject* obj, QEvent* event) {
         case Qt::Key_PageUp:
             /* Forward QKeyEvent for PageDown/PageUp key since QAbstractListView already implemented the procedure */
             event->ignore();
-            items_->keyPressEvent(ke);
+            items_->keyPressEvent(keyEvent);
             return true;
         default:
             return obj->eventFilter(obj, event);
+        }
+    }
+    case QEvent::FocusOut: {
+        auto focusEvent = static_cast<QFocusEvent*>(event);
+        if (obj == searchbox_ && focusEvent->reason() == Qt::MouseFocusReason) {
+            searchbox_->setFocus();
+            return true;
+        }
+        else {
+            return false;
         }
     }
     case QEvent::ShortcutOverride: {

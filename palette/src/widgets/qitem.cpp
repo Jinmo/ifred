@@ -74,7 +74,10 @@ void QItem::paint(QPainter * painter,
     auto textRect = style->subElementRect(QStyle::SE_ItemViewItemText, &option, widget);
     painter->translate(textRect.left(), textRect.top());
     
-    textRect = textRect.intersected(widget->contentsRect());
+    // TODO: write a correct algorithm to limit rendering in QFrame, not QMainWindow
+    // currently, I added this condition to prevent determining height of topmost item
+    if(textRect.top() >= 0)
+        textRect = textRect.intersected(widget->contentsRect());
 
     document->drawContents(painter, QRectF(0, 0, textRect.width(), textRect.height()));
     painter->restore();
