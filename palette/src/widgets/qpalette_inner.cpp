@@ -30,7 +30,9 @@ QPaletteInner::QPaletteInner(QWidget* parent, const QString& name, const QVector
         if (items_->model()->rowCount())
         {
             Action action = (items_->currentIndex()).data().value<Action>();
+            window()->hide();
             emit itemClicked(action);
+            close();
         }
         return true;
         });
@@ -43,10 +45,10 @@ QPaletteInner::QPaletteInner(QWidget* parent, const QString& name, const QVector
 
     connect(items_, &QListView::clicked, this, [=](const QModelIndex & index) {
         auto action = index.data().value<Action>();
+        window()->hide();
         emit itemClicked(action);
+        close();
         });
-
-    connect(this, &QPaletteInner::itemClicked, [=]() { close(); });
 
     searchbox_->installEventFilter(this);
     items_->installEventFilter(this);

@@ -20,6 +20,7 @@ static void centerWidgets(QWidget* widget, QWidget* host = nullptr) {
 QPaletteContainer::QPaletteContainer()
     : QMainWindow(nullptr), inner_stacked_(new QStackedWidget(this)), shadow_observer_(new ShadowObserver(this)) {
     setWindowFlags(Qt::Tool | Qt::FramelessWindowHint);
+        setAttribute(Qt::WA_DeleteOnClose);
     setAttribute(Qt::WA_TranslucentBackground); //enable MainWindow to be transparent
 
     setCentralWidget(inner_stacked_);
