@@ -11,6 +11,9 @@ QPaletteInner::QPaletteInner(QWidget* parent, const QString& name, const QVector
     items_ = new QItems(this, items);
     searchbox_ = new QLineEdit(this);
 
+        items_->setAttribute(Qt::WA_MacShowFocusRect, 0);
+        searchbox_->setAttribute(Qt::WA_MacShowFocusRect, 0);
+
     // Add widgets
     layout = new QVBoxLayout(this);
     layout->addWidget(searchbox_);
