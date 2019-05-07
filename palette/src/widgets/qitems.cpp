@@ -8,6 +8,8 @@ QItems::QItems(QWidget* parent, const QVector<Action>& items)
     QAbstractItemView::setModel(model_);
     QAbstractItemView::setItemDelegate(item_delegate_);
 
+    setAttribute(Qt::WA_DeleteOnClose);
+
     // Border width
     setLineWidth(0);
 

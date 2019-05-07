@@ -17,6 +17,10 @@ public:
 
     explicit QItems(QWidget* parent, const QVector<Action>& items);
     using QAbstractItemView::keyPressEvent;
+
+    ~QItems() {
+        delete model_;
+    }
 };
 
 #endif // QITEMS_H

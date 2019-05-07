@@ -89,7 +89,7 @@ void addNames(QVector<Action>& result, size_t names) {
         const char* name = get_nlist_name(i);
         qstring demangled_name = demangle_name(name, 0);
 
-        result.push_back(Action{ QString::number(get_nlist_ea(i), 16).toUpper(),
+        result.push_back(Action{ QString::number(get_nlist_ea(i), 16) + ":" + name,
                                 (demangled_name.empty() ? name : demangled_name.c_str()),
                                 QString() });
     }
@@ -164,8 +164,12 @@ class name_palette_handler : public action_handler_t {
             if (id.startsWith("struct:")) {
                 open_structs_window(id.midRef(7).toULongLong());
             }
-            ea_t address = static_cast<ea_t>(id.toULongLong(nullptr, 16));
-            jumpto(address);
+            else {
+                int sep = action.id.indexOf(':');
+                ea_t address = static_cast<ea_t>(id.midRef(0, sep).toULongLong(nullptr, 16));
+                jumpto(address);
+                reg_update_strlist("History\\$", action.id.midRef(sep + 1).toUtf8().data(), 32);
+            }
 
             return true;
             });

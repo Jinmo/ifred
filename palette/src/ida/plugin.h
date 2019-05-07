@@ -15,3 +15,4 @@
 #include <name.hpp>
 #include <struct.hpp>
 #include <diskio.hpp>
+#include <registry.hpp>

@@ -1,6 +1,11 @@
 #include <widgets/palette_manager.h>
 #include <thread>
-#define COUNT 200
+#define COUNT 200000
+
+QString random_key() {
+    const char* keys[] = { "Shift" };
+    return keys[rand() % (sizeof(keys) / sizeof(keys[0]))];
+}
 
 QVector<Action> testItems() {
     QVector<Action> action_list;
@@ -10,7 +15,7 @@ QVector<Action> testItems() {
 
     for (int i = 0; i < COUNT; i++) {
         auto id = QString::number(1LL * rand() * rand() * rand() * rand(), 36) + ":" + QString::number(i);
-        action_list.push_back(Action{ id, id, "Ctrl+" + QString::number(i % 10), QString::number(i) + "th element" });
+        action_list.push_back(Action{ id, id, random_key() + "+" + QString::number(i % 10), QString::number(i) + "th element" });
     }
 
     return action_list;
