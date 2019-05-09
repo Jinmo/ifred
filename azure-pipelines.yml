@@ -93,12 +93,12 @@ jobs:
       tar xvf $(Agent.TempDirectory)/qt5.6.0.txz || exit 100
       mkdir build64
       cd build64
-      cmake $(Build.SourcesDirectory) -DCMAKE_PREFIX_PATH=$PWD/../qt560/clang_64 -DIDA_SDK=$PWD/../idasdk70 -DIDA_VERSION=700 -DIDA_BINARY_64=True -DIDA_EA_64=True -GNinja -DPYBIND11_PYTHON_VERSION=2.7 -DIDA_INSTALL_DIR=$PWD/../idalib-7.0/MacOS
+      cmake $(Build.SourcesDirectory) -DCMAKE_PREFIX_PATH=$PWD/../qt560/clang_64 -DIDA_SDK=$PWD/../idasdk70 -DIDA_BINARY_64=True -DIDA_EA_64=True -GNinja -DPYBIND11_PYTHON_VERSION=2.7 -DIDA_INSTALL_DIR=$PWD/../idalib-7.0/MacOS
       ninja
       cp palette/ida_palette64.dylib $(Build.ArtifactStagingDirectory)
       mkdir ../build
       cd ../build
-      cmake $(Build.SourcesDirectory) -DCMAKE_PREFIX_PATH=$PWD/../qt560/clang_64 -DIDA_SDK=$PWD/../idasdk70 -DIDA_VERSION=700 -DIDA_BINARY_64=True -DIDA_EA_64=False -GNinja -DPYBIND11_PYTHON_VERSION=2.7 -DIDA_INSTALL_DIR=$PWD/../idalib-7.0/MacOS
+      cmake $(Build.SourcesDirectory) -DCMAKE_PREFIX_PATH=$PWD/../qt560/clang_64 -DIDA_SDK=$PWD/../idasdk70 -DIDA_BINARY_64=True -DIDA_EA_64=False -GNinja -DPYBIND11_PYTHON_VERSION=2.7 -DIDA_INSTALL_DIR=$PWD/../idalib-7.0/MacOS
       ninja
       cp palette/ida_palette.dylib $(Build.ArtifactStagingDirectory)
     displayName: 'Build'
