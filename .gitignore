@@ -5,3 +5,5 @@ build
 # CLion files
 .idea
 cmake-build-*
+
+CMakeSettings\.json
