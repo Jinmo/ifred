@@ -56,12 +56,26 @@ QPaletteInner::QPaletteInner(QWidget* parent, const QString& name, const QVector
     items_->installEventFilter(this);
 
     if (!closeKey.isEmpty()) {
-        shortcut_ = new QShortcut(QKeySequence(closeKey), this);
-        connect(shortcut_, &QShortcut::activated, this, &QPaletteInner::close);
+        shortcut_ = registerShortcut({ closeKey }, [=]() {close(); }, false);
     }
+
+    registerShortcut({ "Ctrl+J" }, [=]() {arrowPressed(-1); });
+    registerShortcut({ "Ctrl+K" }, [=]() {arrowPressed(+1); });
 }
 
-void QPaletteInner::keyPressEvent(QKeyEvent* e) {
+void QPaletteInner::arrowPressed(int delta) {
+    auto new_row = items_->currentIndex().row() + delta;
+    auto row_count = items_->model()->rowCount();
+
+    if (new_row < 0)
+        new_row = 0;
+    else if (new_row >= row_count)
+        new_row = row_count - 1;
+
+    items_->setCurrentIndex(items_->model()->index(new_row, 0));
+}
+
+void QPaletteInner::keyPressEvent(QKeyEvent * e) {
     if (e->key() != Qt::Key_Escape)
         QFrame::keyPressEvent(e);
     else {
@@ -69,7 +83,7 @@ void QPaletteInner::keyPressEvent(QKeyEvent* e) {
     }
 }
 
-bool QPaletteInner::eventFilter(QObject* obj, QEvent* event) {
+bool QPaletteInner::eventFilter(QObject * obj, QEvent * event) {
     switch (event->type()) {
     case QEvent::KeyPress: {
         auto* keyEvent = dynamic_cast<QKeyEvent*>(event);
@@ -83,15 +97,7 @@ bool QPaletteInner::eventFilter(QObject* obj, QEvent* event) {
         case Qt::Key_Down:
         case Qt::Key_Up: {
             /* We manually process Up/Down key to handle corner cases and for ease of edits */
-            int delta = keyEvent->key() == Qt::Key_Down ? 1 : -1;
-            auto new_row = items_->currentIndex().row() + delta;
-
-            if (new_row == -1)
-                new_row = 0;
-            else if (new_row == items_->model()->rowCount())
-                new_row--;
-
-            items_->setCurrentIndex(items_->model()->index(new_row, 0));
+            arrowPressed(keyEvent->key() == Qt::Key_Down ? 1 : -1);
             return true;
         }
         case Qt::Key_Escape:
@@ -119,8 +125,13 @@ bool QPaletteInner::eventFilter(QObject* obj, QEvent* event) {
         }
     }
     case QEvent::ShortcutOverride: {
-        /* Handling ShortcutOverride prevents UI from hooking the shortcuts used in the command palette */
-        event->accept();
+        auto* keyEvent = dynamic_cast<QKeyEvent*>(event);
+        /*
+        Handling ShortcutOverride prevents UI from hooking the shortcuts used in the command palette.
+        If the shortcut is registered by registerShortcut(), it's not overriden.
+        */
+        if(!registered_keys_.contains(QKeySequence(keyEvent->key() | keyEvent->modifiers())))
+            event->accept();
         return true;
     }
     default:
