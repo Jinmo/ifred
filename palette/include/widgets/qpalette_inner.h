@@ -20,7 +20,7 @@ class PALETTE_EXPORT QPaletteInner : public QFrame {
     QShortcut* shortcut_;
 
 	// Registered shortcuts not overriden by Qt::ShortcutOverride event
-	QSet<QKeySequence> registered_keys_;
+	QHash<QKeySequence, QShortcut *> registered_keys_;
 
     bool eventFilter(QObject* obj, QEvent* event) override;
     void keyPressEvent(QKeyEvent* e) override;
@@ -31,12 +31,15 @@ class PALETTE_EXPORT QPaletteInner : public QFrame {
 
 	template<typename T>
 	QShortcut *registerShortcut(QKeySequence sequence, T callback, bool override=true) {
-		if(override)
-			registered_keys_.insert(sequence);
-
-		auto *shortcut = new QShortcut(QKeySequence(sequence), this);
+        // QKeyEvent treats Meta key as Ctrl, but QAction doesn't.
+        QKeySequence keySequence(sequence.toString().replace("Meta+", "Ctrl+"));
+        
+        auto *shortcut = new QShortcut(keySequence, this);
 		connect(shortcut, &QShortcut::activated, callback);
 
+        if(override)
+            registered_keys_.insert(sequence, shortcut);
+        
 		return shortcut;
 	}
 

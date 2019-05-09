@@ -56,7 +56,7 @@ QPaletteInner::QPaletteInner(QWidget* parent, const QString& name, const QVector
     items_->installEventFilter(this);
 
     if (!closeKey.isEmpty()) {
-        shortcut_ = registerShortcut({ closeKey }, [=]() {close(); }, false);
+        shortcut_ = registerShortcut({ closeKey }, [=]() {close(); });
     }
 
     registerShortcut({ "Ctrl+J" }, [=]() {arrowPressed(-1); });
@@ -87,6 +87,12 @@ bool QPaletteInner::eventFilter(QObject * obj, QEvent * event) {
     switch (event->type()) {
     case QEvent::KeyPress: {
         auto* keyEvent = dynamic_cast<QKeyEvent*>(event);
+
+        QKeySequence sequence(keyEvent->key() | keyEvent->modifiers());
+        if(registered_keys_.contains(sequence)) {
+            emit registered_keys_[sequence]->activated();
+            return true;
+        }
 
         if (shortcut_ && QKeySequence(keyEvent->key() | keyEvent->modifiers()) == shortcut_->key()) {
             close();
@@ -130,8 +136,7 @@ bool QPaletteInner::eventFilter(QObject * obj, QEvent * event) {
         Handling ShortcutOverride prevents UI from hooking the shortcuts used in the command palette.
         If the shortcut is registered by registerShortcut(), it's not overriden.
         */
-        if(!registered_keys_.contains(QKeySequence(keyEvent->key() | keyEvent->modifiers())))
-            event->accept();
+        event->accept();
         return true;
     }
     default:
