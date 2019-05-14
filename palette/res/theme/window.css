@@ -13,8 +13,8 @@ QLineEdit, QLineEdit:hover, QLineEdit:active {
     height: 29px;
     margin: 7px 7px 8px 8px;
     padding-left: 7px;
-    border: 1px solid rgb(23,91,137);
-    background: rgb(60,60,60);
+    border: 1px solid rgb(23, 91, 137);
+    background: rgb(60, 60, 60);
 }
 
 /* List view and items */
@@ -25,19 +25,19 @@ QListView {
     margin: 0;
 }
 
-    QListView::item {
-        padding-left: 14px;
-        padding-top: 3px;
-    }
+QListView::item {
+    padding-left: 14px;
+    padding-top: 3px;
+}
 
-        QListView::item:hover {
-            background: rgb(42, 45, 46);
-            border: 0;
-        }
+QListView::item:hover {
+    background: rgb(42, 45, 46);
+    border: 0;
+}
 
-        QListView::item:selected {
-            background: #062f4a !important;
-        }
+QListView::item:selected {
+    background: #062f4a !important;
+}
 
 table, td, div, p, span, em {
     background: transparent;
@@ -59,22 +59,24 @@ td {
     vertical-align: middle;
 }
 
-    td.shortcut {
-        float: right;
-        padding-right: 18px;
-    }
+td.shortcut {
+    float: right;
+    padding-right: 18px;
+}
 
-    td.description {
-        color: #555;
-    }
+td.description {
+    color: #555;
+}
 
-em { /* Highlighted Text */
+em {
+    /* Highlighted Text */
     font-weight: bold;
     color: rgb(0, 151, 251);
     font-style: normal;
 }
 
-span { /* Action ID text */
+span {
+    /* Action ID text */
     font-family: Segoe UI;
     padding-left: 20px;
     color: transparent;
@@ -93,11 +95,11 @@ QScrollBar:vertical {
 }
 
 QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
-    background: rgba(0,0,0,0.1);
+    background: rgba(0, 0, 0, 0.1);
 }
 
 QScrollBar::handle:vertical {
-    background: rgba(255,255,255,0.3);
+    background: rgba(255, 255, 255, 0.3);
     min-height: 20px;
     border-radius: 6px;
 }
