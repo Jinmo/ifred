@@ -14,7 +14,7 @@ QRegularExpression capturingRegexp(const QString& keyword) {
 
     for (auto& x : keyword)
         if (!x.isSpace())
-            regexp_before_join << (QString("(.*?)(") + x + ")");
+            regexp_before_join << (QString("(.*?)([\\x") + QString::number(x.unicode(),16).rightJustified(2, '0') + "])");
 
     regexp_before_join.push_back("(.*)$");
 
@@ -33,9 +33,11 @@ const QString highlight(const QString & needle, const QString & haystack) {
         auto match = regexp.match(haystack).capturedTexts();
 
         int i = -1;
-        for (auto&& word : match) {
+        for (auto& word : match) {
             if (++i == 0) continue;
-            if (i % 2 == 0) highlights << em_ << word << emEnd_;
+
+			word = word.replace("<", "&lt;");
+			if (i % 2 == 0) highlights << em_ << word << emEnd_;
             else highlights << word;
         }
     }
