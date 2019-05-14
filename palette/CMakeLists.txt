@@ -42,5 +42,17 @@ GENERATE_EXPORT_HEADER(palette)
 set(sources src/ida/plugin.cpp)
 
 add_ida_qt_plugin(ida_palette ${sources})
+
+# In OSX, make ifred use @executable_path/python[64].dylib to use IDAPython bindings
+# I'm not sure if it's a best way.
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+	if(IDA_EA_64)
+	    set(IDAPYTHON "${IDA_INSTALL_DIR}/plugins/python64.dylib")
+	else()
+	    set(IDAPYTHON "${IDA_INSTALL_DIR}/plugins/python.dylib")
+	endif()
+	target_link_libraries(ida_palette PRIVATE ${IDAPYTHON})
+endif()
+
 target_link_libraries(ida_palette
     PRIVATE Qt5::Core Qt5::Gui Qt5::Widgets palette pybind11::module)
