@@ -8,7 +8,7 @@
 
 Currently tested on Windows. Install Qt 5.6.3 and IDA SDK, and follow steps in .appveyor.yml.
 
-You can download [prebuilt plugins](https://jinmo123.visualstudio.com/idapkg/_apis/build/status/Jinmo.ifred?branchName=master) from azure pipelines.
+You can download [prebuilt plugins](https://jinmo123.visualstudio.com/idapkg/_build/latest?definitionId=1&branchName=master) from azure pipelines.
 
 ## Python API
 
