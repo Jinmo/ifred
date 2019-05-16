@@ -6,7 +6,7 @@
 
 ## How to build
 
-Currently tested on Windows. Install Qt 5.6.3 and IDA SDK, and follow steps in .appveyor.yml.
+Currently tested on Windows. Install Qt 5.6.3 and IDA SDK, and follow steps in azure-pipelines.yml.
 
 You can download [prebuilt plugins](https://jinmo123.visualstudio.com/idapkg/_build/latest?definitionId=1&branchName=master) from azure pipelines.
 
