@@ -1,24 +1,46 @@
 * {
 	font-family: Segoe UI;
-	font-size: 15px;
-	background: rgb(38, 44, 56);
+	font-size: 18px;
+    background-color: #232834;
 	border-radius: 6px;
 }
 
+QMainWindow, QLineEdit, QListView {
+    width: 700px;
+}
+
+QLineEdit {
+    font-family: Segoe UI;
+    height: 62px !important;
+    font-size: 25px;
+    color: #cbccc6;
+    border: none;
+    padding-left: 80px;
+    background: url(theme:input-search.png) no-repeat;
+    background-color: #232834;
+}
+
+QLineEdit[text=""] {
+    color: #232834;
+}
+
 QScrollBar:vertical * {
-    background-color: #000;
+    background-color: #fff;
 }
 
 QScrollBar:vertical {
     border: none;
-    background: none;
-    background-color: #000;
     width: 12px;
     border-radius: 6px;
+    background: transparent;
+}
+
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: rgb(245,246,246);
 }
 
 QScrollBar::handle:vertical {
-    background: rgba(255,255,255,0.3);
+    background: rgb(219,220,221);
     min-height: 20px;
     border-radius: 6px;
 }
@@ -42,3 +64,68 @@ QListView {
 	min-height: 300px;
 	max-height: 300px;
 }
+
+QListView::item {
+    padding-top: 8px;
+    padding-left: 25px;
+}
+
+QListView::item:hover {
+    background: transparent;
+}
+
+QListView::item:selected {
+    background: #191e2a;
+}
+
+table, td, div, p, span, em {
+    background: transparent;
+}
+
+table {
+    color: rgb(80, 87, 97);
+    font-size: 18px;
+    font-family: Segoe UI;
+    margin-bottom: 18px;
+}
+
+table.selected {
+    color: #cbccc6;
+}
+
+td.placeholder {
+    font-size: 1px;
+    width: 700px;
+}
+
+td {
+    padding: 0;
+    margin: 0;
+    vertical-align: middle;
+}
+
+td.shortcut {
+    float: right;
+    padding-right: 32px;
+}
+
+td.description {
+    color: rgb(185, 190, 195);
+    font-size: 14px;
+}
+
+em {
+    /* Highlighted Text */
+    font-weight: bold;
+    color: rgb(255, 204, 102);
+    font-style: normal;
+}
+
+span {
+    color: transparent;
+    /* Action ID text */
+    font-family: Segoe UI;
+    padding-left: 20px;
+    color: transparent;
+}
+

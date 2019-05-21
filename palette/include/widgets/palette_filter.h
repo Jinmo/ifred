@@ -25,10 +25,13 @@ class PaletteFilter : public QAbstractItemModel {
 	SearchService* search_service_;
 
 public:
-    PaletteFilter(QWidget* parent, const QVector<Action>& items);
+    PaletteFilter(QWidget* parent, const QString &palette_name, const QVector<Action>& items);
 
     // Public interface
     void setFilter(const QString& keyword);
+    SearchService* search_service() {
+        return search_service_;
+    }
 
     // Implementations
     QModelIndex index(int row, int column, const QModelIndex& parent = QModelIndex()) const override;
@@ -49,12 +52,15 @@ class SearchService: public QObject {
 
 	std::vector<int> indexes_;
 	QVector<Action>* actions_;
+    QHash<QString, int> recent_actions_;
+
+    QSettings storage_;
 
 	bool canceled_;
 
 public:
 	using QObject::moveToThread;
-	SearchService(QObject* parent, QVector<Action>* actions);
+	SearchService(QObject* parent, const QString &palette_name, QVector<Action>* actions);
 
 	void search(const QString& keyword);
 
@@ -69,6 +75,7 @@ public:
 signals:
     // Request
 	void startSearching(const QString& keyword);
+    void reportAction(const QString& action);
 	// Response
 	void doneSearching(std::vector<int> *indexes, int count, int preferred_index);
 };

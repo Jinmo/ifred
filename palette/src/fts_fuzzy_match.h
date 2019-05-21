@@ -133,10 +133,10 @@ namespace fts {
 
 		// Calculate score
 		if (matched) {
-			const int sequential_bonus = 80;            // bonus for adjacent matches
-			const int separator_bonus = 30;             // bonus if match occurs after a separator
+			const int sequential_bonus = 50;            // bonus for adjacent matches
+			const int separator_bonus = 50;             // bonus if match occurs after a separator
 			const int camel_bonus = 30;                 // bonus if match is uppercase and prev is lower
-			const int first_letter_bonus = 50;          // bonus if the first letter is matched
+			const int first_letter_bonus = 30;          // bonus if the first letter is matched
 
 			const int leading_letter_penalty = -5;      // penalty applied for every letter in str before the first match
 			const int max_leading_letter_penalty = -15; // maximum penalty for leading letters
@@ -180,7 +180,7 @@ namespace fts {
 						outScore += camel_bonus;
 
 					// Separator
-					bool neighborSeparator = !isalnum(neighbor);
+					bool neighborSeparator = isspace(neighbor);
 					if (neighborSeparator)
 						outScore += separator_bonus;
 				}
@@ -213,10 +213,15 @@ namespace fts {
         auto it = pattern.begin();
         auto itEnd = pattern.end();
 
+        int i = 0;
+
         if (it == itEnd)
             return true;
 
         for (auto&& c : str) {
+            i++;
+            if (i > 100)
+                return false;
             unsigned int index = ((unsigned int)(it->unicode() & 0x7F) * 128 + (unsigned int)(c.unicode() & 0x7F));
             if (equals[index >> 3] & (1 << (index % 8))) {
                 ++it;

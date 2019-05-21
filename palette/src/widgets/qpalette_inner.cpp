@@ -8,9 +8,9 @@ QPaletteInner::QPaletteInner(QWidget* parent, const QString& name, const QVector
     QVBoxLayout* layout;
 
     // Create widgets
-    items_ = new QItems(this, items);
     searchbox_ = new QLineEdit(this);
 
+    items_ = new QItems(this, name_, items);
     items_->setAttribute(Qt::WA_MacShowFocusRect, 0);
     searchbox_->setAttribute(Qt::WA_MacShowFocusRect, 0);
 
@@ -19,13 +19,14 @@ QPaletteInner::QPaletteInner(QWidget* parent, const QString& name, const QVector
     layout->addWidget(searchbox_);
     layout->addWidget(items_);
 
-    setAttribute(Qt::WA_DeleteOnClose);
+    //setAttribute(Qt::WA_DeleteOnClose);
 
     // Set margin and spacing between widgets
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
 
     setLayout(layout);
+
     setStyleSheet(loadFile("theme/window.css"));
 
     connect(searchbox_, &QLineEdit::returnPressed, [=]() {
@@ -39,11 +40,13 @@ QPaletteInner::QPaletteInner(QWidget* parent, const QString& name, const QVector
         return true;
         });
 
+    connect(searchbox_, &QLineEdit::textChanged, [=] { style()->polish(searchbox_); });
+
     connect(searchbox_, &QLineEdit::textChanged, [=](const QString & text) {
-        items_->scrollToTop();
-        items_->setCurrentIndex(items_->model()->index(0, 0));
         items_->model()->setFilter(text);
         });
+
+    items_->model()->setFilter(QString());
 
     connect(items_, &QListView::clicked, this, [=](const QModelIndex & index) {
         auto action = index.data().value<Action>();
@@ -54,6 +57,10 @@ QPaletteInner::QPaletteInner(QWidget* parent, const QString& name, const QVector
 
     searchbox_->installEventFilter(this);
     items_->installEventFilter(this);
+
+    connect(this, &QPaletteInner::itemClicked, [=](Action & action) {
+        emit items_->model()->search_service()->reportAction(action.id);
+        });
 
     if (!closeKey.isEmpty()) {
         shortcut_ = registerShortcut({ closeKey }, [=]() {close(); });

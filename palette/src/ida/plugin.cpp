@@ -143,8 +143,11 @@ const QVector<Action> getNames() {
 }
 
 class command_palette_handler : public action_handler_t {
-    int idaapi activate(action_activation_ctx_t*) override {
-        show_palette("command palette", "Enter action or option name...", getActions(), CMD_PALETTE_SHORTCUT, [](Action & action) {
+    int idaapi activate(action_activation_ctx_t* context) override {
+        qstring shortcut;
+        get_action_shortcut(&shortcut, context->action);
+        shortcut.replace("-", "+");
+        show_palette("command palette", "Enter action or option name...", getActions(), shortcut.c_str(), [](Action & action) {
             process_ui_action(action.id.toStdString().c_str());
             return true;
             });
@@ -157,8 +160,11 @@ class command_palette_handler : public action_handler_t {
 };
 
 class name_palette_handler : public action_handler_t {
-    int idaapi activate(action_activation_ctx_t*) override {
-        show_palette("name palette", "Enter symbol name...", getNames(), NAME_PALETTE_SHORTCUT, [](Action & action) {
+    int idaapi activate(action_activation_ctx_t* context) override {
+        qstring shortcut;
+        get_action_shortcut(&shortcut, context->action);
+        shortcut.replace("-", "+");
+        show_palette("name palette" + QString(get_path(PATH_TYPE_IDB)), "Enter symbol name...", getNames(), shortcut.c_str(), [](Action & action) {
             auto&& id = action.id;
 
             if (id.startsWith("struct:")) {

@@ -38,23 +38,19 @@ QString loadFileFromBundle(const char* filename, QFile &file, bool& updated) {
 }
 
 QString loadFile(const char* filename, bool force_update, bool& updated) {
-    static QHash<QString, QString> last_loaded;
     static bool resource_initialized;
 
     if(!resource_initialized) {
         Q_INIT_RESOURCE(theme_bundle);
         resource_initialized = true;
+
+        QDir::addSearchPath("theme", pluginPath("theme/"));
     }
 
     auto absolutePath = pluginPath(filename);
     QFile file(absolutePath);
 
     updated = false;
-
-    if (last_loaded.contains(absolutePath) && !force_update) {
-        auto& content = last_loaded[absolutePath];
-        return content;
-    }
 
     if (!file.exists()) {
         return loadFileFromBundle(filename, file, updated);
@@ -64,8 +60,6 @@ QString loadFile(const char* filename, bool force_update, bool& updated) {
         return QString();
 
     auto content = QString::fromUtf8(file.readAll());
-    last_loaded[absolutePath] = content;
-
     updated = true;
 
     return content;
