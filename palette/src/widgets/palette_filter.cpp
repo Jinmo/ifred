@@ -82,10 +82,6 @@ PaletteFilter::PaletteFilter(QWidget * parent, const QString & palette_name, con
     }
 }
 
-bool SearchService::lessThan(const QString & keyword, const Action & left, const Action & right) const {
-    return distance(keyword, left.name) < distance(keyword, right.name);
-}
-
 bool SearchService::match(const QString & keyword, Action & action) {
     if (keyword.isEmpty())
         return true;
@@ -140,7 +136,7 @@ void SearchService::search(const QString & keyword) {
                 return *lhs_r < *rhs_r;
 
             if (keyword.size() > 1)
-                return lessThan(keyword, actions[lhs], actions[rhs]);
+                return distance(keyword, actions[lhs].name) < distance(keyword, actions[rhs].name);
             else
                 return lhs < rhs;
                 });

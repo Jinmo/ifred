@@ -58,15 +58,13 @@ class SearchService: public QObject {
 
 	bool canceled_;
 
+    void search(const QString& keyword);
+
+    bool match(const QString& keyword, Action& action);
+
 public:
 	using QObject::moveToThread;
 	SearchService(QObject* parent, const QString &palette_name, QVector<Action>* actions);
-
-	void search(const QString& keyword);
-
-	bool lessThan(const QString& keyword, const Action& left, const Action& right) const;
-
-	bool match(const QString& keyword, Action& action);
 
 	void cancel() {
 		canceled_ = true;

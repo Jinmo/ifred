@@ -24,8 +24,7 @@ static void centerWidgets(QWidget *window, QWidget* widget, QWidget* host = null
     else {
         QRect screenGeometry = QApplication::desktop()->screenGeometry();
         int x = (screenGeometry.width() - widget->width()) / 2;
-        int y = getMainWindow()->menuBar()->geometry().top() + getMainWindow()->menuBar()->size().height() - widget->contentsMargins().top();
-        qDebug() << widget->width() << x << y << screenGeometry.width();
+        int y = (screenGeometry.height() - widget->height()) / 2;
         window->move(x, y);
     }
 }
