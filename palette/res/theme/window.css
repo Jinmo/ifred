@@ -12,7 +12,7 @@ QLineEdit, QLineEdit:hover, QLineEdit:active {
     width: 720px;
     height: 29px;
     margin: 7px 7px 8px 8px;
-    padding-left: 7px;
+    padding: 0px 7px;
     border: 1px solid rgb(23, 91, 137);
     background: rgb(60, 60, 60);
 }
@@ -23,6 +23,7 @@ QListView {
     border: none;
     padding: 0;
     margin: 0;
+    min-height: 350px;
 }
 
 QListView::item {
@@ -33,6 +34,11 @@ QListView::item {
 QListView::item:hover {
     background: rgb(42, 45, 46);
     border: 0;
+}
+
+QListView::item:checked {
+    padding-bottom: 1px;
+    border-bottom: 1px solid #3f3f46;
 }
 
 QListView::item:selected {
