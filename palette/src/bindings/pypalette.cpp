@@ -1,4 +1,4 @@
-#include <widgets/palette_manager.h>
+#include <palette_api.h>
 
 #include <bindings/pypalette.h>
 

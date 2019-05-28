@@ -1,4 +1,4 @@
-#include <widgets/qitem.h>
+#include <widgets/item.h>
 #include <widgets/palette_filter.h>
 
 QHash<QString, QRegularExpression> capturing_regexp_cache;
@@ -48,7 +48,7 @@ const QString highlight(const QString & needle, const QString & haystack) {
     return QString(highlights.join(""));
 }
 
-void QItem::paint(QPainter * painter,
+void ItemDelegate::paint(QPainter * painter,
     const QStyleOptionViewItem & option, const QModelIndex & index) const {
 
     QStyledItemDelegate::paint(painter, option, index);
@@ -70,15 +70,8 @@ void QItem::paint(QPainter * painter,
     const QWidget* widget = option.widget;
     QStyle* style = widget ? widget->style() : QApplication::style();
 
-    QStringList classes;
-
     if (index.row() == recents_) {
-        classes.append("item");
         opt.state |= QStyle::State_On;
-    }
-
-    if (opt.state & QStyle::State_Selected) {
-        qDebug() << "selected" << action.id;
     }
 
     opt.text = "";
@@ -87,7 +80,6 @@ void QItem::paint(QPainter * painter,
     style->drawControl(QStyle::CE_ItemViewItem, &opt, painter, widget);
 
     painter->restore();
-
     painter->save();
 
     auto textRect = style->subElementRect(QStyle::SE_ItemViewItemText, &option, widget);
@@ -98,30 +90,30 @@ void QItem::paint(QPainter * painter,
     if(textRect.top() >= 0)
         textRect = textRect.intersected(widget->contentsRect());
 
-    auto document = const_cast<QItem*>(this)->renderAction(false, classNameMap[(int)opt.state & (QStyle::State_Selected | QStyle::State_MouseOver)], keyword, action);
+    auto document = const_cast<ItemDelegate*>(this)->renderAction(false, classNameMap[(int)opt.state & (QStyle::State_Selected | QStyle::State_MouseOver)], keyword, action);
 
     document->drawContents(painter, QRectF(0, 0, textRect.width(), textRect.height()));
     painter->restore();
 }
 
-QSize QItem::sizeHint(const QStyleOptionViewItem & option, const QModelIndex & index) const {
+QSize ItemDelegate::sizeHint(const QStyleOptionViewItem & option, const QModelIndex & index) const {
     QStyleOptionViewItemV4 options = option;
     initStyleOption(&options, index);
 
     Action action = index.data().value<Action>();
 
-    auto document = const_cast<QItem *>(this)->renderAction(true, QString(), QString(), action);
+    auto document = const_cast<ItemDelegate *>(this)->renderAction(true, QString(), QString(), action);
     document->setTextWidth(option.rect.width());
 
     return QSize(option.rect.width(), (int)document->size().height());
 }
 
-void QItem::updateCSS(const QString& style_sheet) {
+void ItemDelegate::updateCSS(const QString& style_sheet) {
     document_->setDefaultStyleSheet(style_sheet);
     document_->setDocumentMargin(0);
 }
 
-QTextDocument* QItem::renderAction(bool size_hint, const QString &className, const QString& keyword, Action& action) {
+QTextDocument* ItemDelegate::renderAction(bool size_hint, const QString &className, const QString& keyword, Action& action) {
     QString html = "<table width=100% cellpadding=0 cellspacing=0 class=\"" + className + "\"><tr><td class=\"name\">" + (!size_hint ? highlight(keyword, action.name) : "keyword") + "</td>";
 
     if (action.shortcut.size())

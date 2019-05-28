@@ -4,7 +4,7 @@
 #include <QtGui>
 #include <QtWidgets>
 
-#include <widgets/palette_manager.h>
+#include <palette_api.h>
 #include <utils.h>
 
 #ifndef __APPLE__

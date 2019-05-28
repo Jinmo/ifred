@@ -1,14 +1,12 @@
-#include <widgets/qitems.h>
+#include <widgets/items.h>
 
-QItems::QItems(QWidget* parent, const QString &palette_name, const QVector<Action>& items)
+Items::Items(QWidget* parent, const QString &palette_name, const QVector<Action>& items)
     : QListView(parent),
     model_(new PaletteFilter(this, palette_name, std::move(items))),
-    item_delegate_(new QItem(this)) {
+    item_delegate_(new ItemDelegate(this)) {
 
     QAbstractItemView::setModel(model_);
     QAbstractItemView::setItemDelegate(item_delegate_);
-
-    //setAttribute(Qt::WA_DeleteOnClose);
 
     // Border width
     setLineWidth(0);

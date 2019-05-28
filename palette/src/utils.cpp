@@ -1,7 +1,7 @@
 #include "utils.h"
 #include <time.h>
 
-#include <widgets/palette_manager.h>
+#include <palette_api.h>
 
 void postToMainThread(const std::function<void()>& fun) {
     QObject signalSource;
@@ -11,7 +11,15 @@ void postToMainThread(const std::function<void()>& fun) {
 }
 
 QString loadFileFromBundle(const char* filename, QFile &file, bool& updated) {
-    // Check if it exists in bundle resource
+    static bool resource_initialized;
+
+    if (!resource_initialized) {
+        Q_INIT_RESOURCE(theme_bundle);
+        resource_initialized = true;
+
+        QDir::addSearchPath("theme", pluginPath("theme/"));
+    }
+
     QFile resFile(QStringLiteral(":/bundle/") + filename);
 
     updated = false;
@@ -38,21 +46,13 @@ QString loadFileFromBundle(const char* filename, QFile &file, bool& updated) {
 }
 
 QString loadFile(const char* filename, bool force_update, bool& updated) {
-    static bool resource_initialized;
-
-    if(!resource_initialized) {
-        Q_INIT_RESOURCE(theme_bundle);
-        resource_initialized = true;
-
-        QDir::addSearchPath("theme", pluginPath("theme/"));
-    }
-
     auto absolutePath = pluginPath(filename);
     QFile file(absolutePath);
 
     updated = false;
 
     if (!file.exists()) {
+        // Check if it exists in bundle resource
         return loadFileFromBundle(filename, file, updated);
     }
 

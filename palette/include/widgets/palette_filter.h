@@ -15,10 +15,9 @@ class SearchService;
 class PaletteFilter : public QAbstractItemModel {
     Q_OBJECT;
 
-    QVector<Action> items_;
     std::vector<int> shown_items_;
-
     int shown_items_count_;
+
     QString keyword_;
 
 	QThread *searcher_;
@@ -51,7 +50,7 @@ class SearchService: public QObject {
 	Q_OBJECT;
 
 	std::vector<int> indexes_;
-	QVector<Action>* actions_;
+	QVector<Action> actions_;
     QHash<QString, int> recent_actions_;
 
     QSettings storage_;
@@ -64,7 +63,9 @@ class SearchService: public QObject {
 
 public:
 	using QObject::moveToThread;
-	SearchService(QObject* parent, const QString &palette_name, QVector<Action>* actions);
+	SearchService(QObject* parent, const QString &palette_name, const QVector<Action> &actions);
+
+    const QVector<Action> &actions() { return actions_; }
 
 	void cancel() {
 		canceled_ = true;

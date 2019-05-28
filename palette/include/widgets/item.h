@@ -7,13 +7,13 @@
 #include <action.h>
 #include <observers.h>
 
-class QItem : public QStyledItemDelegate {
+class ItemDelegate : public QStyledItemDelegate {
     QSize cached_size_;
     QTextDocument* document_;
     int recents_;
 
 public:
-    explicit QItem(QWidget* parent)
+    explicit ItemDelegate(QWidget* parent)
         : QStyledItemDelegate(parent), document_(new QTextDocument(this)) {
         updateCSS(loadFile("theme/window.css"));
     }

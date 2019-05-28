@@ -9,18 +9,16 @@ set(PYTHON_EXECUTABLE "" CACHE PATH "Python executable (x64 if >= 7.0)")
 include(GenerateExportHeader)
 
 set(sources src/widgets/palette_filter.cpp
-            src/utils.cpp
-            src/widgets/qpalette_inner.cpp
-            src/widgets/qpalettecontainer.cpp
-            src/widgets/qitems.cpp
-            src/widgets/qitem.cpp
-            src/widgets/palette_manager.cpp
+            src/widgets/palette.cpp
+            src/widgets/items.cpp
+            src/widgets/item.cpp
             src/bindings/pypalette.cpp
+            src/utils.cpp
             src/action.cpp
+            src/palette_api.cpp
             res/theme_bundle.qrc
             include/widgets/palette_filter.h
-            include/widgets/qpalettecontainer.h
-            include/widgets/qpalette_inner.h
+            include/widgets/palette.h
             include/action.h
 )
 
