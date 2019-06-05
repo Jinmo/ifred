@@ -93,10 +93,9 @@ void SearchService::search(const QString & keyword) {
     for (long i = 0; i < indexes_.size(); i++) {
         if (canceled_)
             return;
-        auto r = recent_actions.find(actions_[i].id);
 
         if (keyword.isEmpty() || fts::fuzzy_match_simple(keyword, actions_[i].name)) {
-            if (r != recent_actions.end()) {
+            if (recent_actions.count(actions_[i].id)) {
                 recent_indexes_[recent_count++] = i;
             }
             else {
@@ -108,13 +107,10 @@ void SearchService::search(const QString & keyword) {
     std::copy(indexes_.begin(), indexes_.begin() + nonrecent_count, indexes_.begin() + recent_count);
     std::copy(recent_indexes_.begin(), recent_indexes_.begin() + recent_count, indexes_.begin());
 
-    /* Sort by fuzzy matching if keyword is longer than 1 character
-       This sorts indexes_ which is array of indexes, and copies to shown_items_.
-       The size/capacity of each vector is not changed, just member variable shown_items_count_ is changed.
-
-       If the job is cancelled during sort, the compare function raises exception to abort sorting.
-    */
     try {
+        /* Sort by how recent the item is.
+           If the job is cancelled during sort, the compare function raises exception to abort sorting.
+        */
         std::sort(indexes_.begin(), indexes_.begin() + recent_count, [=](int lhs, int rhs) -> bool {
             if (canceled_)
                 throw std::exception();
@@ -125,6 +121,8 @@ void SearchService::search(const QString & keyword) {
             return *lhs_r < *rhs_r;
 
             });
+
+        /* Sort by fuzzy matching if keyword is longer than 1 character */
         if (keyword.size() > 1)
             std::sort(indexes_.begin() + recent_count, indexes_.begin() + nonrecent_count + recent_count, [=](int lhs, int rhs) -> bool {
             if (canceled_)
@@ -164,7 +162,7 @@ SearchService::SearchService(QObject * parent, const QString & palette_name, con
         }
         recent_actions_[id] = 0;
         storage_.setValue("recent_actions", toVariant(recent_actions_));
-        storage_.sync();
+        storage_.sync(); // save to platform-specific registry immediately
         });
 
     storage_.sync();
