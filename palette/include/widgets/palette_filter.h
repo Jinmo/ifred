@@ -20,11 +20,11 @@ class PaletteFilter : public QAbstractItemModel {
 
     QString keyword_;
 
-	QThread *searcher_;
-	SearchService* search_service_;
+    QThread* searcher_;
+    SearchService* search_service_;
 
 public:
-    PaletteFilter(QWidget* parent, const QString &palette_name, const QVector<Action>& items);
+    PaletteFilter(QWidget* parent, const QString& palette_name, const QVector<Action>& items);
 
     // Public interface
     void setFilter(const QString& keyword);
@@ -40,41 +40,41 @@ public:
     int	columnCount(const QModelIndex& parent) const override { return 1; }
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
 
-	void onDoneSearching(std::vector<int> *indexes_, int count, int preferred_index);
+    void onDoneSearching(std::vector<int>* indexes_, int count, int preferred_index);
 
 signals:
     void filteringDone(int preferred_index);
 };
 
-class SearchService: public QObject {
-	Q_OBJECT;
+class SearchService : public QObject {
+    Q_OBJECT;
 
-	std::vector<int> indexes_, recent_indexes_;
-	QVector<Action> actions_;
+    std::vector<int> indexes_, recent_indexes_;
+    QVector<Action> actions_;
     QHash<QString, int> recent_actions_;
 
     QSettings storage_;
 
-	bool canceled_;
+    bool canceled_;
 
     void search(const QString& keyword);
 
 public:
-	using QObject::moveToThread;
-	SearchService(QObject* parent, const QString &palette_name, const QVector<Action> &actions);
+    using QObject::moveToThread;
+    SearchService(QObject* parent, const QString& palette_name, const QVector<Action>& actions);
 
-    const QVector<Action> &actions() { return actions_; }
+    const QVector<Action>& actions() { return actions_; }
 
-	void cancel() {
-		canceled_ = true;
-	}
+    void cancel() {
+        canceled_ = true;
+    }
 
 signals:
     // Request
-	void startSearching(const QString& keyword);
+    void startSearching(const QString& keyword);
     void reportAction(const QString& action);
-	// Response
-	void doneSearching(std::vector<int> *indexes, int count, int preferred_index);
+    // Response
+    void doneSearching(std::vector<int>* indexes, int count, int preferred_index);
 };
 
 #endif // PALETTE_FILTER_H

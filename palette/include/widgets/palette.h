@@ -18,7 +18,7 @@ class CommandPalette : public QMainWindow {
     Q_OBJECT;
 
 public:
-    CommandPalette(QWidget *parent = nullptr);
+    CommandPalette(QWidget* parent = nullptr);
 
     void show(const QString& name, const QString& placeholder, const QVector<Action>& actions, const QString& closeKey, ActionHandler func);
 };
