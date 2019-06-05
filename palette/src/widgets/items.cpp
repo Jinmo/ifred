@@ -1,6 +1,6 @@
 #include <widgets/items.h>
 
-Items::Items(QWidget* parent, const QString &palette_name, const QVector<Action>& items)
+Items::Items(QWidget* parent, const QString& palette_name, const QVector<Action>& items)
     : QListView(parent),
     model_(new PaletteFilter(this, palette_name, std::move(items))),
     item_delegate_(new ItemDelegate(this)) {

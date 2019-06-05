@@ -115,7 +115,7 @@ const QVector<Action> getActions() {
     return result;
 }
 
-void addStructs(QVector<Action> &result) {
+void addStructs(QVector<Action> & result) {
     int idx = get_first_struc_idx();
     while (idx != BADADDR) {
         tid_t sid = get_struc_by_idx(idx);

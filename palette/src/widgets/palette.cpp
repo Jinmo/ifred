@@ -177,7 +177,7 @@ CommandPalette::CommandPalette(QWidget * parent)
     setStyleSheet(loadFile("theme/window.css"));
 
     // Set shadow effect from styles.json
-    auto* shadow = new QGraphicsDropShadowEffect(this);
+    auto * shadow = new QGraphicsDropShadowEffect(this);
 
     int shadowWidth = json("theme/styles.json")["shadow-width"].toInt();
     QColor shadowColor(0, 0, 0, 100);

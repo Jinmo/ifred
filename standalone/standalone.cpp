@@ -35,12 +35,12 @@ int main(int argc, char** argv) {
     QThread t1;
     QObject::connect(&t1, &QThread::started, []() {
         show_palette("<test palette>", "Enter item name...", testItems(), "Ctrl+P", [](Action & action) {
-        if (action.id == "std::runtime_error") {
-            throw std::runtime_error("raised!");
-        }
-        qDebug() << action.id << action.name << action.shortcut;
-        return false;
-        });
+            if (action.id == "std::runtime_error") {
+                throw std::runtime_error("raised!");
+            }
+            qDebug() << action.id << action.name << action.shortcut;
+            return false;
+            });
         });
 
     t1.start();

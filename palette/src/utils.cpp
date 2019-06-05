@@ -10,7 +10,7 @@ void postToMainThread(const std::function<void()>& fun) {
         });
 }
 
-QString loadFileFromBundle(const char* filename, QFile &file, bool& updated) {
+QString loadFileFromBundle(const char* filename, QFile& file, bool& updated) {
     static bool resource_initialized;
 
     if (!resource_initialized) {
@@ -68,15 +68,15 @@ QString loadFile(const char* filename, bool force_update, bool& updated) {
 QHash<QString, QJsonDocument> cached_json;
 
 const QJsonObject json(const char* filename, bool force_update) {
-	bool updated;
-	const QString& content_str = loadFile(filename, force_update, updated);
+    bool updated;
+    const QString& content_str = loadFile(filename, force_update, updated);
 
     if (!updated)
         return cached_json[filename].object();
 
-	const QByteArray& content = content_str.toUtf8();
-	QJsonDocument json(QJsonDocument::fromJson(content));
-	cached_json[filename] = json;
+    const QByteArray& content = content_str.toUtf8();
+    QJsonDocument json(QJsonDocument::fromJson(content));
+    cached_json[filename] = json;
 
     return json.object();
 }
