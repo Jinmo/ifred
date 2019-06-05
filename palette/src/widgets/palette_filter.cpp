@@ -36,13 +36,13 @@ void PaletteFilter::setFilter(const QString & keyword) {
     emit search_service_->startSearching(keyword);
 }
 
-void PaletteFilter::onDoneSearching(std::vector<int> * indexes_, int count, int preferred_index) {
+void PaletteFilter::onDoneSearching(std::vector<int> * indexes_, int count, int recent_count) {
     emit layoutAboutToBeChanged();
     std::copy(indexes_->begin(), indexes_->begin() + count, shown_items_.begin());
     shown_items_count_ = count;
 
     emit layoutChanged();
-    emit filteringDone(preferred_index);
+    emit filteringDone(recent_count);
 }
 
 QModelIndex PaletteFilter::index(int row, int column, const QModelIndex & parent) const {
@@ -81,15 +81,8 @@ PaletteFilter::PaletteFilter(QWidget * parent, const QString & palette_name, con
     }
 }
 
-bool SearchService::match(const QString & keyword, Action & action) {
-    if (keyword.isEmpty())
-        return true;
-
-    return fts::fuzzy_match_simple(keyword, action.name);
-}
-
 void SearchService::search(const QString & keyword) {
-    long count = 0, preferred_index = -1;
+    long nonrecent_count = 0, recent_count = 0;
     QHash<QString, int> recent_actions(recent_actions_);
 
     canceled_ = false;
@@ -101,13 +94,19 @@ void SearchService::search(const QString & keyword) {
         if (canceled_)
             return;
         auto r = recent_actions.find(actions_[i].id);
-        if (match(keyword, actions_[i])) {
-            indexes_[count++] = i;
+
+        if (keyword.isEmpty() || fts::fuzzy_match_simple(keyword, actions_[i].name)) {
             if (r != recent_actions.end()) {
-                preferred_index = preferred_index + 1;
+                recent_indexes_[recent_count++] = i;
+            }
+            else {
+                indexes_[nonrecent_count++] = i;
             }
         }
     }
+
+    std::copy(indexes_.begin(), indexes_.begin() + nonrecent_count, indexes_.begin() + recent_count);
+    std::copy(recent_indexes_.begin(), recent_indexes_.begin() + recent_count, indexes_.begin());
 
     /* Sort by fuzzy matching if keyword is longer than 1 character
        This sorts indexes_ which is array of indexes, and copies to shown_items_.
@@ -116,31 +115,29 @@ void SearchService::search(const QString & keyword) {
        If the job is cancelled during sort, the compare function raises exception to abort sorting.
     */
     try {
-        std::sort(indexes_.begin(), indexes_.begin() + count, [=](int lhs, int rhs) -> bool {
+        std::sort(indexes_.begin(), indexes_.begin() + recent_count, [=](int lhs, int rhs) -> bool {
             if (canceled_)
                 throw std::exception();
 
             auto lhs_r = recent_actions.find(actions_[lhs].id);
             auto rhs_r = recent_actions.find(actions_[rhs].id);
 
-            if (lhs_r == recent_actions.end() && rhs_r != recent_actions.end())
-                return false;
-            else if (rhs_r == recent_actions.end() && lhs_r != recent_actions.end())
-                return true;
-            else if (lhs_r != recent_actions.end() && rhs_r != recent_actions.end())
-                return *lhs_r < *rhs_r;
+            return *lhs_r < *rhs_r;
 
-            if (keyword.size() > 1)
-                return distance(keyword, actions_[lhs].name) < distance(keyword, actions_[rhs].name);
-            else
-                return lhs < rhs;
             });
+        if (keyword.size() > 1)
+            std::sort(indexes_.begin() + recent_count, indexes_.begin() + nonrecent_count + recent_count, [=](int lhs, int rhs) -> bool {
+            if (canceled_)
+                throw std::exception();
+
+            return distance(keyword, actions_[lhs].name) < distance(keyword, actions_[rhs].name);
+                });
     }
-    catch (std::exception &) {
+    catch (std::exception&) {
         return;
     }
 
-    emit doneSearching(&indexes_, count, preferred_index);
+    emit doneSearching(&indexes_, nonrecent_count + recent_count, recent_count);
 }
 
 QHash<QString, int> fromVariant(const QHash<QString, QVariant> & source) {
@@ -159,7 +156,7 @@ QHash<QString, QVariant> toVariant(const QHash<QString, int> & source) {
     return result;
 }
 
-SearchService::SearchService(QObject * parent, const QString & palette_name, const QVector <Action> & actions) : QObject(parent), actions_(actions), storage_("ifred", palette_name), indexes_(actions.size()), canceled_(false) {
+SearchService::SearchService(QObject * parent, const QString & palette_name, const QVector <Action> & actions) : QObject(parent), actions_(actions), storage_("ifred", palette_name), indexes_(actions.size()), recent_indexes_(), canceled_(false) {
     connect(this, &SearchService::startSearching, this, &SearchService::search);
     connect(this, &SearchService::reportAction, [=](const QString & id) {
         for (auto&& it : recent_actions_.keys()) {
@@ -172,4 +169,5 @@ SearchService::SearchService(QObject * parent, const QString & palette_name, con
 
     storage_.sync();
     recent_actions_ = fromVariant(storage_.value("recent_actions").toHash());
+    recent_indexes_.resize(recent_actions_.size());
 }

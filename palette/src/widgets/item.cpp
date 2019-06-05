@@ -14,7 +14,7 @@ QRegularExpression capturingRegexp(const QString& keyword) {
 
     for (auto& x : keyword)
         if (!x.isSpace())
-            regexp_before_join << (QString("(.*?)([\\x") + QString::number(x.unicode(),16).rightJustified(2, '0') + "])");
+            regexp_before_join << (QString("(.*?)([\\x") + QString::number(x.unicode(), 16).rightJustified(2, '0') + "])");
 
     regexp_before_join.push_back("(.*)$");
 
@@ -36,8 +36,8 @@ const QString highlight(const QString & needle, const QString & haystack) {
         for (auto& word : match) {
             if (++i == 0) continue;
 
-			word = word.replace("<", "&lt;");
-			if (i % 2 == 0) highlights << em_ << word << emEnd_;
+            word = word.replace("<", "&lt;");
+            if (i % 2 == 0) highlights << em_ << word << emEnd_;
             else highlights << word;
         }
     }
@@ -84,10 +84,10 @@ void ItemDelegate::paint(QPainter * painter,
 
     auto textRect = style->subElementRect(QStyle::SE_ItemViewItemText, &option, widget);
     painter->translate(textRect.left(), textRect.top());
-    
+
     // TODO: write a correct algorithm to limit rendering in QFrame, not QMainWindow
     // currently, I added this condition to prevent determining height of topmost item
-    if(textRect.top() >= 0)
+    if (textRect.top() >= 0)
         textRect = textRect.intersected(widget->contentsRect());
 
     auto document = const_cast<ItemDelegate*>(this)->renderAction(false, classNameMap[(int)opt.state & (QStyle::State_Selected | QStyle::State_MouseOver)], keyword, action);
@@ -102,18 +102,18 @@ QSize ItemDelegate::sizeHint(const QStyleOptionViewItem & option, const QModelIn
 
     Action action = index.data().value<Action>();
 
-    auto document = const_cast<ItemDelegate *>(this)->renderAction(true, QString(), QString(), action);
+    auto document = const_cast<ItemDelegate*>(this)->renderAction(true, QString(), QString(), action);
     document->setTextWidth(option.rect.width());
 
     return QSize(option.rect.width(), (int)document->size().height());
 }
 
-void ItemDelegate::updateCSS(const QString& style_sheet) {
+void ItemDelegate::updateCSS(const QString & style_sheet) {
     document_->setDefaultStyleSheet(style_sheet);
     document_->setDocumentMargin(0);
 }
 
-QTextDocument* ItemDelegate::renderAction(bool size_hint, const QString &className, const QString& keyword, Action& action) {
+QTextDocument* ItemDelegate::renderAction(bool size_hint, const QString & className, const QString & keyword, Action & action) {
     QString html = "<table width=100% cellpadding=0 cellspacing=0 class=\"" + className + "\"><tr><td class=\"name\">" + (!size_hint ? highlight(keyword, action.name) : "keyword") + "</td>";
 
     if (action.shortcut.size())

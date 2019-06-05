@@ -8,13 +8,15 @@
 #include <observers.h>
 
 class ItemDelegate : public QStyledItemDelegate {
-    QSize cached_size_;
     QTextDocument* document_;
     int recents_;
 
+    bool style_updated_;
+    QSize cached_size_;
+
 public:
     explicit ItemDelegate(QWidget* parent)
-        : QStyledItemDelegate(parent), document_(new QTextDocument(this)) {
+        : QStyledItemDelegate(parent), document_(new QTextDocument(this)), recents_(0), style_updated_(false) {
         updateCSS(loadFile("theme/window.css"));
     }
 

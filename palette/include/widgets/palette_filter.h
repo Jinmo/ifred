@@ -49,7 +49,7 @@ signals:
 class SearchService: public QObject {
 	Q_OBJECT;
 
-	std::vector<int> indexes_;
+	std::vector<int> indexes_, recent_indexes_;
 	QVector<Action> actions_;
     QHash<QString, int> recent_actions_;
 
@@ -58,8 +58,6 @@ class SearchService: public QObject {
 	bool canceled_;
 
     void search(const QString& keyword);
-
-    bool match(const QString& keyword, Action& action);
 
 public:
 	using QObject::moveToThread;

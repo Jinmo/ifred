@@ -19,7 +19,7 @@ public:
     using QAbstractItemView::keyPressEvent;
 
     ~Items() {
-        // delete model_;
+        delete model_;
     }
 };
 
