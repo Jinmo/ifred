@@ -222,7 +222,7 @@ namespace fts {
             i++;
             if (i > 100)
                 return false;
-            unsigned int index = ((unsigned int)(it->unicode() & 0x7F) * 128 + (unsigned int)(c.unicode() & 0x7F));
+            unsigned int index = ((unsigned int)(*reinterpret_cast<const ushort *>(it) & 0x7F) * 128 + (*reinterpret_cast<const ushort *>(&c) & 0x7F));
             if (equals[index >> 3] & (1 << (index % 8))) {
                 ++it;
                 if (it == itEnd) {
