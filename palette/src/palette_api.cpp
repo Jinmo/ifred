@@ -15,9 +15,19 @@ static void postToThread2(F&& fun, QThread* thread = qApp->thread()) {
         Qt::QueuedConnection);
 }
 
+QWidget* getMainWindow() {
+    // This is not too expensive.
+    for (auto& widget : qApp->topLevelWidgets()) {
+        if (qobject_cast<QMainWindow*>(widget)) {
+            return widget;
+        }
+    }
+    return nullptr;
+}
+
 void show_palette(const QString& name, const QString& placeholder, const QVector<Action>& actions, const QString& closeKey, ActionHandler func) {
     postToThread2([=]() {
-        g_current_widget = new CommandPalette();
+        g_current_widget = new CommandPalette(getMainWindow());
         g_current_widget->show(name, placeholder, actions, closeKey, std::move(func));
         });
 }
