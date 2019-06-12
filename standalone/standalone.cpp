@@ -29,22 +29,16 @@ const QString TestPluginPath(const char* name) {
 
 int main(int argc, char** argv) {
     QApplication app(argc, argv);
-    auto palette = new CommandPalette(nullptr);
-
     set_path_handler(TestPluginPath);
 
-    QThread t1;
-    QObject::connect(&t1, &QThread::started, [=]() {
-        palette->show("<test palette>", "Enter item name...", testItems(), "Ctrl+P", [](Action & action) {
-            if (action.id == "std::runtime_error") {
-                throw std::runtime_error("raised!");
-            }
-            qDebug() << action.id << action.name << action.shortcut;
-            return false;
-            });
+    auto palette = new CommandPalette(nullptr);
+    palette->show("<test palette>", "Enter item name...", testItems(), "Ctrl+P", [](Action& action) {
+        if (action.id == "std::runtime_error") {
+            throw std::runtime_error("raised!");
+        }
+        qDebug() << action.id << action.name << action.shortcut;
+        return false;
         });
-
-    t1.start();
 
     app.exec();
 }

@@ -8,11 +8,11 @@ Items::Items(QWidget* parent, const QString& palette_name, const QVector<Action>
     // Optimization
     setUniformItemSizes(true);
 
-    QAbstractItemView::setModel(model_);
-    QAbstractItemView::setItemDelegate(item_delegate_);
-
     setLineWidth(0);
     setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+
+    QAbstractItemView::setModel(model_);
+    QAbstractItemView::setItemDelegate(item_delegate_);
 
     connect(model_, &PaletteFilter::filteringDone, this, [=](int index) {
         setCurrentIndex(model_->index(0, 0));
