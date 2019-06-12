@@ -15,7 +15,7 @@ class Items : public QListView {
 public:
     PaletteFilter* model() { return model_; }
 
-    explicit Items(QWidget* parent, const QString& palette_name, const QVector<Action>& items);
+    explicit Items(QWidget* parent, const QString& palette_name, const QVector<Action>& items, SearchService *search_service);
     using QAbstractItemView::keyPressEvent;
 
     ~Items() {

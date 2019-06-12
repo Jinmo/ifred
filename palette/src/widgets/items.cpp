@@ -1,8 +1,8 @@
 #include <widgets/items.h>
 
-Items::Items(QWidget* parent, const QString& palette_name, const QVector<Action>& items)
+Items::Items(QWidget* parent, const QString& palette_name, const QVector<Action>& items, SearchService *search_service)
     : QListView(parent),
-    model_(new PaletteFilter(this, palette_name, std::move(items))),
+    model_(new PaletteFilter(this, palette_name, std::move(items), search_service)),
     item_delegate_(new ItemDelegate(this)) {
 
     // Optimization

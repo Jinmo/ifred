@@ -23,7 +23,7 @@ class PaletteFilter : public QAbstractItemModel
     SearchService* search_service_;
 
 public:
-    PaletteFilter(QWidget* parent, const QString& palette_name, const QVector<Action>& items);
+    PaletteFilter(QWidget* parent, const QString& palette_name, const QVector<Action>& items, SearchService* search_service);
 
     // Public interface
     void setFilter(const QString& keyword);

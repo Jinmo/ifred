@@ -71,10 +71,9 @@ int PaletteFilter::rowCount(const QModelIndex &parent) const
     return shown_items_.count();
 }
 
-PaletteFilter::PaletteFilter(QWidget *parent, const QString &palette_name, const QVector<Action> &items)
-    : QAbstractItemModel(parent), shown_items_(items.size())
+PaletteFilter::PaletteFilter(QWidget *parent, const QString &palette_name, const QVector<Action> &items, SearchService *search_service)
+    : QAbstractItemModel(parent), shown_items_(items.size()), search_service_(search_service)
 {
-    search_service_ = new BasicService(this, palette_name, items);
     connect(search_service_, &SearchService::doneSearching, this, &PaletteFilter::onDoneSearching);
 
     // This can be done in same thread
