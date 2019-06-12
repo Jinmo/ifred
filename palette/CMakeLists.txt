@@ -4,15 +4,24 @@ include("ida-cmake/cmake/QtIDA.cmake")
 include("ida-cmake/cmake/IDA.cmake")
 
 # Some required settings
+set(PYTHON_SUPPORT OFF BOOL)
 set(PYTHON_EXECUTABLE "" CACHE PATH "Python executable (x64 if >= 7.0)")
 
 include(GenerateExportHeader)
+
+if(PYTHON_SUPPORT)
+    set(python_binding_src src/bindings/pypalette.cpp)
+    set(python_libraries pybind11::module)
+else()
+    set(python_binding_src)
+    set(python_libraries)
+endif()
 
 set(sources src/widgets/palette_filter.cpp
             src/widgets/palette.cpp
             src/widgets/items.cpp
             src/widgets/item.cpp
-            src/bindings/pypalette.cpp
+            ${python_binding_src}
             src/utils.cpp
             src/action.cpp
             src/palette_api.cpp
@@ -23,7 +32,7 @@ set(sources src/widgets/palette_filter.cpp
 )
 
 add_library(palette STATIC ${sources})
-target_link_libraries(palette PRIVATE Qt5::Core Qt5::Gui Qt5::Widgets pybind11::module)
+target_link_libraries(palette PRIVATE Qt5::Core Qt5::Gui Qt5::Widgets ${python_libraries})
 target_compile_definitions(palette PUBLIC "QT_NAMESPACE=QT")
 
 target_include_directories(palette
@@ -43,7 +52,7 @@ add_ida_qt_plugin(ida_palette ${sources})
 
 # In OSX, make ifred use @executable_path/python[64].dylib to use IDAPython bindings
 # I'm not sure if it's a best way.
-if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+if((${PYTHON_SUPPORT}) AND (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin"))
 	if(IDA_EA_64)
 	    set(IDAPYTHON "${IDA_INSTALL_DIR}/plugins/python64.dylib")
 	else()
@@ -53,4 +62,4 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
 endif()
 
 target_link_libraries(ida_palette
-    PRIVATE Qt5::Core Qt5::Gui Qt5::Widgets palette pybind11::module)
+    PRIVATE Qt5::Core Qt5::Gui Qt5::Widgets palette ${python_libraries})

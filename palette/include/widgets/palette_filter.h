@@ -12,12 +12,11 @@
 
 class SearchService;
 
-class PaletteFilter : public QAbstractItemModel {
+class PaletteFilter : public QAbstractItemModel
+{
     Q_OBJECT;
 
-    std::vector<int> shown_items_;
-    int shown_items_count_;
-
+    QVector<Action> shown_items_;
     QString keyword_;
 
     QThread* searcher_;
@@ -28,53 +27,73 @@ public:
 
     // Public interface
     void setFilter(const QString& keyword);
-    SearchService* search_service() {
+    const QString& filter() { return keyword_; }
+
+    SearchService* search_service()
+    {
         return search_service_;
+    }
+
+    void set_search_service(SearchService* new_service)
+    {
+        search_service_ = new_service;
     }
 
     // Implementations
     QModelIndex index(int row, int column, const QModelIndex& parent = QModelIndex()) const override;
     QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
-    QModelIndex	parent(const QModelIndex& index) const override { return {}; }
+    QModelIndex parent(const QModelIndex& index) const override { return {}; }
 
-    int	columnCount(const QModelIndex& parent) const override { return 1; }
+    int columnCount(const QModelIndex& parent) const override { return 1; }
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
 
-    void onDoneSearching(std::vector<int>* indexes_, int count, int preferred_index);
+public slots:
+    void onDoneSearching(QVector<Action> items, int recent_count);
 
 signals:
-    void filteringDone(int preferred_index);
+    void filteringDone(int recent_count);
 };
 
-class SearchService : public QObject {
+class SearchService : public QObject
+{
     Q_OBJECT;
 
+public:
+    using QObject::moveToThread;
+    SearchService(QObject* parent) : QObject(parent) {};
+
+    void search(QString keyword) {
+        cancel();
+        emit startSearching(keyword);
+    }
+
+    virtual void cancel() = 0;
+
+signals:
+    // Request
+    void startSearching(const QString& keyword);
+    void itemClicked(const QString& action_id);
+
+    // Response
+    void doneSearching(QVector<Action> actions, int recent_count);
+};
+
+class BasicService : public SearchService
+{
     std::vector<int> indexes_, recent_indexes_;
-    QVector<Action> actions_;
+    const QVector<Action> actions_; // immutable
     QHash<QString, int> recent_actions_;
-
     QSettings storage_;
-
     bool canceled_;
 
     void search(const QString& keyword);
 
 public:
-    using QObject::moveToThread;
-    SearchService(QObject* parent, const QString& palette_name, const QVector<Action>& actions);
-
-    const QVector<Action>& actions() { return actions_; }
-
-    void cancel() {
+    BasicService(QObject* parent, const QString& palette_name, const QVector<Action>& actions);
+    void cancel() override
+    {
         canceled_ = true;
     }
-
-signals:
-    // Request
-    void startSearching(const QString& keyword);
-    void reportAction(const QString& action);
-    // Response
-    void doneSearching(std::vector<int>* indexes, int count, int preferred_index);
 };
 
 #endif // PALETTE_FILTER_H
