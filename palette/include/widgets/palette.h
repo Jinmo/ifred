@@ -21,6 +21,10 @@ public:
     CommandPalette(QWidget* parent = nullptr);
 
     void show(const QString& name, const QString& placeholder, const QVector<Action>& actions, const QString& closeKey, ActionHandler func);
+    void focusOutEvent(QFocusEvent* event) {
+        close();
+    }
+
 };
 
 class QPaletteFrame : public QFrame {

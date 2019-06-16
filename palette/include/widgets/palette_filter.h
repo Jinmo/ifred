@@ -1,12 +1,8 @@
 #ifndef PALETTE_FILTER_H
 #define PALETTE_FILTER_H
 
-#include <QVector>
 #include <QtGui>
 #include <QtWidgets>
-#include <QFutureWatcher>
-
-#include <QtConcurrent/QtConcurrent>
 
 #include <action.h>
 
@@ -48,7 +44,7 @@ public:
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
 
 public slots:
-    void onDoneSearching(QVector<Action> items, int recent_count);
+    void onDoneSearching(QString keyword, QVector<Action> items, int recent_count);
 
 signals:
     void filteringDone(int recent_count);
@@ -75,7 +71,7 @@ signals:
     void itemClicked(const QString& action_id);
 
     // Response
-    void doneSearching(QVector<Action> actions, int recent_count);
+    void doneSearching(QString keyword, QVector<Action> actions, int recent_count);
 };
 
 class BasicService : public SearchService

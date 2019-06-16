@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ACTION_H
+#define ACTION_H
 #include <QString>
 #include <QObject>
 
@@ -9,3 +10,4 @@ struct Action {
 
 Q_DECLARE_METATYPE(Action);
 
+#endif

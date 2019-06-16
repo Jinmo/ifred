@@ -3,8 +3,8 @@
 #define FTS_FUZZY_MATCH_IMPLEMENTATION
 #include "fts_fuzzy_match.h"
 
-#define SAME_THREAD_THRESHOLD 20000
-#define MAX_RECENT_ITEMS 100
+constexpr int SAME_THREAD_THRESHOLD = 20000;
+constexpr int MAX_RECENT_ITEMS = 100;
 
 using DistanceHash = QHash<QPair<QString, QString>, int>;
 
@@ -39,15 +39,14 @@ int distance(const QString &s1_, const QString &s2_)
 
 void PaletteFilter::setFilter(const QString &keyword)
 {
-    keyword_ = keyword;
-    search_service_->startSearching(keyword);
+    search_service_->search(keyword);
 }
 
-void PaletteFilter::onDoneSearching(QVector<Action> items, int recent_count)
+void PaletteFilter::onDoneSearching(QString keyword, QVector<Action> items, int recent_count)
 {
     emit layoutAboutToBeChanged();
     shown_items_.swap(items);
-
+    keyword_ = keyword;
     emit layoutChanged();
     emit filteringDone(recent_count);
 }
@@ -72,13 +71,8 @@ int PaletteFilter::rowCount(const QModelIndex &parent) const
 }
 
 PaletteFilter::PaletteFilter(QWidget *parent, const QString &palette_name, const QVector<Action> &items, SearchService *search_service)
-    : QAbstractItemModel(parent), shown_items_(items.size()), search_service_(search_service)
+    : QAbstractItemModel(parent), shown_items_(), search_service_(search_service)
 {
-    connect(search_service_, &SearchService::doneSearching, this, &PaletteFilter::onDoneSearching);
-
-    // This can be done in same thread
-    setFilter(QString());
-
     // In my opinion, total character count can be checked either.
     if (items.count() >= SAME_THREAD_THRESHOLD)
     {
@@ -91,6 +85,8 @@ PaletteFilter::PaletteFilter(QWidget *parent, const QString &palette_name, const
         searcher_ = nullptr;
         search_service_->setParent(this);
     }
+
+    connect(search_service_, &SearchService::doneSearching, this, &PaletteFilter::onDoneSearching, Qt::QueuedConnection);
 }
 
 void BasicService::search(const QString &keyword)
@@ -107,7 +103,6 @@ void BasicService::search(const QString &keyword)
     {
         if (canceled_)
             return;
-
         if (keyword.isEmpty() || fts::fuzzy_match_simple(keyword, actions_[i].name))
         {
             if (recent_actions.count(actions_[i].id))
@@ -124,12 +119,11 @@ void BasicService::search(const QString &keyword)
     try
     {
         /* Sort by how recent the item is.
-           If the job is cancelled during sort, the compare function raises exception to abort sorting.
+           If the job is canceled during sort, the compare function raises exception to abort sorting.
         */
         std::sort(recent_indexes_.begin(), recent_indexes_.begin() + recent_count, [=](int lhs, int rhs) -> bool {
             if (canceled_)
                 throw canceled_error();
-
             auto lhs_r = recent_actions.find(actions_[lhs].id);
             auto rhs_r = recent_actions.find(actions_[rhs].id);
 
@@ -139,10 +133,9 @@ void BasicService::search(const QString &keyword)
         /* Sort by fuzzy matching if keyword is longer than 1 character */
         if (keyword.size() > 1)
             std::sort(indexes_.begin(), indexes_.begin() + nonrecent_count, [=](int lhs, int rhs) -> bool {
-                if (canceled_)
-                    throw canceled_error();
-
-                return distance(keyword, actions_[lhs].name) < distance(keyword, actions_[rhs].name);
+            if (canceled_)
+                throw canceled_error();
+            return distance(keyword, actions_[lhs].name) < distance(keyword, actions_[rhs].name);
             });
     }
     catch (canceled_error &)
@@ -163,7 +156,7 @@ void BasicService::search(const QString &keyword)
         result.push_back(actions_[indexes_[i]]);
     }
 
-    emit doneSearching(result, recent_count);
+    emit doneSearching(keyword, result, recent_count);
 }
 
 static int convert(QVariant a) { return a.toInt(); }

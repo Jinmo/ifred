@@ -21,7 +21,7 @@ QPaletteFrame::QPaletteFrame(QWidget* parent, const QString& name, const QVector
     searchbox_ = new QLineEdit(this);
     searchbox_->setAttribute(Qt::WA_MacShowFocusRect, 0);
 
-    items_ = new Items(this, name_, items, new BasicService(this, name_, items));
+    items_ = new Items(this, name_, items, new BasicService(nullptr, name_, items));
     items_->setAttribute(Qt::WA_MacShowFocusRect, 0);
 
     // Add widgets

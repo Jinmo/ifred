@@ -1,6 +1,6 @@
 #include <palette_api.h>
 #include <thread>
-#define COUNT 200000
+#define COUNT 500000
 
 QString random_key() {
     const char* keys[] = { "Shift" };

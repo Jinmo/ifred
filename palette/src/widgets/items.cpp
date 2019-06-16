@@ -15,7 +15,7 @@ Items::Items(QWidget* parent, const QString& palette_name, const QVector<Action>
     QAbstractItemView::setItemDelegate(item_delegate_);
 
     connect(model_, &PaletteFilter::filteringDone, this, [=](int index) {
-        setCurrentIndex(model_->index(0, 0));
         item_delegate_->setRecents(index);
+        setCurrentIndex(model_->index(0, 0));
         });
 }
