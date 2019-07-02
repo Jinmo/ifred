@@ -464,7 +464,7 @@ int idaapi init()
     get_action_shortcut(&shortcut, "CommandPalette");
     get_action_shortcut(&shortcut2, command_palette_action.name);
 
-    if (shortcut == "Ctrl+Shift+P" && shortcut == shortcut2)
+    if (shortcut == "Ctrl-Shift-P" && shortcut == shortcut2)
         update_action_shortcut("CommandPalette", "");
 
     return PLUGIN_KEEP;
