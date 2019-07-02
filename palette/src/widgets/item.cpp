@@ -70,7 +70,7 @@ void ItemDelegate::paint(QPainter * painter,
     const QWidget* widget = option.widget;
     QStyle* style = widget ? widget->style() : QApplication::style();
 
-    if (index.row() == recents_) {
+    if (index.row() == recents_ - 1) {
         opt.state |= QStyle::State_On;
     }
 
