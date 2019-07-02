@@ -137,22 +137,126 @@ void addStructs(QVector<Action>& result)
     }
 }
 
-const QVector<Action> getNames()
-{
+class NamesManager {
+    QHash<ea_t, Action*> address_to_name;
+    QHash<tid_t, Action*> address_to_struct;
     QVector<Action> result;
-    size_t names = get_nlist_size();
-    size_t structs = get_struc_qty();
+public:
+    NamesManager() {
+        hook_to_notification_point(HT_IDB, idb_hooks, this);
+        hook_to_notification_point(HT_IDP, idp_hooks, this);
+    }
 
-    // 0. Reserve vector to avoid multiple allocations
-    result.reserve(names + structs);
+    void init(QVector<Action>* names) {
+        address_to_name.clear();
+        address_to_struct.clear();
 
-    // 1. Add names from IDA
-    addNames(result, names);
+        for (auto& action : *names) {
+            auto sep = action.id.indexOf(':');
+            if (action.id.startsWith("struct:")) {
+                address_to_struct.insert(
+                    action.id.midRef(sep + 1).toULongLong(nullptr), &action);
+            }
+            else {
+                address_to_name.insert(
+                    action.id.midRef(0, sep).toULongLong(nullptr, 16), &action);
+            }
+        }
+    }
 
-    // 2. Add structs from IDA
-    addStructs(result);
+    void rename(ea_t address, const char* name) {
+        auto it = address_to_name.find(address);
+        if (it == address_to_name.end())
+            return;
 
-    return result;
+        qstring demangled_name = demangle_name(name, 0);
+
+        Action* action = it.value();
+        action->name = QString::fromStdString((demangled_name.empty() ? name : demangled_name.c_str()));
+        action->id = QString::number(address, 16) + ":" + name;
+    }
+
+    void struc_rename(tid_t id, const char* name) {
+        auto it = address_to_struct.find(id);
+        if (it == address_to_struct.end())
+            return;
+
+        Action* action = it.value();
+        action->name = QString::fromStdString(name);
+    }
+
+    void clear() {
+        result.clear();
+        address_to_name.clear();
+        address_to_struct.clear();
+    }
+
+    QVector<Action> get(bool clear = false) {
+        size_t names = get_nlist_size();
+        size_t structs = get_struc_qty();
+
+        if (result.size() != 0 && !clear)
+            return result;
+
+        // 0. Reserve vector to avoid multiple allocations
+        result.reserve(names + structs);
+
+        // 1. Add names from IDA
+        addNames(result, names);
+
+        // 2. Add structs from IDA
+        addStructs(result);
+
+        init(&result);
+
+        return result;
+    }
+
+    static ssize_t idaapi idb_hooks(void* user_data, int notification_code, va_list va) {
+        auto manager = reinterpret_cast<NamesManager*>(user_data);
+
+        switch (notification_code) {
+        case idb_event::renamed:
+        {
+            auto ea = va_arg(va, ea_t);
+            auto new_name = va_arg(va, const char*);
+            manager->rename(ea, new_name);
+        }
+        case idb_event::struc_renamed:
+        {
+            auto struc = va_arg(va, struc_t*);
+            if (struc)
+                manager->struc_rename(
+                    struc->id, get_struc_name(struc->id).c_str());
+        }
+        }
+        return 0;
+    }
+
+    static ssize_t idaapi idp_hooks(void* user_data, int notification_code, va_list va) {
+        auto manager = reinterpret_cast<NamesManager*>(user_data);
+
+        switch (notification_code) {
+        case processor_t::ev_term:
+            manager->clear();
+        }
+        return 0;
+    }
+
+};
+
+const QVector<Action> getNames(bool clear = false)
+{
+    static NamesManager* manager;
+
+    if (!manager) {
+        manager = new NamesManager();
+    }
+
+    return manager->get();
+}
+
+void init_rename_hooks() {
 }
 
 class command_palette_handler : public action_handler_t
@@ -337,12 +441,14 @@ int idaapi init()
         return PLUGIN_SKIP;
     };
 
+    init_rename_hooks();
+
 #ifdef __MAC__
     if (!mac_dlopen_workaround())
     {
         msg("ifred mac dlopen workaround error\n");
         return PLUGIN_SKIP;
-    }
+}
 #endif
 
 #ifdef _WIN32
@@ -354,7 +460,13 @@ int idaapi init()
     }
 #endif
 
-    update_action_shortcut("CommandPalette", "");
+    qstring shortcut, shortcut2;
+    get_action_shortcut(&shortcut, "CommandPalette");
+    get_action_shortcut(&shortcut2, command_palette_action.name);
+
+    if (shortcut == "Ctrl+Shift+P" && shortcut == shortcut2)
+        update_action_shortcut("CommandPalette", "");
+
     return PLUGIN_KEEP;
 }
 
