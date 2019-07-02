@@ -15,7 +15,7 @@ QVector<Action> testItems() {
 
     for (int i = 0; i < COUNT; i++) {
         auto id = QString::number(1LL * rand() * rand() * rand() * rand(), 36) + ":" + QString::number(i);
-        action_list.push_back(Action{ id, id, random_key() + "+" + QString::number(i % 10), QString::number(i) + "th element" });
+        action_list.push_back(Action{ id, id + id, random_key() + "+" + QString::number(i % 10), QString::number(i) + "th element" });
     }
 
     return action_list;
