@@ -176,6 +176,23 @@ public:
         action->id = QString::number(address, 16) + ":" + name;
     }
 
+    void rebase(segm_move_infos_t& infos) {
+        std::vector<std::pair<ea_t, ea_t>> moves;
+        for (auto&& seg : infos) {
+            for (auto&& key : address_to_name.keys()) {
+                if (key >= seg.from && key < seg.from + seg.size) {
+                    moves.push_back({key, key + seg.to - seg.from});
+                }
+            }
+        }
+        for (auto &&move: moves) {
+            auto value = address_to_name[move.first];
+            address_to_name.remove(move.first);
+            value->id = QString::number(move.second, 16) + ":" + value->name;
+            address_to_name[move.second] = value;
+        }
+    }
+
     void struc_rename(tid_t id, const char* name) {
         auto it = address_to_struct.find(id);
         if (it == address_to_struct.end())
@@ -216,11 +233,17 @@ public:
         auto manager = reinterpret_cast<NamesManager*>(user_data);
 
         switch (notification_code) {
+        case idb_event::allsegs_moved: {
+            auto info = va_arg(va, segm_move_infos_t*);
+            manager->rebase(*info);
+            break;
+        }
         case idb_event::renamed:
         {
             auto ea = va_arg(va, ea_t);
             auto new_name = va_arg(va, const char*);
             manager->rename(ea, new_name);
+            break;
         }
         case idb_event::struc_renamed:
         {

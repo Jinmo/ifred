@@ -138,8 +138,8 @@ namespace fts {
 
 		// Calculate score
 		if (matched) {
-			const int sequential_bonus = 50;            // bonus for adjacent matches
-			const int separator_bonus = 50;             // bonus if match occurs after a separator
+			const int sequential_bonus = 15;            // bonus for adjacent matches
+			const int separator_bonus = 30;             // bonus if match occurs after a separator
 			const int camel_bonus = 30;                 // bonus if match is uppercase and prev is lower
 			const int first_letter_bonus = 30;          // bonus if the first letter is matched
 

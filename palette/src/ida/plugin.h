@@ -16,3 +16,4 @@
 #include <struct.hpp>
 #include <diskio.hpp>
 #include <registry.hpp>
+#include <moves.hpp>
