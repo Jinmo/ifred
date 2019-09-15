@@ -18,7 +18,7 @@ You can make a custom palette in IDAPython.
 from __palette__ import show_palette, Palette, Action
 import random, string
 
-myhandler = lambda item: sys.stdout.write('You selected: %s\n' % item.description)
+myhandler = lambda item: sys.stdout.write('You selected: %s\n' % item.name)
 random_str = lambda: "".join(random.choice(string.lowercase) for i in range(20))
 
 entries = [Action(name=random_str(), # displayed text
