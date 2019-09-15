@@ -131,7 +131,8 @@ void addStructs(QVector<Action>& result)
     while (idx != BADADDR)
     {
         tid_t sid = get_struc_by_idx(idx);
-        result.push_back(Action{ "struct:" + QString::number(sid), QString::fromStdString(get_struc_name(sid).c_str()), "" });
+        result.push_back(Action{ "struct:" + QString::number(sid),
+			QString::fromStdString(get_struc_name(sid).c_str()), QString() });
 
         idx = get_next_struc_idx(idx);
     }
@@ -166,10 +167,15 @@ public:
 
     void rename(ea_t address, const char* name) {
         auto it = address_to_name.find(address);
-        if (it == address_to_name.end())
-            return;
+		qstring demangled_name = demangle_name(name, 0);
 
-        qstring demangled_name = demangle_name(name, 0);
+		if (it == address_to_name.end()) {
+			result.push_back(Action{ QString::number(address, 16) + ":" + name,
+									(demangled_name.empty() ? name : demangled_name.c_str()),
+									QString() });
+			address_to_name.insert(address, &result.back());
+			return;
+		}
 
         Action* action = it.value();
         action->name = QString::fromStdString((demangled_name.empty() ? name : demangled_name.c_str()));
@@ -195,8 +201,10 @@ public:
 
     void struc_rename(tid_t id, const char* name) {
         auto it = address_to_struct.find(id);
-        if (it == address_to_struct.end())
-            return;
+		if (it == address_to_struct.end()) {
+			result.push_back(Action{ "struct:" + id, name, QString() });
+			address_to_struct.insert(id, &result.back());
+		}
 
         Action* action = it.value();
         action->name = QString::fromStdString(name);
