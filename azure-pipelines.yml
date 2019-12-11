@@ -52,8 +52,8 @@ jobs:
       $env:PATH="$(Build.SourcesDirectory);$env:PATH"
       $cl=Get-Command cl|Select-Object -ExpandProperty Definition
 
-      mkdir build64
-      cd build64
+      mkdir build64-py2
+      cd build64-py2
 
       cmake .. "-DCMAKE_PREFIX_PATH=$(Agent.TempDirectory)\\qt563" -DIDA_BINARY_64=True -DIDA_EA_64=True "-DIDA_SDK=$(Agent.TempDirectory)\\idasdk70" -G Ninja -DCMAKE_CXX_COMPILER:FILEPATH=$cl -DCMAKE_C_COMPILER:FILEPATH=$cl -DCMAKE_BUILD_TYPE=RelWithDebInfo
       ninja
@@ -61,8 +61,8 @@ jobs:
       copy palette\\ida_palette64.dll $(Build.ArtifactStagingDirectory)\\py2
 
       cd ..
-      mkdir build
-      cd build
+      mkdir build32-py2
+      cd build32-py2
 
       cmake .. "-DCMAKE_PREFIX_PATH=$(Agent.TempDirectory)\\qt563" -DIDA_BINARY_64=True -DIDA_EA_64=False "-DIDA_SDK=$(Agent.TempDirectory)\\idasdk70" -G Ninja -DCMAKE_CXX_COMPILER:FILEPATH=$cl -DCMAKE_C_COMPILER:FILEPATH=$cl -DCMAKE_BUILD_TYPE=RelWithDebInfo
       ninja
@@ -82,8 +82,8 @@ jobs:
       $env:PATH="$(Build.SourcesDirectory);$env:PATH"
       $cl=Get-Command cl|Select-Object -ExpandProperty Definition
 
-      mkdir build64
-      cd build64
+      mkdir build64-py3
+      cd build64-py3
 
       cmake .. "-DCMAKE_PREFIX_PATH=$(Agent.TempDirectory)\\qt563" -DIDA_BINARY_64=True -DIDA_EA_64=True "-DIDA_SDK=$(Agent.TempDirectory)\\idasdk70" -G Ninja -DCMAKE_CXX_COMPILER:FILEPATH=$cl -DCMAKE_C_COMPILER:FILEPATH=$cl -DCMAKE_BUILD_TYPE=RelWithDebInfo
       ninja
@@ -91,8 +91,8 @@ jobs:
       copy palette\\ida_palette64.dll $(Build.ArtifactStagingDirectory)\\py3
 
       cd ..
-      mkdir build
-      cd build
+      mkdir build32-py3
+      cd build32-py3
 
       cmake .. "-DCMAKE_PREFIX_PATH=$(Agent.TempDirectory)\\qt563" -DIDA_BINARY_64=True -DIDA_EA_64=False "-DIDA_SDK=$(Agent.TempDirectory)\\idasdk70" -G Ninja -DCMAKE_CXX_COMPILER:FILEPATH=$cl -DCMAKE_C_COMPILER:FILEPATH=$cl -DCMAKE_BUILD_TYPE=RelWithDebInfo
       ninja
