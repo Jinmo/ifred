@@ -1,5 +1,4 @@
 #include <palette_api.h>
-
 #include <bindings/pypalette.h>
 
 PyPalette::PyPalette(const std::string& name, const std::string& placeholer, const py::list& entries) {
@@ -59,8 +58,13 @@ PYBIND11_MODULE(__palette__, m) {
         }, py::arg("palette"), py::arg("close_key") = "");
 
     m.attr("threading") = py::module::import("threading");
+    m.attr("threading") = py::module::import("threading");
+
+    auto globals = m.attr("__dict__");
+    PyDict_SetItemString(globals.ptr(), "__builtins__", PyEval_GetBuiltins());
 
     py::exec(R"(
+
 class Action:
     def __init__(self, id, name, handler, shortcut="", description=""):
         self.id = id
@@ -73,12 +77,23 @@ def execute_action(id):
     # on main thread
     threading.Thread(target=__cur_palette__[id].handler, args=(__cur_palette__[id], )).run()
 
-)", m.attr("__dict__"));
+)", globals);
 
     m.attr("__version__") = "dev";
 }
 
 void init_python_module() {
+#if PY_MAJOR_VERSION >= 3 /// Compatibility macros for various Python versions
+    auto ptr = PyInit___palette__();
+    py::str str("__palette__");
+    _PyImport_FixupExtensionObject(
+        ptr,
+        str.ptr(),
+        str.ptr(),
+        PyImport_GetModuleDict()
+    );
+#else
     init__palette__();
+#endif
 }
 

@@ -5,9 +5,12 @@
 #include <string>
 
 #undef NDEBUG
+#pragma push_macro("slots")
+#undef slots
 #include <pybind11/pybind11.h>
 #include <pybind11/eval.h>
 #include <pybind11/stl.h>
+#pragma pop_macro("slots")
 
 namespace py = pybind11;
 

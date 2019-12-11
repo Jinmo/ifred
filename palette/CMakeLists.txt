@@ -4,7 +4,7 @@ include("ida-cmake/cmake/QtIDA.cmake")
 include("ida-cmake/cmake/IDA.cmake")
 
 # Some required settings
-set(PYTHON_SUPPORT OFF BOOL)
+set(PYTHON_SUPPORT ON BOOL)
 set(PYTHON_EXECUTABLE "" CACHE PATH "Python executable (x64 if >= 7.0)")
 
 include(GenerateExportHeader)
