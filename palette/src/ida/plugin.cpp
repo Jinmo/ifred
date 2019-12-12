@@ -139,8 +139,8 @@ void addStructs(QVector<Action>& result)
 }
 
 class NamesManager {
-    QHash<ea_t, Action> address_to_name;
-    QHash<tid_t, Action> address_to_struct;
+    QHash<ea_t, int> address_to_name;
+    QHash<tid_t, int> address_to_struct;
     QVector<Action> result;
 public:
     NamesManager() {
@@ -152,16 +152,18 @@ public:
         address_to_name.clear();
         address_to_struct.clear();
 
+        int index = 0;
         for (auto& action : *names) {
             auto sep = action.id.indexOf(':');
             if (action.id.startsWith("struct:")) {
                 address_to_struct.insert(
-                    action.id.midRef(sep + 1).toULongLong(nullptr), action);
+                    action.id.midRef(sep + 1).toULongLong(nullptr), index);
             }
             else {
                 address_to_name.insert(
-                    action.id.midRef(0, sep).toULongLong(nullptr, 16), action);
+                    action.id.midRef(0, sep).toULongLong(nullptr, 16), index);
             }
+            index++;
         }
     }
 
@@ -170,14 +172,15 @@ public:
 		qstring demangled_name = demangle_name(name, 0);
 
 		if (it == address_to_name.end()) {
+            if (result.empty()) return; // Not initialized yet
 			result.push_back(Action{ QString::number(address, 16) + ":" + name,
-									(demangled_name.empty() ? name : demangled_name.c_str()),
+									demangled_name.empty() ? name : demangled_name.c_str(),
 									QString() });
-			address_to_name.insert(address, result.back());
+			address_to_name.insert(address, result.size() - 1);
 			return;
 		}
 
-        Action &action = it.value();
+        Action &action = result[it.value()];
         action.name = QString::fromStdString((demangled_name.empty() ? name : demangled_name.c_str()));
         action.id = QString::number(address, 16) + ":" + name;
     }
@@ -192,21 +195,23 @@ public:
             }
         }
         for (auto &&move: moves) {
-            auto value = address_to_name[move.first];
+            auto index = address_to_name[move.first];
+            auto &action = result[index];
             address_to_name.remove(move.first);
-            value.id = QString::number(move.second, 16) + ":" + value.name;
-            address_to_name[move.second] = value;
+            action.id = QString::number(move.second, 16) + ":" + action.name;
+            address_to_name[move.second] = index;
         }
     }
 
     void struc_rename(tid_t id, const char* name) {
         auto it = address_to_struct.find(id);
 		if (it == address_to_struct.end()) {
+            if (result.empty()) return; // Not initialized yet
 			result.push_back(Action{ "struct:" + id, name, QString() });
-			address_to_struct.insert(id, result.back());
+			address_to_struct.insert(id, result.size() - 1);
 		}
 
-        Action action = it.value();
+        Action &action = result[it.value()];
         action.name = QString::fromStdString(name);
     }
 
