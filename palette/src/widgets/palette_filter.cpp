@@ -45,7 +45,7 @@ void PaletteFilter::setFilter(const QString &keyword)
 void PaletteFilter::onDoneSearching(QString keyword, QVector<Action> items, int recent_count)
 {
     emit layoutAboutToBeChanged();
-    shown_items_.swap(items);
+    shown_items_ = items;
     keyword_ = keyword;
     emit layoutChanged();
     emit filteringDone(recent_count);

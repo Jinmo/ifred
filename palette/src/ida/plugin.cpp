@@ -139,8 +139,8 @@ void addStructs(QVector<Action>& result)
 }
 
 class NamesManager {
-    QHash<ea_t, Action*> address_to_name;
-    QHash<tid_t, Action*> address_to_struct;
+    QHash<ea_t, Action> address_to_name;
+    QHash<tid_t, Action> address_to_struct;
     QVector<Action> result;
 public:
     NamesManager() {
@@ -156,11 +156,11 @@ public:
             auto sep = action.id.indexOf(':');
             if (action.id.startsWith("struct:")) {
                 address_to_struct.insert(
-                    action.id.midRef(sep + 1).toULongLong(nullptr), &action);
+                    action.id.midRef(sep + 1).toULongLong(nullptr), action);
             }
             else {
                 address_to_name.insert(
-                    action.id.midRef(0, sep).toULongLong(nullptr, 16), &action);
+                    action.id.midRef(0, sep).toULongLong(nullptr, 16), action);
             }
         }
     }
@@ -173,13 +173,13 @@ public:
 			result.push_back(Action{ QString::number(address, 16) + ":" + name,
 									(demangled_name.empty() ? name : demangled_name.c_str()),
 									QString() });
-			address_to_name.insert(address, &result.back());
+			address_to_name.insert(address, result.back());
 			return;
 		}
 
-        Action* action = it.value();
-        action->name = QString::fromStdString((demangled_name.empty() ? name : demangled_name.c_str()));
-        action->id = QString::number(address, 16) + ":" + name;
+        Action &action = it.value();
+        action.name = QString::fromStdString((demangled_name.empty() ? name : demangled_name.c_str()));
+        action.id = QString::number(address, 16) + ":" + name;
     }
 
     void rebase(segm_move_infos_t& infos) {
@@ -194,7 +194,7 @@ public:
         for (auto &&move: moves) {
             auto value = address_to_name[move.first];
             address_to_name.remove(move.first);
-            value->id = QString::number(move.second, 16) + ":" + value->name;
+            value.id = QString::number(move.second, 16) + ":" + value.name;
             address_to_name[move.second] = value;
         }
     }
@@ -203,11 +203,11 @@ public:
         auto it = address_to_struct.find(id);
 		if (it == address_to_struct.end()) {
 			result.push_back(Action{ "struct:" + id, name, QString() });
-			address_to_struct.insert(id, &result.back());
+			address_to_struct.insert(id, result.back());
 		}
 
-        Action* action = it.value();
-        action->name = QString::fromStdString(name);
+        Action action = it.value();
+        action.name = QString::fromStdString(name);
     }
 
     void clear() {
@@ -406,10 +406,8 @@ public:
 
 void initpy()
 {
-    postToMainThread([]() {
-        gil_scoped_acquire gil;
-        init_python_module();
-        });
+    gil_scoped_acquire gil;
+    init_python_module();
 }
 
 ssize_t idaapi load_python(void*, int notification_code, va_list va)
