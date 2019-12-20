@@ -3,13 +3,6 @@
 
 #include <palette_api.h>
 
-void postToMainThread(const std::function<void()>& fun) {
-    QObject signalSource;
-    QObject::connect(&signalSource, &QObject::destroyed, qApp, [=](QObject*) {
-        fun();
-        });
-}
-
 QString loadFileFromBundle(const char* filename, QFile& file, bool& updated) {
     static bool resource_initialized;
 

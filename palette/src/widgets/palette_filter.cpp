@@ -12,28 +12,26 @@ class canceled_error : public std::exception
 {
 };
 
-int distance(const QString &s1_, const QString &s2_)
+int distance(const QString &s1, const QString &s2)
 {
     static QThreadStorage<DistanceHash *> distances;
 
-    QString s1 = s1_.toLower();
-    QPair<QString, QString> pair(s1, s2_);
+    QPair<QString, QString> pair(s1, s2);
 
     if (!distances.hasLocalData())
     {
         distances.setLocalData(new DistanceHash());
     }
 
-    if (distances.localData()->contains(pair))
-        return (*distances.localData())[pair];
-
-    QByteArray s1b = s1.toUtf8();
-    QByteArray s2b = s2_.toUtf8();
+    auto distances_ = distances.localData();
+    auto it = distances_->find(pair);
+    if (it != distances_->end())
+        return it.value();
 
     int score;
-    fts::fuzzy_match(s1b.data(), s2b.data(), score);
+    fts::fuzzy_match(reinterpret_cast<const uint16_t *>(s1.data()), reinterpret_cast<const uint16_t *>(s2.data()), score);
 
-    distances.localData()->insert(pair, -score);
+    distances_->insert(pair, -score);
     return -score;
 }
 
