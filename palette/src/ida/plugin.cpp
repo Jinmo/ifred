@@ -207,7 +207,7 @@ public:
         auto it = address_to_struct.find(id);
 		if (it == address_to_struct.end()) {
             if (result.empty()) return; // Not initialized yet
-			result.push_back(Action{ "struct:" + id, name, QString() });
+			result.push_back(Action{ "struct:" + QString::number(id), name, QString() });
 			address_to_struct.insert(id, result.size() - 1);
 		}
 
