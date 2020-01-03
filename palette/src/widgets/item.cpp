@@ -110,6 +110,9 @@ QSize ItemDelegate::sizeHint(const QStyleOptionViewItem & option, const QModelIn
 
 void ItemDelegate::updateCSS(const QString & style_sheet) {
     document_->setDefaultStyleSheet(style_sheet);
+    QTextOption textOption;
+    textOption.setWrapMode(QTextOption::WrapAnywhere);
+    document_->setDefaultTextOption(textOption);
     document_->setDocumentMargin(0);
 }
 

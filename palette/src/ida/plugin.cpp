@@ -95,11 +95,12 @@ void addNames(QVector<Action>& result, size_t names)
 {
     for (size_t i = 0; i < names; i++)
     {
-        const char* name = get_nlist_name(i);
-        qstring demangled_name = demangle_name(name, 0);
+        ea_t ea = get_nlist_ea(i);
+        qstring demangled_name;
+        get_demangled_name(&demangled_name, ea, 0, 0, GN_SHORT);
 
-        result.push_back(Action{ QString::number(get_nlist_ea(i), 16) + ":" + name,
-                                (demangled_name.empty() ? name : demangled_name.c_str()),
+        result.push_back(Action{ QString::number(get_nlist_ea(i), 16),
+                                demangled_name.c_str(),
                                 QString() });
     }
 }
@@ -125,6 +126,14 @@ const QVector<Action> getActions()
     return result;
 }
 
+qstring get_nice_struc_name(tid_t struct_) {
+    auto name = get_struc_name(struct_);
+    tinfo_t tif;
+    tif.get_named_type(get_idati(), name.c_str());
+    tif.print(&name);
+    return name;
+}
+
 void addStructs(QVector<Action>& result)
 {
     int idx = get_first_struc_idx();
@@ -132,7 +141,7 @@ void addStructs(QVector<Action>& result)
     {
         tid_t sid = get_struc_by_idx(idx);
         result.push_back(Action{ "struct:" + QString::number(sid),
-			QString::fromStdString(get_struc_name(sid).c_str()), QString() });
+			QString::fromStdString(get_nice_struc_name(sid).c_str()), QString() });
 
         idx = get_next_struc_idx(idx);
     }
@@ -169,20 +178,21 @@ public:
 
     void rename(ea_t address, const char* name) {
         auto it = address_to_name.find(address);
-		qstring demangled_name = demangle_name(name, 0);
+		qstring demangled_name;
+        get_demangled_name(&demangled_name, address, 0, 0, GN_SHORT);
 
 		if (it == address_to_name.end()) {
             if (result.empty()) return; // Not initialized yet
-			result.push_back(Action{ QString::number(address, 16) + ":" + name,
-									demangled_name.empty() ? name : demangled_name.c_str(),
+			result.push_back(Action{ QString::number(address, 16),
+									demangled_name.c_str(),
 									QString() });
 			address_to_name.insert(address, result.size() - 1);
 			return;
 		}
 
         Action &action = result[it.value()];
-        action.name = QString::fromStdString((demangled_name.empty() ? name : demangled_name.c_str()));
-        action.id = QString::number(address, 16) + ":" + name;
+        action.name = QString::fromStdString(demangled_name.c_str());
+        action.id = QString::number(address, 16);
     }
 
     void rebase(segm_move_infos_t& infos) {
@@ -198,7 +208,7 @@ public:
             auto index = address_to_name[move.first];
             auto &action = result[index];
             address_to_name.remove(move.first);
-            action.id = QString::number(move.second, 16) + ":" + action.name;
+            action.id = QString::number(move.second, 16);
             address_to_name[move.second] = index;
         }
     }
@@ -263,7 +273,7 @@ public:
             auto struc = va_arg(va, struc_t*);
             if (struc)
                 manager->struc_rename(
-                    struc->id, get_struc_name(struc->id).c_str());
+                    struc->id, get_nice_struc_name(struc->id).c_str());
         }
         }
         return 0;
@@ -331,10 +341,11 @@ class name_palette_handler : public action_handler_t
             }
             else
             {
-                int sep = action.id.indexOf(':');
-                ea_t address = static_cast<ea_t>(id.midRef(0, sep).toULongLong(nullptr, 16));
+                ea_t address = static_cast<ea_t>(id.toULongLong(nullptr, 16));
                 jumpto(address);
-                reg_update_strlist("History\\$", action.id.midRef(sep + 1).toUtf8().data(), 32);
+                qstring name;
+                get_ea_name(&name, address, 0, 0);
+                reg_update_strlist("History\\$", name.c_str(), 32);
             }
 
             return true;
