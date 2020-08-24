@@ -77,7 +77,7 @@ jobs:
       architecture: x64
 
   - powershell: |
-      mkdir "$(Build.ArtifactStagingDirectory)\\py3"
+      mkdir "$(Build.ArtifactStagingDirectory)\\py3-pre38"
 
       $env:PATH="$(Build.SourcesDirectory);$env:PATH"
       $cl=Get-Command cl|Select-Object -ExpandProperty Definition
@@ -88,7 +88,7 @@ jobs:
       cmake .. "-DCMAKE_PREFIX_PATH=$(Agent.TempDirectory)\\qt563" -DIDA_BINARY_64=True -DIDA_EA_64=True "-DIDA_SDK=$(Agent.TempDirectory)\\idasdk70" -G Ninja -DCMAKE_CXX_COMPILER:FILEPATH=$cl -DCMAKE_C_COMPILER:FILEPATH=$cl -DCMAKE_BUILD_TYPE=RelWithDebInfo
       ninja
 
-      copy palette\\ida_palette64.dll $(Build.ArtifactStagingDirectory)\\py3
+      copy palette\\ida_palette64.dll $(Build.ArtifactStagingDirectory)\\py3-pre38
 
       cd ..
       mkdir build32-py3
@@ -97,7 +97,37 @@ jobs:
       cmake .. "-DCMAKE_PREFIX_PATH=$(Agent.TempDirectory)\\qt563" -DIDA_BINARY_64=True -DIDA_EA_64=False "-DIDA_SDK=$(Agent.TempDirectory)\\idasdk70" -G Ninja -DCMAKE_CXX_COMPILER:FILEPATH=$cl -DCMAKE_C_COMPILER:FILEPATH=$cl -DCMAKE_BUILD_TYPE=RelWithDebInfo
       ninja
 
-      copy palette\\ida_palette.dll $(Build.ArtifactStagingDirectory)\\py3
+      copy palette\\ida_palette.dll $(Build.ArtifactStagingDirectory)\\py3-pre38
+    displayName: Build
+
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: 3.8
+      addToPath: true
+      architecture: x64
+
+  - powershell: |
+      mkdir "$(Build.ArtifactStagingDirectory)\\py3-38"
+
+      $env:PATH="$(Build.SourcesDirectory);$env:PATH"
+      $cl=Get-Command cl|Select-Object -ExpandProperty Definition
+
+      mkdir build64-py38
+      cd build64-py38
+
+      cmake .. "-DCMAKE_PREFIX_PATH=$(Agent.TempDirectory)\\qt563" -DIDA_BINARY_64=True -DIDA_EA_64=True "-DIDA_SDK=$(Agent.TempDirectory)\\idasdk70" -G Ninja -DCMAKE_CXX_COMPILER:FILEPATH=$cl -DCMAKE_C_COMPILER:FILEPATH=$cl -DCMAKE_BUILD_TYPE=RelWithDebInfo
+      ninja
+
+      copy palette\\ida_palette64.dll $(Build.ArtifactStagingDirectory)\\py3-38
+
+      cd ..
+      mkdir build32-py38
+      cd build32-py38
+
+      cmake .. "-DCMAKE_PREFIX_PATH=$(Agent.TempDirectory)\\qt563" -DIDA_BINARY_64=True -DIDA_EA_64=False "-DIDA_SDK=$(Agent.TempDirectory)\\idasdk70" -G Ninja -DCMAKE_CXX_COMPILER:FILEPATH=$cl -DCMAKE_C_COMPILER:FILEPATH=$cl -DCMAKE_BUILD_TYPE=RelWithDebInfo
+      ninja
+
+      copy palette\\ida_palette.dll $(Build.ArtifactStagingDirectory)\\py3-38
     displayName: Build
 
   - task: PublishBuildArtifacts@1
