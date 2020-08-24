@@ -7,6 +7,12 @@
 #include <palette_api.h>
 #include <utils.h>
 
+// NO_OBSOLETE_FUNCS might be overkill, so let's just define this
+#if IDA_SDK_VERSION >= 750
+#define ACTION_DESC_LITERAL(name, label, handler, shortcut, tooltip, icon)\
+  { sizeof(action_desc_t), name, label, handler, &PLUGIN, shortcut, tooltip, icon, ADF_OT_PLUGIN }
+#endif
+
 #ifndef __APPLE__
 #define CMD_PALETTE_SHORTCUT "Ctrl+Shift+P"
 #define NAME_PALETTE_SHORTCUT "Ctrl+P"
@@ -456,8 +462,14 @@ const QString IdaPluginPath(const char* filename)
     return g_plugin_path + filename;
 }
 
+#if IDA_SDK_VERSION >= 750
+#define INIT_RETURN_TYPE plugmod_t *
+#else
+#define INIT_RETURN_TYPE int
+#endif
+
 //--------------------------------------------------------------------------
-int idaapi init()
+INIT_RETURN_TYPE idaapi init()
 {
     if (!is_idaq())
         // the plugin works only with idaq

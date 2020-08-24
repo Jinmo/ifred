@@ -1,5 +1,8 @@
-#include <palette_api.h>
 #include <thread>
+#include <stdexcept>
+
+#include <palette_api.h>
+
 #define COUNT 500000
 
 QString random_key() {
@@ -11,7 +14,7 @@ QVector<Action> testItems() {
     QVector<Action> action_list;
 
     action_list.reserve(COUNT + 1);
-    action_list.push_back(Action{ "std::runtime_error", "raise exception!!!!!!!!!!!!!!!!!!", "", "Just raises an exception" });
+    action_list.push_back(Action{ "std::runtime_error", "raise exception!!", "", "Just raises an exception" });
 
     for (int i = 0; i < COUNT; i++) {
         auto id = QString::number(1LL * rand() * rand() * rand() * rand(), 36) + ":" + QString::number(i);

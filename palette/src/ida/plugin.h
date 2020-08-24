@@ -5,6 +5,9 @@
 // clang header uses the functions
 #define USE_STANDARD_FILE_FUNCTIONS
 #define USE_DANGEROUS_FUNCTIONS
+
+#define __DEFINE_PLUGIN_RETURN_CODES__
+
 #include <ida.hpp>
 #include <idp.hpp>
 
