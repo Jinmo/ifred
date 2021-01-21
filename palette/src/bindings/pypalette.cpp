@@ -89,8 +89,11 @@ void init_python_module() {
     _PyImport_FixupExtensionObject(
         ptr,
         str.ptr(),
-        str.ptr(),
-        PyImport_GetModuleDict()
+        str.ptr()
+#if PY_MINOR_VERSION >= 7
+        // Python 3.6 uses this by default
+        , PyImport_GetModuleDict()
+#endif
     );
 #else
     init__palette__();
