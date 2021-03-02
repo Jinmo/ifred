@@ -153,6 +153,15 @@ void addStructs(QVector<Action>& result)
     }
 }
 
+void addEnums(QVector<Action>& result) {
+    size_t cnt = get_enum_qty();
+    for (size_t i = 0; i < cnt; i++) {
+        enum_t n = getn_enum(i);
+        result.push_back(Action{ "struct:" + QString::number(n),
+            QString::fromStdString(get_nice_struc_name(n).c_str()), QString() });
+    }
+}
+
 class NamesManager {
     QHash<ea_t, int> address_to_name;
     QHash<tid_t, int> address_to_struct;
@@ -219,16 +228,18 @@ public:
         }
     }
 
-    void struc_rename(tid_t id, const char* name) {
+    void update_struct(tid_t id, const char* name) {
+        if (result.empty()) return; // Not initialized yet
+
         auto it = address_to_struct.find(id);
 		if (it == address_to_struct.end()) {
-            if (result.empty()) return; // Not initialized yet
 			result.push_back(Action{ "struct:" + QString::number(id), name, QString() });
 			address_to_struct.insert(id, result.size() - 1);
-		}
-
-        Action &action = result[it.value()];
-        action.name = QString::fromStdString(name);
+        }
+        else {
+            Action& action = result[it.value()];
+            action.name = QString::fromStdString(name);
+        }
     }
 
     void clear() {
@@ -252,6 +263,9 @@ public:
 
         // 2. Add structs from IDA
         addStructs(result);
+
+        // 3. Add enums from IDA
+        addEnums(result);
 
         init(&result);
 
@@ -278,8 +292,16 @@ public:
         {
             auto struc = va_arg(va, struc_t*);
             if (struc)
-                manager->struc_rename(
+                manager->update_struct(
                     struc->id, get_nice_struc_name(struc->id).c_str());
+            break;
+        }
+        case idb_event::struc_created:
+        case idb_event::enum_created:
+        case idb_event::enum_renamed:
+        {
+            auto tid = va_arg(va, tid_t);
+            manager->update_struct(tid, get_nice_struc_name(tid).c_str());
         }
         }
         return 0;
@@ -343,7 +365,11 @@ class name_palette_handler : public action_handler_t
 
             if (id.startsWith("struct:"))
             {
-                open_structs_window(id.midRef(7).toULongLong());
+                auto tid = id.midRef(7).toULongLong();
+                if (get_enum_idx(tid) == -1)
+                    open_structs_window(tid);
+                else
+                    open_enums_window(tid);
             }
             else
             {

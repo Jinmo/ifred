@@ -21,3 +21,4 @@
 #include <registry.hpp>
 #include <moves.hpp>
 #include <typeinf.hpp>
+#include <enum.hpp>
