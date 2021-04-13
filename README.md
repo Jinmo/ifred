@@ -1,4 +1,4 @@
-# IDA command palette & further
+# IDA command palette & more
 
 [![Build Status](https://jinmo123.visualstudio.com/idapkg/_apis/build/status/Jinmo.ifred?branchName=master)](https://jinmo123.visualstudio.com/idapkg/_build/latest?definitionId=1&branchName=master)
 
