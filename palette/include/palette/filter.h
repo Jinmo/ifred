@@ -4,7 +4,7 @@
 #include <QtGui>
 #include <QtWidgets>
 
-#include <action.h>
+#include <palette/action.h>
 
 class SearchService;
 
@@ -14,12 +14,10 @@ class PaletteFilter : public QAbstractItemModel
 
     QVector<Action> shown_items_;
     QString keyword_;
-
-    QThread* searcher_;
     SearchService* search_service_;
 
 public:
-    PaletteFilter(QWidget* parent, const QString& palette_name, const QVector<Action>& items, SearchService* search_service);
+    PaletteFilter(QWidget* parent, const QString& palette_name, SearchService* search_service);
 
     // Public interface
     void setFilter(const QString& keyword);
@@ -72,24 +70,6 @@ signals:
 
     // Response
     void doneSearching(QString keyword, QVector<Action> actions, int recent_count);
-};
-
-class BasicService : public SearchService
-{
-    std::vector<int> indexes_, recent_indexes_;
-    const QVector<Action> actions_; // immutable
-    QHash<QString, int> recent_actions_;
-    QSettings storage_;
-    bool canceled_;
-
-    void search(const QString& keyword);
-
-public:
-    BasicService(QObject* parent, const QString& palette_name, const QVector<Action>& actions);
-    void cancel() override
-    {
-        canceled_ = true;
-    }
 };
 
 #endif // PALETTE_FILTER_H

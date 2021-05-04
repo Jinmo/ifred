@@ -1,5 +1,5 @@
-#include <palette_api.h>
 #include <widgets/palette.h>
+#include <api.h>
 #include <action.h>
 #include <utility>
 
@@ -15,7 +15,7 @@ static void postToThread2(F&& fun, QThread* thread = qApp->thread()) {
         Qt::QueuedConnection);
 }
 
-QWidget* getMainWindow() {
+static QWidget* getMainWindow() {
     // This is not too expensive.
     for (auto& widget : qApp->topLevelWidgets()) {
         if (qobject_cast<QMainWindow*>(widget)) {

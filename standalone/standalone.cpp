@@ -1,7 +1,7 @@
 #include <thread>
 #include <stdexcept>
 
-#include <palette_api.h>
+#include <palette/api.h>
 
 #define COUNT 500000
 

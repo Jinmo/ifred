@@ -3,10 +3,11 @@
 #include <QtGui>
 #include <QtWidgets>
 
-#include <widgets/items.h>
-#include <action.h>
-#include <observers.h>
-#include <utils.h>
+#include <palette/widgets.h>
+#include <palette/action.h>
+#include <palette/observers.h>
+#include <palette/utils.h>
+#include <palette/filter.h>
 
 #include "palette_export.h"
 #include <functional>
@@ -27,13 +28,13 @@ public:
 
 };
 
-class QPaletteFrame : public QFrame {
+class PaletteFrame : public QFrame {
     Q_OBJECT;
 
     QString name_;
 
     QLineEdit* searchbox_;
-    Items* items_;
+    PaletteItems* items_;
     QShortcut* shortcut_;
 
     // Registered shortcuts not overriden by Qt::ShortcutOverride event
@@ -58,7 +59,7 @@ class QPaletteFrame : public QFrame {
     }
 
 public:
-    QPaletteFrame(QWidget* parent, const QString& name, const QVector<Action>& items, const QString& closeKey);
+    PaletteFrame(QWidget* parent, const QString& name, const QString& closeKey, SearchService *search_service);
 
     void setPlaceholderText(const QString& placeholder);
 

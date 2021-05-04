@@ -1,4 +1,4 @@
-#include <palette_api.h>
+#include <api.h>
 #include <bindings/pypalette.h>
 
 PyPalette::PyPalette(const std::string& name, const std::string& placeholer, const py::list& entries) {

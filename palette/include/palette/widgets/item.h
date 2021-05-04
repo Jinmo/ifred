@@ -4,8 +4,8 @@
 #include <QtGui>
 #include <QtWidgets>
 
-#include <action.h>
-#include <observers.h>
+#include <palette/action.h>
+#include <palette/observers.h>
 
 class ItemDelegate : public QStyledItemDelegate {
     QTextDocument* document_;

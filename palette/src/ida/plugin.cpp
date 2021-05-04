@@ -1,11 +1,10 @@
 #include "plugin.h"
-#include <Python.h>
 
 #include <QtGui>
 #include <QtWidgets>
 
-#include <palette_api.h>
-#include <utils.h>
+#include <palette/api.h>
+#include <palette/utils.h>
 
 // NO_OBSOLETE_FUNCS might be overkill, so let's just define this
 #if IDA_SDK_VERSION >= 750
@@ -431,47 +430,6 @@ char help[] = "IDA palette";
 
 char wanted_name[] = "ifred";
 
-void init_python_module();
-
-class gil_scoped_acquire
-{
-    PyGILState_STATE state;
-    bool reset;
-
-public:
-    gil_scoped_acquire()
-    {
-        reset = false;
-        state = PyGILState_Ensure();
-    }
-
-    ~gil_scoped_acquire()
-    {
-        if (!reset)
-            PyGILState_Release(state);
-    }
-};
-
-void initpy()
-{
-    gil_scoped_acquire gil;
-    init_python_module();
-}
-
-ssize_t idaapi load_python(void*, int notification_code, va_list va)
-{
-    auto info = va_arg(va, plugin_info_t*);
-
-    if (notification_code == ui_plugin_loaded && !strcmp(info->org_name, "IDAPython"))
-    {
-        initpy();
-
-        unhook_from_notification_point(HT_UI, load_python, nullptr);
-    }
-
-    return 0;
-}
-
 const QString IdaPluginPath(const char* filename)
 {
     static QString g_plugin_path;
@@ -504,10 +462,10 @@ INIT_RETURN_TYPE idaapi init()
     msg("loading palettes...\n");
 
     // 1. init IDAPython
-    if (!Py_IsInitialized())
-        hook_to_notification_point(HT_UI, load_python, nullptr);
-    else
-        initpy();
+#if PYTHON_SUPPORT
+    void initpy();
+    initpy();
+#endif
 
     // 2. init theme path handler
     set_path_handler(IdaPluginPath);

@@ -1,19 +1,8 @@
 #include <utility>
 #include <widgets/palette.h>
+#include <search_services/basic_service.h>
 
-static QMainWindow* getMainWindow() {
-    static QMainWindow* mainWindow;
-    for (QWidget* widget : qApp->topLevelWidgets()) {
-        if (qobject_cast<QMainWindow*>(widget)) {
-            mainWindow = qobject_cast<QMainWindow*>(widget);
-            break;
-        }
-    }
-
-    return mainWindow;
-}
-
-QPaletteFrame::QPaletteFrame(QWidget* parent, const QString& name, const QVector<Action>& items, const QString& closeKey)
+PaletteFrame::PaletteFrame(QWidget* parent, const QString& name, const QString& closeKey, SearchService *search_service)
     : QFrame(parent), name_(name), shortcut_(nullptr) {
     QVBoxLayout* layout;
 
@@ -21,7 +10,7 @@ QPaletteFrame::QPaletteFrame(QWidget* parent, const QString& name, const QVector
     searchbox_ = new QLineEdit(this);
     searchbox_->setAttribute(Qt::WA_MacShowFocusRect, 0);
 
-    items_ = new Items(this, name_, items, new BasicService(nullptr, name_, items));
+    items_ = new PaletteItems(this, name_, search_service);
     items_->setAttribute(Qt::WA_MacShowFocusRect, 0);
 
     // Add widgets
@@ -62,7 +51,7 @@ QPaletteFrame::QPaletteFrame(QWidget* parent, const QString& name, const QVector
     searchbox_->installEventFilter(this);
     items_->installEventFilter(this);
 
-    connect(this, &QPaletteFrame::itemClicked, [=](Action & action) {
+    connect(this, &PaletteFrame::itemClicked, [=](Action & action) {
         emit items_->model()->search_service()->itemClicked(action.id);
         });
 
@@ -79,7 +68,7 @@ QPaletteFrame::QPaletteFrame(QWidget* parent, const QString& name, const QVector
     registerShortcut({ "Esc" }, [=]() {window()->close(); });
 }
 
-void QPaletteFrame::arrowPressed(int delta) {
+void PaletteFrame::arrowPressed(int delta) {
     auto new_row = items_->currentIndex().row() + delta;
     auto row_count = items_->model()->rowCount();
 
@@ -91,7 +80,7 @@ void QPaletteFrame::arrowPressed(int delta) {
     items_->setCurrentIndex(items_->model()->index(new_row, 0));
 }
 
-bool QPaletteFrame::eventFilter(QObject * obj, QEvent * event) {
+bool PaletteFrame::eventFilter(QObject * obj, QEvent * event) {
     switch (event->type()) {
     case QEvent::KeyPress: {
         auto* keyEvent = dynamic_cast<QKeyEvent*>(event);
@@ -143,11 +132,11 @@ bool QPaletteFrame::eventFilter(QObject * obj, QEvent * event) {
     }
 }
 
-void QPaletteFrame::showEvent(QShowEvent * event) {
+void PaletteFrame::showEvent(QShowEvent * event) {
     searchbox_->setFocus();
 }
 
-void QPaletteFrame::setPlaceholderText(const QString & placeholder) {
+void PaletteFrame::setPlaceholderText(const QString & placeholder) {
     searchbox_->setPlaceholderText(placeholder);
 }
 
@@ -191,10 +180,10 @@ CommandPalette::CommandPalette(QWidget * parent)
 }
 
 void CommandPalette::show(const QString & name, const QString & placeholder, const QVector<Action> & actions, const QString & closeKey, ActionHandler func) {
-    auto inner = new QPaletteFrame(this, name, actions, closeKey);
+    auto inner = new PaletteFrame(this, name, closeKey, new BasicService(nullptr, name, actions));
 
     setCentralWidget(inner);
-    connect(inner, &QPaletteFrame::itemClicked, std::move(func));
+    connect(inner, &PaletteFrame::itemClicked, std::move(func));
 
     inner->setPlaceholderText(placeholder);
 

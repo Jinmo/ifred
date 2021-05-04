@@ -34,7 +34,7 @@ show_palette(Palette('palette name here', 'placeholder here...', entries))
 Currently cleaning up C++ API. See `standalone/` folder.
 
 ```cpp
-#include <widgets/palette_manager.h>
+#include <palette/api.h>
 #define COUNT 100
 
 QVector<Action> testItems() {

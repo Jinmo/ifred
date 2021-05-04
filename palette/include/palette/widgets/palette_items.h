@@ -4,21 +4,21 @@
 #include <QtGui>
 #include <QtWidgets>
 
-#include <widgets/item.h>
-#include <widgets/palette_filter.h>
-#include <action.h>
+#include <palette/widgets/item.h>
+#include <palette/filter.h>
+#include <palette/action.h>
 
-class Items : public QListView {
+class PaletteItems : public QListView {
     PaletteFilter* model_;
     ItemDelegate* item_delegate_;
 
 public:
     PaletteFilter* model() { return model_; }
 
-    explicit Items(QWidget* parent, const QString& palette_name, const QVector<Action>& items, SearchService *search_service);
+    explicit PaletteItems(QWidget* parent, const QString& palette_name, SearchService *search_service);
     using QAbstractItemView::keyPressEvent;
 
-    ~Items() {
+    ~PaletteItems() {
         delete model_;
     }
 };

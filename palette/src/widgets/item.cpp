@@ -1,5 +1,5 @@
 #include <widgets/item.h>
-#include <widgets/palette_filter.h>
+#include <filter.h>
 
 QHash<QString, QRegularExpression> capturing_regexp_cache;
 

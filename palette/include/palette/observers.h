@@ -3,7 +3,7 @@
 #include <QWidget>
 #include <QFileSystemWatcher>
 
-#include <utils.h>
+#include <palette/utils.h>
 
 class CSSObserver : public QFileSystemWatcher {
     const char* filename_;
