@@ -13,12 +13,12 @@
 
 #pragma warning(pop)
 
+#include <diskio.hpp>
+#include <enum.hpp>
 #include <kernwin.hpp>
 #include <loader.hpp>
-#include <name.hpp>
-#include <struct.hpp>
-#include <diskio.hpp>
-#include <registry.hpp>
 #include <moves.hpp>
+#include <name.hpp>
+#include <registry.hpp>
+#include <struct.hpp>
 #include <typeinf.hpp>
-#include <enum.hpp>

@@ -1,74 +1,71 @@
-#include <utils.h>
 #include <api.h>
 #include <time.h>
+#include <utils.h>
 
 QString loadFileFromBundle(const char* filename, QFile& file, bool& updated) {
-    static bool resource_initialized;
+  static bool resource_initialized;
 
-    if (!resource_initialized) {
-        Q_INIT_RESOURCE(theme_bundle);
-        resource_initialized = true;
+  if (!resource_initialized) {
+    Q_INIT_RESOURCE(theme_bundle);
+    resource_initialized = true;
 
-        QDir::addSearchPath("theme", pluginPath("theme/"));
+    QDir::addSearchPath("theme", pluginPath("theme/"));
+  }
+
+  QFile resFile(QStringLiteral(":/bundle/") + filename);
+
+  updated = false;
+
+  if (resFile.exists()) {
+    if (!resFile.open(QIODevice::ReadOnly)) return QString();
+    auto bytes = resFile.readAll();
+    auto content = QString::fromUtf8(bytes);
+
+    auto dir = QDir(file.fileName());
+    dir.mkpath("..");
+
+    if (file.open(QIODevice::WriteOnly)) {
+      file.write(bytes);
+      file.close();
     }
 
-    QFile resFile(QStringLiteral(":/bundle/") + filename);
-
-    updated = false;
-
-    if (resFile.exists()) {
-        if (!resFile.open(QIODevice::ReadOnly)) return QString();
-        auto bytes = resFile.readAll();
-        auto content = QString::fromUtf8(bytes);
-
-        auto dir = QDir(file.fileName());
-        dir.mkpath("..");
-
-        if (file.open(QIODevice::WriteOnly)) {
-            file.write(bytes);
-            file.close();
-        }
-
-        updated = true;
-
-        return content;
-    }
-    else
-        return QString();
-}
-
-QString loadFile(const char* filename, bool force_update, bool& updated) {
-    auto absolutePath = pluginPath(filename);
-    QFile file(absolutePath);
-
-    updated = false;
-
-    if (!file.exists()) {
-        // Check if it exists in bundle resource
-        return loadFileFromBundle(filename, file, updated);
-    }
-
-    if (!file.open(QIODevice::ReadOnly))
-        return QString();
-
-    auto content = QString::fromUtf8(file.readAll());
     updated = true;
 
     return content;
+  } else
+    return QString();
+}
+
+QString loadFile(const char* filename, bool force_update, bool& updated) {
+  auto absolutePath = pluginPath(filename);
+  QFile file(absolutePath);
+
+  updated = false;
+
+  if (!file.exists()) {
+    // Check if it exists in bundle resource
+    return loadFileFromBundle(filename, file, updated);
+  }
+
+  if (!file.open(QIODevice::ReadOnly)) return QString();
+
+  auto content = QString::fromUtf8(file.readAll());
+  updated = true;
+
+  return content;
 }
 
 QHash<QString, QJsonDocument> cached_json;
 
 const QJsonObject json(const char* filename, bool force_update) {
-    bool updated;
-    const QString& content_str = loadFile(filename, force_update, updated);
+  bool updated;
+  const QString& content_str = loadFile(filename, force_update, updated);
 
-    if (!updated)
-        return cached_json[filename].object();
+  if (!updated) return cached_json[filename].object();
 
-    const QByteArray& content = content_str.toUtf8();
-    QJsonDocument json(QJsonDocument::fromJson(content));
-    cached_json[filename] = json;
+  const QByteArray& content = content_str.toUtf8();
+  QJsonDocument json(QJsonDocument::fromJson(content));
+  cached_json[filename] = json;
 
-    return json.object();
+  return json.object();
 }

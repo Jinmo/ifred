@@ -8,7 +8,9 @@
 
 Currently tested on Windows. Install Qt 5.6.3 and IDA SDK, and follow steps in azure-pipelines.yml.
 
-You can download [prebuilt plugins](https://jinmo123.visualstudio.com/idapkg/_build/latest?definitionId=1&branchName=master) from azure pipelines.
+You can
+download [prebuilt plugins](https://jinmo123.visualstudio.com/idapkg/_build/latest?definitionId=1&branchName=master)
+from azure pipelines.
 
 ## Python API
 
@@ -76,7 +78,8 @@ int main() {
 
 ## Changing theme
 
-You can copy css, json files from `palette/res/theme/<name>/*` to `%APPDATA%/Hex-rays/IDA Pro/plugins/palette/theme/`, like the existing css, json files.
+You can copy css, json files from `palette/res/theme/<name>/*` to `%APPDATA%/Hex-rays/IDA Pro/plugins/palette/theme/`,
+like the existing css, json files.
 
 ayu white:
 

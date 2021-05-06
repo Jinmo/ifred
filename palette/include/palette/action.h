@@ -1,11 +1,11 @@
 #ifndef ACTION_H
 #define ACTION_H
-#include <QString>
 #include <QObject>
+#include <QString>
 
 struct Action {
-    QString id, name, shortcut;
-    QString description;
+  QString id, name, shortcut;
+  QString description;
 };
 
 Q_DECLARE_METATYPE(Action);

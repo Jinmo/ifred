@@ -1,45 +1,44 @@
 #pragma once
 
-#include <QWidget>
-#include <QFileSystemWatcher>
-
 #include <palette/utils.h>
 
+#include <QFileSystemWatcher>
+#include <QWidget>
+
 class CSSObserver : public QFileSystemWatcher {
-    const char* filename_;
-public:
-    CSSObserver(QWidget* parent, const char* filename) : QFileSystemWatcher(parent), filename_(filename) {
-        addPath(pluginPath(filename));
-        connect(this, &QFileSystemWatcher::fileChanged, this, &CSSObserver::updated);
+  const char* filename_;
 
-        updated();
-    }
+ public:
+  CSSObserver(QWidget* parent, const char* filename)
+      : QFileSystemWatcher(parent), filename_(filename) {
+    addPath(pluginPath(filename));
+    connect(this, &QFileSystemWatcher::fileChanged, this,
+            &CSSObserver::updated);
 
-    void updated() {
-        parentWidget()->setStyleSheet(loadFile(filename_));
-    }
+    updated();
+  }
 
-    QWidget* parentWidget() {
-        return static_cast<QWidget*>(parent());
-    }
+  void updated() { parentWidget()->setStyleSheet(loadFile(filename_)); }
+
+  QWidget* parentWidget() { return static_cast<QWidget*>(parent()); }
 };
 
 class JSONObserver : public QFileSystemWatcher {
-    const char* filename_;
-protected:
-    JSONObserver(QObject* parent, const char* filename = "settings.json")
-        : QFileSystemWatcher(parent), filename_(filename) {
-        addPath(pluginPath(filename));
-    }
+  const char* filename_;
 
-    void updated() {
-        onUpdated(json(filename_, true));
-    }
+ protected:
+  JSONObserver(QObject* parent, const char* filename = "settings.json")
+      : QFileSystemWatcher(parent), filename_(filename) {
+    addPath(pluginPath(filename));
+  }
 
-    void activate() {
-        connect(this, &QFileSystemWatcher::fileChanged, this, &JSONObserver::updated);
-        updated();
-    }
+  void updated() { onUpdated(json(filename_, true)); }
 
-    virtual void onUpdated(const QJsonObject& config) = 0;
+  void activate() {
+    connect(this, &QFileSystemWatcher::fileChanged, this,
+            &JSONObserver::updated);
+    updated();
+  }
+
+  virtual void onUpdated(const QJsonObject& config) = 0;
 };

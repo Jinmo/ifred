@@ -1,15 +1,18 @@
 #include "plugin.h"
 
-#include <QtGui>
-#include <QtWidgets>
-
 #include <palette/api.h>
 #include <palette/utils.h>
 
+#include <QtGui>
+#include <QtWidgets>
+
 // NO_OBSOLETE_FUNCS might be overkill, so let's just define this
 #if IDA_SDK_VERSION >= 750
-#define ACTION_DESC_LITERAL(name, label, handler, shortcut, tooltip, icon)\
-  { sizeof(action_desc_t), name, label, handler, &PLUGIN, shortcut, tooltip, icon, ADF_OT_PLUGIN }
+#define ACTION_DESC_LITERAL(name, label, handler, shortcut, tooltip, icon)   \
+  {                                                                          \
+    sizeof(action_desc_t), name, label, handler, &PLUGIN, shortcut, tooltip, \
+        icon, ADF_OT_PLUGIN                                                  \
+  }
 #endif
 
 #ifndef __APPLE__
@@ -22,372 +25,347 @@
 
 #ifdef __MAC__
 #include <dlfcn.h>
-bool mac_dlopen_workaround()
-{
-    Dl_info res;
-    if (dladdr(&PLUGIN, &res) == 0)
-    {
-        return false;
-    }
+bool mac_dlopen_workaround() {
+  Dl_info res;
+  if (dladdr(&PLUGIN, &res) == 0) {
+    return false;
+  }
 
-    auto res_open = dlopen(res.dli_fname, RTLD_NODELETE);
-    if (!res_open)
-    {
-        return false;
-    }
+  auto res_open = dlopen(res.dli_fname, RTLD_NODELETE);
+  if (!res_open) {
+    return false;
+  }
 
-    return true;
+  return true;
 }
 #endif
 
-QVector<QRegularExpression> getBlacklist()
-{
-    auto blacklist = json("config.json")["blacklist"].toArray();
-    QVector<QRegularExpression> blacklist_converted;
+QVector<QRegularExpression> getBlacklist() {
+  auto blacklist = json("config.json")["blacklist"].toArray();
+  QVector<QRegularExpression> blacklist_converted;
 
-    for (auto&& i : blacklist)
-    {
-        if (i.toString().size())
-            blacklist_converted.push_back(QRegularExpression(i.toString()));
-    }
-    return blacklist_converted;
+  for (auto&& i : blacklist) {
+    if (i.toString().size())
+      blacklist_converted.push_back(QRegularExpression(i.toString()));
+  }
+  return blacklist_converted;
 }
 
-void addActions(QVector<Action>& result, const qstrvec_t& actions)
-{
-    qstring tooltip, shortcut;
-    action_state_t state;
+void addActions(QVector<Action>& result, const qstrvec_t& actions) {
+  qstring tooltip, shortcut;
+  action_state_t state;
 
-    auto blacklist = getBlacklist();
+  auto blacklist = getBlacklist();
 
-    QRegularExpression remove_tilde("~(.*?)~");
+  QRegularExpression remove_tilde("~(.*?)~");
 
-    for (auto& item : actions)
-    {
-        // Check blacklist
-        bool skip = false;
-        for (auto& pattern : blacklist)
-            if (pattern.match(item.c_str()).hasMatch())
-            {
-                skip = true;
-                break;
-            }
+  for (auto& item : actions) {
+    // Check blacklist
+    bool skip = false;
+    for (auto& pattern : blacklist)
+      if (pattern.match(item.c_str()).hasMatch()) {
+        skip = true;
+        break;
+      }
 
-        if (skip)
-            continue;
+    if (skip) continue;
 
-        // Enabled actions only
-        if (!get_action_state(item.c_str(), &state))
-            continue;
+    // Enabled actions only
+    if (!get_action_state(item.c_str(), &state)) continue;
 
-        if (state > AST_ENABLE)
-            continue;
+    if (state > AST_ENABLE) continue;
 
-        // Get metadata for the action
-        QString tooltip_qstr;
+    // Get metadata for the action
+    QString tooltip_qstr;
 
-        get_action_label(&tooltip, item.c_str());
-        get_action_shortcut(&shortcut, item.c_str());
+    get_action_label(&tooltip, item.c_str());
+    get_action_shortcut(&shortcut, item.c_str());
 
-        tooltip_qstr = QString::fromUtf8(tooltip.c_str());
-        tooltip_qstr = tooltip_qstr.replace(remove_tilde, "\\1");
+    tooltip_qstr = QString::fromUtf8(tooltip.c_str());
+    tooltip_qstr = tooltip_qstr.replace(remove_tilde, "\\1");
 
-        result.push_back(Action{ QString(item.c_str()), tooltip_qstr, QString(shortcut.c_str()) });
-    }
+    result.push_back(
+        Action{QString(item.c_str()), tooltip_qstr, QString(shortcut.c_str())});
+  }
 }
 
-void addNames(QVector<Action>& result, size_t names)
-{
-    for (size_t i = 0; i < names; i++)
-    {
-        ea_t ea = get_nlist_ea(i);
-        qstring demangled_name;
-        get_demangled_name(&demangled_name, ea, 0, 0, GN_SHORT);
+void addNames(QVector<Action>& result, size_t names) {
+  for (size_t i = 0; i < names; i++) {
+    ea_t ea = get_nlist_ea(i);
+    qstring demangled_name;
+    get_demangled_name(&demangled_name, ea, 0, 0, GN_SHORT);
 
-        result.push_back(Action{ QString::number(get_nlist_ea(i), 16),
-                                demangled_name.c_str(),
-                                QString() });
-    }
+    result.push_back(Action{QString::number(get_nlist_ea(i), 16),
+                            demangled_name.c_str(), QString()});
+  }
 }
 
 // Get command palette items from IDA: 1. actions, 2. names
-const QVector<Action> getActions()
-{
-    QVector<Action> result;
+const QVector<Action> getActions() {
+  QVector<Action> result;
 
-    qstrvec_t actions;
-    get_registered_actions(&actions);
+  qstrvec_t actions;
+  get_registered_actions(&actions);
 
-    // 0. Reserve vector to avoid multiple allocations
-    result.reserve(static_cast<int>(actions.size()));
+  // 0. Reserve vector to avoid multiple allocations
+  result.reserve(static_cast<int>(actions.size()));
 
-    // 1. Add actions from IDA except blacklisted identifiers
-    addActions(result, actions);
+  // 1. Add actions from IDA except blacklisted identifiers
+  addActions(result, actions);
 
-    std::sort(result.begin(), result.begin() + result.size(), [](Action& lhs, Action& rhs) {
-        return lhs.name.compare(rhs.name) < 0;
-        });
+  std::sort(
+      result.begin(), result.begin() + result.size(),
+      [](Action& lhs, Action& rhs) { return lhs.name.compare(rhs.name) < 0; });
 
-    return result;
+  return result;
 }
 
 qstring get_nice_struc_name(tid_t struct_) {
-    auto name = get_struc_name(struct_);
-    tinfo_t tif;
-    tif.get_named_type(get_idati(), name.c_str());
-    tif.print(&name);
-    return name;
+  auto name = get_struc_name(struct_);
+  tinfo_t tif;
+  tif.get_named_type(get_idati(), name.c_str());
+  tif.print(&name);
+  return name;
 }
 
-void addStructs(QVector<Action>& result)
-{
-    int idx = get_first_struc_idx();
-    while (idx != BADADDR)
-    {
-        tid_t sid = get_struc_by_idx(idx);
-        result.push_back(Action{ "struct:" + QString::number(sid),
-			QString::fromStdString(get_nice_struc_name(sid).c_str()), QString() });
+void addStructs(QVector<Action>& result) {
+  int idx = get_first_struc_idx();
+  while (idx != BADADDR) {
+    tid_t sid = get_struc_by_idx(idx);
+    result.push_back(Action{
+        "struct:" + QString::number(sid),
+        QString::fromStdString(get_nice_struc_name(sid).c_str()), QString()});
 
-        idx = get_next_struc_idx(idx);
-    }
+    idx = get_next_struc_idx(idx);
+  }
 }
 
 void addEnums(QVector<Action>& result) {
-    size_t cnt = get_enum_qty();
-    for (size_t i = 0; i < cnt; i++) {
-        enum_t n = getn_enum(i);
-        result.push_back(Action{ "struct:" + QString::number(n),
-            QString::fromStdString(get_nice_struc_name(n).c_str()), QString() });
-    }
+  size_t cnt = get_enum_qty();
+  for (size_t i = 0; i < cnt; i++) {
+    enum_t n = getn_enum(i);
+    result.push_back(Action{
+        "struct:" + QString::number(n),
+        QString::fromStdString(get_nice_struc_name(n).c_str()), QString()});
+  }
 }
 
 class NamesManager {
-    QHash<ea_t, int> address_to_name;
-    QHash<tid_t, int> address_to_struct;
-    QVector<Action> result;
-public:
-    NamesManager() {
-        hook_to_notification_point(HT_IDB, idb_hooks, this);
-        hook_to_notification_point(HT_IDP, idp_hooks, this);
+  QHash<ea_t, int> address_to_name;
+  QHash<tid_t, int> address_to_struct;
+  QVector<Action> result;
+
+ public:
+  NamesManager() {
+    hook_to_notification_point(HT_IDB, idb_hooks, this);
+    hook_to_notification_point(HT_IDP, idp_hooks, this);
+  }
+
+  void init(QVector<Action>* names) {
+    address_to_name.clear();
+    address_to_struct.clear();
+
+    int index = 0;
+    for (auto& action : *names) {
+      auto sep = action.id.indexOf(':');
+      if (action.id.startsWith("struct:")) {
+        address_to_struct.insert(action.id.midRef(sep + 1).toULongLong(nullptr),
+                                 index);
+      } else {
+        address_to_name.insert(
+            action.id.midRef(0, sep).toULongLong(nullptr, 16), index);
+      }
+      index++;
+    }
+  }
+
+  void rename(ea_t address, const char* name) {
+    auto it = address_to_name.find(address);
+    qstring demangled_name;
+    get_demangled_name(&demangled_name, address, 0, 0, GN_SHORT);
+
+    if (it == address_to_name.end()) {
+      if (result.empty()) return;  // Not initialized yet
+      result.push_back(Action{QString::number(address, 16),
+                              demangled_name.c_str(), QString()});
+      address_to_name.insert(address, result.size() - 1);
+      return;
     }
 
-    void init(QVector<Action>* names) {
-        address_to_name.clear();
-        address_to_struct.clear();
+    Action& action = result[it.value()];
+    action.name = QString::fromStdString(demangled_name.c_str());
+    action.id = QString::number(address, 16);
+  }
 
-        int index = 0;
-        for (auto& action : *names) {
-            auto sep = action.id.indexOf(':');
-            if (action.id.startsWith("struct:")) {
-                address_to_struct.insert(
-                    action.id.midRef(sep + 1).toULongLong(nullptr), index);
-            }
-            else {
-                address_to_name.insert(
-                    action.id.midRef(0, sep).toULongLong(nullptr, 16), index);
-            }
-            index++;
+  void rebase(segm_move_infos_t& infos) {
+    std::vector<std::pair<ea_t, ea_t>> moves;
+    for (auto&& seg : infos) {
+      for (auto&& key : address_to_name.keys()) {
+        if (key >= seg.from && key < seg.from + seg.size) {
+          moves.push_back({key, key + seg.to - seg.from});
         }
+      }
     }
-
-    void rename(ea_t address, const char* name) {
-        auto it = address_to_name.find(address);
-		qstring demangled_name;
-        get_demangled_name(&demangled_name, address, 0, 0, GN_SHORT);
-
-		if (it == address_to_name.end()) {
-            if (result.empty()) return; // Not initialized yet
-			result.push_back(Action{ QString::number(address, 16),
-									demangled_name.c_str(),
-									QString() });
-			address_to_name.insert(address, result.size() - 1);
-			return;
-		}
-
-        Action &action = result[it.value()];
-        action.name = QString::fromStdString(demangled_name.c_str());
-        action.id = QString::number(address, 16);
+    for (auto&& move : moves) {
+      auto index = address_to_name[move.first];
+      auto& action = result[index];
+      address_to_name.remove(move.first);
+      action.id = QString::number(move.second, 16);
+      address_to_name[move.second] = index;
     }
+  }
 
-    void rebase(segm_move_infos_t& infos) {
-        std::vector<std::pair<ea_t, ea_t>> moves;
-        for (auto&& seg : infos) {
-            for (auto&& key : address_to_name.keys()) {
-                if (key >= seg.from && key < seg.from + seg.size) {
-                    moves.push_back({key, key + seg.to - seg.from});
-                }
-            }
-        }
-        for (auto &&move: moves) {
-            auto index = address_to_name[move.first];
-            auto &action = result[index];
-            address_to_name.remove(move.first);
-            action.id = QString::number(move.second, 16);
-            address_to_name[move.second] = index;
-        }
+  void update_struct(tid_t id, const char* name) {
+    if (result.empty()) return;  // Not initialized yet
+
+    auto it = address_to_struct.find(id);
+    if (it == address_to_struct.end()) {
+      result.push_back(
+          Action{"struct:" + QString::number(id), name, QString()});
+      address_to_struct.insert(id, result.size() - 1);
+    } else {
+      Action& action = result[it.value()];
+      action.name = QString::fromStdString(name);
     }
+  }
 
-    void update_struct(tid_t id, const char* name) {
-        if (result.empty()) return; // Not initialized yet
+  void clear() {
+    result.clear();
+    address_to_name.clear();
+    address_to_struct.clear();
+  }
 
-        auto it = address_to_struct.find(id);
-		if (it == address_to_struct.end()) {
-			result.push_back(Action{ "struct:" + QString::number(id), name, QString() });
-			address_to_struct.insert(id, result.size() - 1);
-        }
-        else {
-            Action& action = result[it.value()];
-            action.name = QString::fromStdString(name);
-        }
+  QVector<Action> get(bool clear = false) {
+    size_t names = get_nlist_size();
+    size_t structs = get_struc_qty();
+
+    if (result.size() != 0 && !clear) return result;
+
+    // 0. Reserve vector to avoid multiple allocations
+    result.reserve(names + structs);
+
+    // 1. Add names from IDA
+    addNames(result, names);
+
+    // 2. Add structs from IDA
+    addStructs(result);
+
+    // 3. Add enums from IDA
+    addEnums(result);
+
+    init(&result);
+
+    return result;
+  }
+
+  static ssize_t idaapi idb_hooks(void* user_data, int notification_code,
+                                  va_list va) {
+    auto manager = reinterpret_cast<NamesManager*>(user_data);
+
+    switch (notification_code) {
+      case idb_event::allsegs_moved: {
+        auto info = va_arg(va, segm_move_infos_t*);
+        manager->rebase(*info);
+        break;
+      }
+      case idb_event::renamed: {
+        auto ea = va_arg(va, ea_t);
+        auto new_name = va_arg(va, const char*);
+        manager->rename(ea, new_name);
+        break;
+      }
+      case idb_event::struc_renamed: {
+        auto struc = va_arg(va, struc_t*);
+        if (struc)
+          manager->update_struct(struc->id,
+                                 get_nice_struc_name(struc->id).c_str());
+        break;
+      }
+      case idb_event::struc_created:
+      case idb_event::enum_created:
+      case idb_event::enum_renamed: {
+        auto tid = va_arg(va, tid_t);
+        manager->update_struct(tid, get_nice_struc_name(tid).c_str());
+      }
     }
+    return 0;
+  }
 
-    void clear() {
-        result.clear();
-        address_to_name.clear();
-        address_to_struct.clear();
+  static ssize_t idaapi idp_hooks(void* user_data, int notification_code,
+                                  va_list va) {
+    auto manager = reinterpret_cast<NamesManager*>(user_data);
+
+    switch (notification_code) {
+      case processor_t::ev_term:
+        manager->clear();
     }
-
-    QVector<Action> get(bool clear = false) {
-        size_t names = get_nlist_size();
-        size_t structs = get_struc_qty();
-
-        if (result.size() != 0 && !clear)
-            return result;
-
-        // 0. Reserve vector to avoid multiple allocations
-        result.reserve(names + structs);
-
-        // 1. Add names from IDA
-        addNames(result, names);
-
-        // 2. Add structs from IDA
-        addStructs(result);
-
-        // 3. Add enums from IDA
-        addEnums(result);
-
-        init(&result);
-
-        return result;
-    }
-
-    static ssize_t idaapi idb_hooks(void* user_data, int notification_code, va_list va) {
-        auto manager = reinterpret_cast<NamesManager*>(user_data);
-
-        switch (notification_code) {
-        case idb_event::allsegs_moved: {
-            auto info = va_arg(va, segm_move_infos_t*);
-            manager->rebase(*info);
-            break;
-        }
-        case idb_event::renamed:
-        {
-            auto ea = va_arg(va, ea_t);
-            auto new_name = va_arg(va, const char*);
-            manager->rename(ea, new_name);
-            break;
-        }
-        case idb_event::struc_renamed:
-        {
-            auto struc = va_arg(va, struc_t*);
-            if (struc)
-                manager->update_struct(
-                    struc->id, get_nice_struc_name(struc->id).c_str());
-            break;
-        }
-        case idb_event::struc_created:
-        case idb_event::enum_created:
-        case idb_event::enum_renamed:
-        {
-            auto tid = va_arg(va, tid_t);
-            manager->update_struct(tid, get_nice_struc_name(tid).c_str());
-        }
-        }
-        return 0;
-    }
-
-    static ssize_t idaapi idp_hooks(void* user_data, int notification_code, va_list va) {
-        auto manager = reinterpret_cast<NamesManager*>(user_data);
-
-        switch (notification_code) {
-        case processor_t::ev_term:
-            manager->clear();
-        }
-        return 0;
-    }
-
+    return 0;
+  }
 };
 
-const QVector<Action> getNames(bool clear = false)
-{
-    static NamesManager* manager;
+const QVector<Action> getNames(bool clear = false) {
+  static NamesManager* manager;
 
-    if (!manager) {
-        manager = new NamesManager();
-    }
+  if (!manager) {
+    manager = new NamesManager();
+  }
 
-    return manager->get();
+  return manager->get();
 }
 
-void init_rename_hooks() {
-}
+void init_rename_hooks() {}
 
-class command_palette_handler : public action_handler_t
-{
-    int idaapi activate(action_activation_ctx_t* context) override
-    {
-        qstring shortcut;
-        get_action_shortcut(&shortcut, context->action);
-        shortcut.replace("-", "+");
-        show_palette("command palette", "Enter action or option name...", getActions(), shortcut.c_str(), [](Action& action) {
-            process_ui_action(action.id.toStdString().c_str());
-            return true;
-            });
-        return 1;
-    }
+class command_palette_handler : public action_handler_t {
+  int idaapi activate(action_activation_ctx_t* context) override {
+    qstring shortcut;
+    get_action_shortcut(&shortcut, context->action);
+    shortcut.replace("-", "+");
+    show_palette("command palette", "Enter action or option name...",
+                 getActions(), shortcut.c_str(), [](Action& action) {
+                   process_ui_action(action.id.toStdString().c_str());
+                   return true;
+                 });
+    return 1;
+  }
 
-    action_state_t idaapi update(action_update_ctx_t*) override
-    {
-        return AST_ENABLE_ALWAYS;
-    }
+  action_state_t idaapi update(action_update_ctx_t*) override {
+    return AST_ENABLE_ALWAYS;
+  }
 };
 
-class name_palette_handler : public action_handler_t
-{
-    int idaapi activate(action_activation_ctx_t* context) override
-    {
-        qstring shortcut;
-        get_action_shortcut(&shortcut, context->action);
-        shortcut.replace("-", "+");
-        show_palette("name palette" + QString(get_path(PATH_TYPE_IDB)), "Enter symbol name...", getNames(), shortcut.c_str(), [](Action& action) {
-            auto&& id = action.id;
+class name_palette_handler : public action_handler_t {
+  int idaapi activate(action_activation_ctx_t* context) override {
+    qstring shortcut;
+    get_action_shortcut(&shortcut, context->action);
+    shortcut.replace("-", "+");
+    show_palette("name palette" + QString(get_path(PATH_TYPE_IDB)),
+                 "Enter symbol name...", getNames(), shortcut.c_str(),
+                 [](Action& action) {
+                   auto&& id = action.id;
 
-            if (id.startsWith("struct:"))
-            {
-                auto tid = id.midRef(7).toULongLong();
-                if (get_enum_idx(tid) == -1)
-                    open_structs_window(tid);
-                else
-                    open_enums_window(tid);
-            }
-            else
-            {
-                ea_t address = static_cast<ea_t>(id.toULongLong(nullptr, 16));
-                jumpto(address);
-                qstring name;
-                get_ea_name(&name, address, 0, 0);
-                reg_update_strlist("History\\$", name.c_str(), 32);
-            }
+                   if (id.startsWith("struct:")) {
+                     auto tid = id.midRef(7).toULongLong();
+                     if (get_enum_idx(tid) == -1)
+                       open_structs_window(tid);
+                     else
+                       open_enums_window(tid);
+                   } else {
+                     ea_t address =
+                         static_cast<ea_t>(id.toULongLong(nullptr, 16));
+                     jumpto(address);
+                     qstring name;
+                     get_ea_name(&name, address, 0, 0);
+                     reg_update_strlist("History\\$", name.c_str(), 32);
+                   }
 
-            return true;
-            });
-        return 1;
-    }
+                   return true;
+                 });
+    return 1;
+  }
 
-    action_state_t idaapi update(action_update_ctx_t*) override
-    {
-        return AST_ENABLE_ALWAYS;
-    }
+  action_state_t idaapi update(action_update_ctx_t*) override {
+    return AST_ENABLE_ALWAYS;
+  }
 };
 
 extern plugin_t PLUGIN;
@@ -396,26 +374,15 @@ static command_palette_handler command_palette_handler_;
 static name_palette_handler name_palette_handler_;
 
 static action_desc_t command_palette_action = ACTION_DESC_LITERAL(
-    "ifred:command_palette",
-    "ifred command palette",
-    &command_palette_handler_,
-    CMD_PALETTE_SHORTCUT,
-    "command palette",
-    -1);
+    "ifred:command_palette", "ifred command palette", &command_palette_handler_,
+    CMD_PALETTE_SHORTCUT, "command palette", -1);
 
 static action_desc_t name_palette_action = ACTION_DESC_LITERAL(
-    "ifred:name_palette",
-    "ifred name palette",
-    &name_palette_handler_,
-    NAME_PALETTE_SHORTCUT,
-    "name palette",
-    -1);
+    "ifred:name_palette", "ifred name palette", &name_palette_handler_,
+    NAME_PALETTE_SHORTCUT, "name palette", -1);
 
 //--------------------------------------------------------------------------
-bool idaapi run(size_t)
-{
-    return true;
-}
+bool idaapi run(size_t) { return true; }
 
 extern char comment[], help[], wanted_name[];
 
@@ -430,114 +397,105 @@ char help[] = "IDA palette";
 
 char wanted_name[] = "ifred";
 
-const QString IdaPluginPath(const char* filename)
-{
-    static QString g_plugin_path;
-    if (g_plugin_path.size())
-    {
-        QString r = g_plugin_path + filename;
-        return r;
-    }
+const QString IdaPluginPath(const char* filename) {
+  static QString g_plugin_path;
+  if (g_plugin_path.size()) {
+    QString r = g_plugin_path + filename;
+    return r;
+  }
 
-    g_plugin_path = (QString(get_user_idadir()).replace("\\", "/") + QStringLiteral("/plugins/palette/"));
-    QDir plugin_dir(g_plugin_path);
-    plugin_dir.mkpath(".");
+  g_plugin_path = (QString(get_user_idadir()).replace("\\", "/") +
+                   QStringLiteral("/plugins/palette/"));
+  QDir plugin_dir(g_plugin_path);
+  plugin_dir.mkpath(".");
 
-    return g_plugin_path + filename;
+  return g_plugin_path + filename;
 }
 
 #if IDA_SDK_VERSION >= 750
-#define INIT_RETURN_TYPE plugmod_t *
+#define INIT_RETURN_TYPE plugmod_t*
 #else
 #define INIT_RETURN_TYPE int
 #endif
 
 //--------------------------------------------------------------------------
-INIT_RETURN_TYPE idaapi init()
-{
-    if (!is_idaq())
-        // the plugin works only with idaq
-        return PLUGIN_SKIP;
+INIT_RETURN_TYPE idaapi init() {
+  if (!is_idaq())
+    // the plugin works only with idaq
+    return PLUGIN_SKIP;
 
-    msg("loading palettes...\n");
+  msg("loading palettes...\n");
 
-    // 1. init IDAPython
+  // 1. init IDAPython
 #if PYTHON_SUPPORT
-    void initpy();
-    initpy();
+  void initpy();
+  initpy();
 #endif
 
-    // 2. init theme path handler
-    set_path_handler(IdaPluginPath);
+  // 2. init theme path handler
+  set_path_handler(IdaPluginPath);
 
-    if (!register_action(command_palette_action))
-    {
-        msg("command palette action loading error\n");
-        return PLUGIN_SKIP;
-    };
+  if (!register_action(command_palette_action)) {
+    msg("command palette action loading error\n");
+    return PLUGIN_SKIP;
+  };
 
-    if (!register_action(name_palette_action))
-    {
-        msg("name palette action loading error\n");
-        return PLUGIN_SKIP;
-    };
+  if (!register_action(name_palette_action)) {
+    msg("name palette action loading error\n");
+    return PLUGIN_SKIP;
+  };
 
-    init_rename_hooks();
+  init_rename_hooks();
 
 #ifdef __MAC__
-    if (!mac_dlopen_workaround())
-    {
-        msg("ifred mac dlopen workaround error\n");
-        return PLUGIN_SKIP;
-}
+  if (!mac_dlopen_workaround()) {
+    msg("ifred mac dlopen workaround error\n");
+    return PLUGIN_SKIP;
+  }
 #endif
 
 #ifdef _WIN32
-    HMODULE hModule;
-    if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCSTR)& init, &hModule))
-    {
-        msg("ifred windows loadlibrary workaround error");
-        return PLUGIN_SKIP;
-    }
+  HMODULE hModule;
+  if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCSTR)&init,
+                         &hModule)) {
+    msg("ifred windows loadlibrary workaround error");
+    return PLUGIN_SKIP;
+  }
 #endif
 
-    qstring shortcut, shortcut2;
-    get_action_shortcut(&shortcut, "CommandPalette");
-    get_action_shortcut(&shortcut2, command_palette_action.name);
+  qstring shortcut, shortcut2;
+  get_action_shortcut(&shortcut, "CommandPalette");
+  get_action_shortcut(&shortcut2, command_palette_action.name);
 
-    if (shortcut == "Ctrl-Shift-P" && shortcut == shortcut2)
-        update_action_shortcut("CommandPalette", "");
+  if (shortcut == "Ctrl-Shift-P" && shortcut == shortcut2)
+    update_action_shortcut("CommandPalette", "");
 
-    return PLUGIN_KEEP;
+  return PLUGIN_KEEP;
 }
 
 //--------------------------------------------------------------------------
-void idaapi term()
-{
-    cleanup_palettes();
-}
+void idaapi term() { cleanup_palettes(); }
 
 //--------------------------------------------------------------------------
 //
 //      PLUGIN DESCRIPTION BLOCK
 //
 //--------------------------------------------------------------------------
-plugin_t PLUGIN =
-{
+plugin_t PLUGIN = {
     IDP_INTERFACE_VERSION,
-    PLUGIN_FIX | PLUGIN_HIDE, // plugin flags
-    init,                     // initialize
+    PLUGIN_FIX | PLUGIN_HIDE,  // plugin flags
+    init,                      // initialize
 
-    term, // terminate. this pointer may be NULL.
+    term,  // terminate. this pointer may be NULL.
 
-    run, // invoke plugin
+    run,  // invoke plugin
 
-    comment, // long comment about the plugin
+    comment,  // long comment about the plugin
     // it could appear in the status line
     // or as a hint
 
-    help, // multiline help about the plugin
+    help,  // multiline help about the plugin
 
-    wanted_name, // the preferred short name of the plugin
-    ""           // the preferred hotkey to run the plugin
+    wanted_name,  // the preferred short name of the plugin
+    ""            // the preferred hotkey to run the plugin
 };
