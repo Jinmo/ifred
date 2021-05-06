@@ -72,7 +72,7 @@ jobs:
       cmake .. "-DCMAKE_PREFIX_PATH=$(Agent.TempDirectory)\\qt563" -DIDA_BINARY_64=True -DIDA_EA_64=True "-DIDA_SDK=$(Agent.TempDirectory)\\idasdk70" -G Ninja -DCMAKE_CXX_COMPILER:FILEPATH=$cl -DCMAKE_C_COMPILER:FILEPATH=$cl -DCMAKE_BUILD_TYPE=RelWithDebInfo
       ninja
 
-      copy palette\\ida_palette64.dll $(Build.ArtifactStagingDirectory)\\py$(PYTHON_VERSION)
+      copy palette\\src\\ida\\ida_palette64.dll $(Build.ArtifactStagingDirectory)\\py$(PYTHON_VERSION)
 
       cd ..
       mkdir build32-py$(PYTHON_VERSION)
@@ -81,7 +81,7 @@ jobs:
       cmake .. "-DCMAKE_PREFIX_PATH=$(Agent.TempDirectory)\\qt563" -DIDA_BINARY_64=True -DIDA_EA_64=False "-DIDA_SDK=$(Agent.TempDirectory)\\idasdk70" -G Ninja -DCMAKE_CXX_COMPILER:FILEPATH=$cl -DCMAKE_C_COMPILER:FILEPATH=$cl -DCMAKE_BUILD_TYPE=RelWithDebInfo
       ninja
 
-      copy palette\\ida_palette.dll $(Build.ArtifactStagingDirectory)\\py$(PYTHON_VERSION)
+      copy palette\\src\\ida\\ida_palette.dll $(Build.ArtifactStagingDirectory)\\py$(PYTHON_VERSION)
     displayName: Build
   
   - task: PublishBuildArtifacts@1
@@ -122,13 +122,13 @@ jobs:
       cd build64-py2
       cmake $(Build.SourcesDirectory) -DCMAKE_PREFIX_PATH=$PWD/../qt560/clang_64 -DIDA_SDK=$PWD/../idasdk70 -DIDA_BINARY_64=True -DIDA_EA_64=True -GNinja -DPYBIND11_PYTHON_VERSION=2.7 -DIDA_INSTALL_DIR=$PWD/../idalib-7.0/MacOS -DCMAKE_BUILD_TYPE=RelWithDebInfo
       ninja
-      cp palette/ida_palette64.dylib $(Build.ArtifactStagingDirectory)/py2
+      cp palette/src/ida/ida_palette64.dylib $(Build.ArtifactStagingDirectory)/py2
 
       mkdir ../build32-py2
       cd ../build32-py2
       cmake $(Build.SourcesDirectory) -DCMAKE_PREFIX_PATH=$PWD/../qt560/clang_64 -DIDA_SDK=$PWD/../idasdk70 -DIDA_BINARY_64=True -DIDA_EA_64=False -GNinja -DPYBIND11_PYTHON_VERSION=2.7 -DIDA_INSTALL_DIR=$PWD/../idalib-7.0/MacOS -DCMAKE_BUILD_TYPE=RelWithDebInfo
       ninja
-      cp palette/ida_palette.dylib $(Build.ArtifactStagingDirectory)/py2
+      cp palette/src/ida/ida_palette.dylib $(Build.ArtifactStagingDirectory)/py2
 
       mkdir $(Build.ArtifactStagingDirectory)/py3
 
@@ -136,13 +136,13 @@ jobs:
       cd ../build64-py3
       cmake $(Build.SourcesDirectory) -DCMAKE_PREFIX_PATH=$PWD/../qt560/clang_64 -DIDA_SDK=$PWD/../idasdk70 -DIDA_BINARY_64=True -DIDA_EA_64=True -GNinja -DPYBIND11_PYTHON_VERSION=3.7 -DIDA_INSTALL_DIR=$PWD/../idalib-7.0/MacOS -DCMAKE_BUILD_TYPE=RelWithDebInfo
       ninja
-      cp palette/ida_palette64.dylib $(Build.ArtifactStagingDirectory)/py3
+      cp palette/src/ida/ida_palette64.dylib $(Build.ArtifactStagingDirectory)/py3
 
       mkdir ../build32-py3
       cd ../build32-py3
       cmake $(Build.SourcesDirectory) -DCMAKE_PREFIX_PATH=$PWD/../qt560/clang_64 -DIDA_SDK=$PWD/../idasdk70 -DIDA_BINARY_64=True -DIDA_EA_64=False -GNinja -DPYBIND11_PYTHON_VERSION=3.7 -DIDA_INSTALL_DIR=$PWD/../idalib-7.0/MacOS -DCMAKE_BUILD_TYPE=RelWithDebInfo
       ninja
-      cp palette/ida_palette.dylib $(Build.ArtifactStagingDirectory)/py3
+      cp palette/src/ida/ida_palette.dylib $(Build.ArtifactStagingDirectory)/py3
 
     displayName: 'Build'
 
