@@ -14,6 +14,7 @@ class PaletteFilter : public QAbstractItemModel {
   QVector<Action> shown_items_;
   QString keyword_;
   SearchService* search_service_;
+  QThread search_worker_;
 
  public:
   PaletteFilter(QWidget* parent, const QString& palette_name,
@@ -23,11 +24,9 @@ class PaletteFilter : public QAbstractItemModel {
   void setFilter(const QString& keyword);
   const QString& filter() { return keyword_; }
 
-  SearchService* search_service() { return search_service_; }
+  SearchService* searchService() { return search_service_; }
 
-  void set_search_service(SearchService* new_service) {
-    search_service_ = new_service;
-  }
+  void setSearchService(SearchService* new_service);
 
   // Implementations
   QModelIndex index(int row, int column,
@@ -51,7 +50,6 @@ class SearchService : public QObject {
   Q_OBJECT;
 
  public:
-  using QObject::moveToThread;
   SearchService(QObject* parent) : QObject(parent){};
 
   void search(QString keyword) {
@@ -60,6 +58,7 @@ class SearchService : public QObject {
   }
 
   virtual void cancel() = 0;
+  virtual bool runInSeparateThread() { return false; }
 
  signals:
   // Request

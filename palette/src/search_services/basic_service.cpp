@@ -73,15 +73,12 @@ BasicService::BasicService(QObject* parent, const QString& palette_name,
   recent_actions_ =
       convert<int, QVariant>(storage_.value("recent_actions").toHash());
   recent_indexes_.resize(recent_actions_.size());
+}
 
-  // In my opinion, total character count can be checked either.
-  if (actions.count() >= SAME_THREAD_THRESHOLD) {
-    searcher_ = new QThread(this);
-    searcher_->start();
-    moveToThread(searcher_);
-  } else {
-    searcher_ = nullptr;
-  }
+bool BasicService::runInSeparateThread() {
+  // In my opinion, total character
+  // count can be checked either.
+  return actions_.count() >= SAME_THREAD_THRESHOLD;
 }
 
 void BasicService::search(const QString& keyword) {

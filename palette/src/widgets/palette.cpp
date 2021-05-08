@@ -54,7 +54,7 @@ PaletteFrame::PaletteFrame(QWidget* parent, const QString& name,
   items_->installEventFilter(this);
 
   connect(this, &PaletteFrame::itemClicked, [=](Action& action) {
-    emit items_->model()->search_service()->itemClicked(action.id);
+    emit items_->model()->searchService()->itemClicked(action.id);
   });
 
   items_->model()->setFilter(QString());

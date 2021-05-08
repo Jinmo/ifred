@@ -33,7 +33,7 @@ void show_palette(const QString& name, const QString& placeholder,
     g_current_widget = new CommandPalette(getMainWindow());
     g_current_widget->setAttribute(Qt::WA_DeleteOnClose);
     g_current_widget->show(name, placeholder, actions, closeKey,
-                           std::move(func));
+                           func);
   });
 }
 

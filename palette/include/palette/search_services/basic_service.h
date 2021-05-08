@@ -4,7 +4,6 @@
 #include <palette/filter.h>
 
 class BasicService : public SearchService {
-  QThread* searcher_;
   std::vector<int> indexes_, recent_indexes_;
   const QVector<Action> actions_;  // immutable
   QHash<QString, int> recent_actions_;
@@ -17,6 +16,7 @@ class BasicService : public SearchService {
   BasicService(QObject* parent, const QString& palette_name,
                const QVector<Action>& actions);
   void cancel() override { canceled_ = true; }
+  bool runInSeparateThread() override;
 };
 
 #endif

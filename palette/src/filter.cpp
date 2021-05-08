@@ -30,11 +30,26 @@ int PaletteFilter::rowCount(const QModelIndex &parent) const {
   return shown_items_.count();
 }
 
+void PaletteFilter::setSearchService(SearchService *new_service) {
+  search_service_ = new_service;
+
+  if (search_service_->runInSeparateThread()) {
+    connect(&search_worker_, &QObject::destroyed,
+        search_service_, &QObject::deleteLater);
+    search_service_->setParent(nullptr);
+    search_service_->moveToThread(&search_worker_);
+    search_worker_.start();
+  } else {
+    search_service_->setParent(this);
+  }
+}
 PaletteFilter::PaletteFilter(QWidget *parent, const QString &palette_name,
                              SearchService *search_service)
     : QAbstractItemModel(parent),
       shown_items_(),
-      search_service_(search_service) {
+      search_service_(nullptr),
+      search_worker_(this) {
+  setSearchService(search_service);
   connect(search_service_, &SearchService::doneSearching, this,
           &PaletteFilter::onDoneSearching, Qt::QueuedConnection);
 }
