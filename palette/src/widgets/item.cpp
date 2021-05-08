@@ -107,9 +107,6 @@ void ItemDelegate::paint(QPainter* painter, const QStyleOptionViewItem& option,
 
 QSize ItemDelegate::sizeHint(const QStyleOptionViewItem& option,
                              const QModelIndex& index) const {
-  QStyleOptionViewItemV4 options = option;
-  initStyleOption(&options, index);
-
   Action action = index.data().value<Action>();
 
   auto document = const_cast<ItemDelegate*>(this)->renderAction(

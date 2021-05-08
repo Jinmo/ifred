@@ -37,9 +37,10 @@ const QString TestPluginPath(const char* name) {
 int main(int argc, char** argv) {
   QApplication app(argc, argv);
   set_path_handler(TestPluginPath);
+  app.setQuitOnLastWindowClosed(true);
 
-  auto palette = new CommandPalette(nullptr);
-  palette->show("<test palette>", "Enter item name...", testItems(), "Ctrl+P",
+  CommandPalette palette;
+  palette.show("<test palette>", "Enter item name...", testItems(), "Ctrl+P",
                 [](Action& action) {
                   if (action.id == "std::runtime_error") {
                     throw std::runtime_error("raised!");

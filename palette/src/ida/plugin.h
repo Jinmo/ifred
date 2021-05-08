@@ -1,6 +1,17 @@
 #pragma warning(push)
+
+#if _MSC_VER
+// Visual Studio
 #pragma warning(disable : 4244)
 #pragma warning(disable : 4267)
+#endif
+
+#if __clang__
+// clang
+#pragma clang diagnostic ignored "-Wnullability-completeness"
+#pragma clang diagnostic ignored "-Wvarargs"
+#pragma clang diagnostic ignored "-Wlogical-op-parentheses"
+#endif
 
 // clang header uses the functions
 #define USE_STANDARD_FILE_FUNCTIONS
@@ -11,8 +22,6 @@
 #include <ida.hpp>
 #include <idp.hpp>
 
-#pragma warning(pop)
-
 #include <diskio.hpp>
 #include <enum.hpp>
 #include <kernwin.hpp>
@@ -22,3 +31,5 @@
 #include <registry.hpp>
 #include <struct.hpp>
 #include <typeinf.hpp>
+
+#pragma warning(pop)

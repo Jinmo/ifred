@@ -150,7 +150,7 @@ static void centerWidgets(QWidget* window, QWidget* widget,
     auto hostRect = host->geometry();
     window->move(hostRect.center() - widget->rect().center());
   } else {
-    QRect screenGeometry = QApplication::desktop()->screenGeometry();
+    QRect screenGeometry = QGuiApplication::screens().at(0)->geometry();
     int x = (screenGeometry.width() - widget->width()) / 2;
     int y = (screenGeometry.height() - widget->height()) / 2;
     window->move(x, y);
@@ -159,7 +159,6 @@ static void centerWidgets(QWidget* window, QWidget* widget,
 
 CommandPalette::CommandPalette(QWidget* parent) : QMainWindow(parent) {
   setWindowFlags(Qt::Tool | Qt::FramelessWindowHint);
-  setAttribute(Qt::WA_DeleteOnClose);
   setAttribute(
       Qt::WA_TranslucentBackground);  // enable MainWindow to be transparent
 
