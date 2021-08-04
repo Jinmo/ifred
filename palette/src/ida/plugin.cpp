@@ -239,7 +239,7 @@ class NamesManager {
     size_t names = get_nlist_size();
     size_t structs = get_struc_qty();
 
-    if (result.size() != 0 && !clear) return result;
+    if (!result.empty() && !clear) return result;
 
     // 0. Reserve vector to avoid multiple allocations
     result.reserve(names + structs);
@@ -303,7 +303,7 @@ class NamesManager {
   }
 };
 
-const QVector<Action> getNames(bool clear = false) {
+QVector<Action> getNames(bool clear = false) {
   static NamesManager* manager;
 
   if (!manager) {
@@ -312,8 +312,6 @@ const QVector<Action> getNames(bool clear = false) {
 
   return manager->get();
 }
-
-void init_rename_hooks() {}
 
 class command_palette_handler : public action_handler_t {
   int idaapi activate(action_activation_ctx_t* context) override {
@@ -368,8 +366,6 @@ class name_palette_handler : public action_handler_t {
   }
 };
 
-extern plugin_t PLUGIN;
-
 static command_palette_handler command_palette_handler_;
 static name_palette_handler name_palette_handler_;
 
@@ -397,15 +393,14 @@ char help[] = "IDA palette";
 
 char wanted_name[] = "ifred";
 
-const QString IdaPluginPath(const char* filename) {
+QString IdaPluginPath(const char* filename) {
   static QString g_plugin_path;
   if (g_plugin_path.size()) {
     QString r = g_plugin_path + filename;
     return r;
   }
 
-  g_plugin_path = (QString(get_user_idadir()).replace("\\", "/") +
-                   QStringLiteral("/plugins/palette/"));
+  g_plugin_path = QString(get_user_idadir()) + "/plugins/palette/";
   QDir plugin_dir(g_plugin_path);
   plugin_dir.mkpath(".");
 
@@ -444,8 +439,6 @@ INIT_RETURN_TYPE idaapi init() {
     msg("name palette action loading error\n");
     return PLUGIN_SKIP;
   };
-
-  init_rename_hooks();
 
 #ifdef __MAC__
   if (!mac_dlopen_workaround()) {

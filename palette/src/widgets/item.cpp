@@ -1,52 +1,30 @@
 #include <filter.h>
 #include <widgets/item.h>
 
-QHash<QString, QRegularExpression> capturing_regexp_cache;
-
-QRegularExpression capturingRegexp(const QString& keyword) {
-  QStringList regexp_before_join;
-
-  if (capturing_regexp_cache.contains(keyword)) {
-    return capturing_regexp_cache[keyword];
-  }
-
-  regexp_before_join << ("^");
-
-  for (auto& x : keyword)
-    if (!x.isSpace())
-      regexp_before_join
-          << (QString("(.*?)([\\x") +
-              QString::number(x.unicode(), 16).rightJustified(2, '0') + "])");
-
-  regexp_before_join.push_back("(.*)$");
-
-  QRegularExpression result(regexp_before_join.join(""),
-                            QRegularExpression::CaseInsensitiveOption);
-
-  capturing_regexp_cache[keyword] = result;
-  return result;
+QString escape(QString str) {
+  str = str.replace("<", "&lt;");
+  return str;
 }
 
-const QString highlight(const QString& needle, const QString& haystack) {
-  static QString em_("<em>"), emEnd_("</em>");
+QString highlight(const QString& needle, const QString& haystack) {
+  static QString em("<em>"), emEnd("</em>");
   QStringList highlights;
 
   if (needle.size()) {
-    auto regexp = capturingRegexp(needle);
-    auto match = regexp.match(haystack).capturedTexts();
+    int pos = -1, last_pos = 0;
+    for (auto c : needle) {
+      pos = haystack.indexOf(c, pos + 1, Qt::CaseInsensitive);
+      if (pos == -1) break;
 
-    int i = -1;
-    for (auto& word : match) {
-      if (++i == 0) continue;
-
-      word = word.replace("<", "&lt;");
-      if (i % 2 == 0)
-        highlights << em_ << word << emEnd_;
-      else
-        highlights << word;
+      highlights << escape(haystack.mid(last_pos, pos - last_pos));
+      highlights << em << escape(haystack[pos]) << emEnd;
+      last_pos = pos + 1;
     }
+
+    // push remaining
+    highlights << haystack.mid(last_pos);
   } else {
-    highlights << QString(haystack).replace("<", "&lt;");
+    highlights << escape(haystack);
   }
 
   return QString(highlights.join(""));
@@ -64,13 +42,13 @@ void ItemDelegate::paint(QPainter* painter, const QStyleOptionViewItem& option,
   QStyleOptionViewItem opt = option;
   initStyleOption(&opt, index);
 
-  Action action = index.data().value<Action>();
-  QString keyword = index.data(Qt::UserRole).value<QString>();
+  auto action = index.data().value<Action>();
+  auto keyword = index.data(Qt::UserRole).value<QString>();
 
   painter->save();
 
-  const QWidget* widget = option.widget;
-  QStyle* style = widget ? widget->style() : QApplication::style();
+  auto* widget = option.widget;
+  auto* style = widget->style();
 
   if (index.row() == recents_ - 1) {
     opt.state |= QStyle::State_On;
@@ -107,7 +85,7 @@ void ItemDelegate::paint(QPainter* painter, const QStyleOptionViewItem& option,
 
 QSize ItemDelegate::sizeHint(const QStyleOptionViewItem& option,
                              const QModelIndex& index) const {
-  Action action = index.data().value<Action>();
+  auto action = index.data().value<Action>();
 
   auto document = const_cast<ItemDelegate*>(this)->renderAction(
       true, QString(), QString(), action);

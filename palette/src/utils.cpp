@@ -12,7 +12,7 @@ QString loadFileFromBundle(const char* filename, QFile& file, bool& updated) {
     QDir::addSearchPath("theme", pluginPath("theme/"));
   }
 
-  QFile resFile(QStringLiteral(":/bundle/") + filename);
+  QFile resFile(":/bundle/" + QString(filename));
 
   updated = false;
 
@@ -57,7 +57,7 @@ QString loadFile(const char* filename, bool force_update, bool& updated) {
 
 QHash<QString, QJsonDocument> cached_json;
 
-const QJsonObject json(const char* filename, bool force_update) {
+QJsonObject json(const char* filename, bool force_update) {
   bool updated;
   const QString& content_str = loadFile(filename, force_update, updated);
 

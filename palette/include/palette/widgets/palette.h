@@ -24,7 +24,12 @@ class CommandPalette : public QMainWindow {
   void show(const QString& name, const QString& placeholder,
             const QVector<Action>& actions, const QString& closeKey,
             ActionHandler func);
-  void focusOutEvent(QFocusEvent* event) { close(); }
+
+  void show(const QString& name, const QString& placeholder,
+            SearchService* searchService, const QString& closeKey,
+            ActionHandler func);
+
+  void focusOutEvent(QFocusEvent* event) override { close(); }
 };
 
 class PaletteFrame : public QFrame {

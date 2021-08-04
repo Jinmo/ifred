@@ -3,6 +3,7 @@
 #include <QtGui>
 #include <QtWidgets>
 #include <string>
+#include <action.h>
 
 #undef NDEBUG
 #pragma push_macro("slots")

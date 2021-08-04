@@ -22,7 +22,7 @@ PaletteFrame::PaletteFrame(QWidget* parent, const QString& name,
   layout->addWidget(items_);
 
   // Set margin and spacing between widgets
-  // This is just like normalize.css because it can be overriden by css
+  // This is just like normalize.css because it can be overridden by css
   layout->setContentsMargins(0, 0, 0, 0);
   layout->setSpacing(0);
 
@@ -30,7 +30,7 @@ PaletteFrame::PaletteFrame(QWidget* parent, const QString& name,
 
   connect(searchbox_, &QLineEdit::returnPressed, [=]() {
     if (items_->model()->rowCount()) {
-      Action action = (items_->currentIndex()).data().value<Action>();
+      auto action = items_->currentIndex().data().value<Action>();
       window()->hide();
       emit itemClicked(action);
       window()->close();
@@ -122,7 +122,6 @@ bool PaletteFrame::eventFilter(QObject* obj, QEvent* event) {
       }
     }
     case QEvent::ShortcutOverride: {
-      auto* keyEvent = dynamic_cast<QKeyEvent*>(event);
       /*
       Handling ShortcutOverride prevents UI from hooking the shortcuts used in
       the command palette. If the shortcut is registered by registerShortcut(),
@@ -144,8 +143,6 @@ void PaletteFrame::setPlaceholderText(const QString& placeholder) {
 
 static void centerWidgets(QWidget* window, QWidget* widget,
                           QWidget* host = nullptr) {
-  if (!host) host = widget->parentWidget();
-
   if (host) {
     auto hostRect = host->geometry();
     window->move(hostRect.center() - widget->rect().center());
@@ -182,8 +179,14 @@ CommandPalette::CommandPalette(QWidget* parent) : QMainWindow(parent) {
 void CommandPalette::show(const QString& name, const QString& placeholder,
                           const QVector<Action>& actions,
                           const QString& closeKey, ActionHandler func) {
-  auto inner = new PaletteFrame(this, name, closeKey,
-                                new BasicService(nullptr, name, actions));
+  show(name, placeholder, new BasicService(nullptr, name, actions), closeKey,
+       std::move(func));
+}
+
+void CommandPalette::show(const QString& name, const QString& placeholder,
+                          SearchService* searchService, const QString& closeKey,
+                          ActionHandler func) {
+  auto inner = new PaletteFrame(this, name, closeKey, searchService);
 
   setCentralWidget(inner);
   connect(inner, &PaletteFrame::itemClicked, std::move(func));
@@ -191,7 +194,7 @@ void CommandPalette::show(const QString& name, const QString& placeholder,
   inner->setPlaceholderText(placeholder);
 
   QMainWindow::show();
-  centerWidgets(this, this, nullptr);
+  centerWidgets(this, this, parentWidget());
 
   activateWindow();
 }

@@ -1,5 +1,7 @@
+#include "pypalette.h"
+
 #include <api.h>
-#include <bindings/pypalette.h>
+#include <filter.h>
 
 PyPalette::PyPalette(const std::string& name, const std::string& placeholer,
                      const py::list& entries) {
@@ -20,7 +22,6 @@ PyPalette::PyPalette(const std::string& name, const std::string& placeholer,
   py::object scope = py::module::import("__palette__").attr("__dict__");
 
   scope["__entries__"] = entries;
-
   py::exec("__cur_palette__ = {l.id: l for l in __entries__}", scope);
 
   actions_.swap(result);
@@ -61,7 +62,6 @@ PYBIND11_MODULE(__palette__, m) {
       },
       py::arg("palette"), py::arg("close_key") = "");
 
-  m.attr("threading") = py::module::import("threading");
   m.attr("threading") = py::module::import("threading");
 
   auto globals = m.attr("__dict__");

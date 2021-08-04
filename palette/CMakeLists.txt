@@ -26,7 +26,6 @@ set(sources src/search_services/basic_service.cpp
         "src/widgets/item.cpp"
         ${python_binding_src}
         src/utils.cpp
-        src/action.cpp
         "src/api.cpp"
         res/theme_bundle.qrc
         "include/palette/search_services/basic_service.h"

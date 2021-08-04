@@ -81,14 +81,14 @@ bool BasicService::runInSeparateThread() {
   return actions_.count() >= SAME_THREAD_THRESHOLD;
 }
 
-void BasicService::search(const QString& keyword) {
+void BasicService::search(QString keyword) {
   long nonrecent_count = 0, recent_count = 0;
   QHash<QString, int> recent_actions(recent_actions_);
 
   canceled_ = false;
 
   /* Filter the items with fuzzy matching: see
-     PaletteFilter::fuzzy_match_simple, which is substr with non-neighbor
+     fts::fuzzy_match_simple, which is substr with non-neighbor
      characters support
   */
   for (long i = 0; i < indexes_.size(); i++) {

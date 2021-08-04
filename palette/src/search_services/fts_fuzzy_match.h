@@ -42,7 +42,7 @@
 
 // Public interface
 namespace fts {
-static bool fuzzy_match_simple(char const* pattern, char const* str);
+static bool fuzzy_match_simple(const QString& pattern, const QString& str);
 
 static bool fuzzy_match(uint16_t const* pattern, uint16_t const* str,
                         int& outScore);
@@ -145,7 +145,7 @@ static bool fuzzy_internal::fuzzy_match_recursive(
 
   // Calculate score
   if (matched) {
-    const int sequential_bonus = 15;  // bonus for adjacent matches
+    const int sequential_bonus = 30;  // bonus for adjacent matches
     const int separator_bonus = 30;   // bonus if match occurs after a separator
     const int camel_bonus =
         30;  // bonus if match is uppercase and prev is lower
@@ -217,7 +217,7 @@ static bool fuzzy_internal::fuzzy_match_recursive(
   }
 }
 
-bool fuzzy_match_simple(const QString& pattern, const QString& str) {
+static bool fuzzy_match_simple(const QString& pattern, const QString& str) {
   auto it = pattern.begin();
   auto itEnd = pattern.end();
 

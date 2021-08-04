@@ -58,12 +58,12 @@ class SearchService : public QObject {
   }
 
   virtual void cancel() = 0;
-  virtual bool runInSeparateThread() { return false; }
+  virtual bool runInSeparateThread() = 0;
 
  signals:
   // Request
-  void startSearching(const QString& keyword);
-  void itemClicked(const QString& action_id);
+  void startSearching(QString keyword);
+  void itemClicked(QString action_id);
 
   // Response
   void doneSearching(QString keyword, QVector<Action> actions,

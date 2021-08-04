@@ -4,13 +4,14 @@
 #include <palette/filter.h>
 
 class BasicService : public SearchService {
-  std::vector<int> indexes_, recent_indexes_;
   const QVector<Action> actions_;  // immutable
+
+  std::vector<int> indexes_, recent_indexes_;
   QHash<QString, int> recent_actions_;
   QSettings storage_;
   bool canceled_;
 
-  void search(const QString& keyword);
+  void search(QString keyword);
 
  public:
   BasicService(QObject* parent, const QString& palette_name,

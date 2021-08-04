@@ -34,8 +34,8 @@ void PaletteFilter::setSearchService(SearchService *new_service) {
   search_service_ = new_service;
 
   if (search_service_->runInSeparateThread()) {
-    connect(&search_worker_, &QObject::destroyed,
-        search_service_, &QObject::deleteLater);
+    connect(&search_worker_, &QObject::destroyed, search_service_,
+            &QObject::deleteLater);
     search_service_->setParent(nullptr);
     search_service_->moveToThread(&search_worker_);
     search_worker_.start();
