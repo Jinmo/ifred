@@ -13,6 +13,12 @@ void PaletteFilter::onDoneSearching(QString keyword, QVector<Action> items,
   emit filteringDone(recent_count);
 }
 
+void PaletteFilter::onDestroy() {
+  search_service_->cancel();
+  search_worker_->quit();
+  search_worker_->wait();
+}
+
 QModelIndex PaletteFilter::index(int row, int column,
                                  const QModelIndex &parent) const {
   return createIndex(row, column);
@@ -34,11 +40,11 @@ void PaletteFilter::setSearchService(SearchService *new_service) {
   search_service_ = new_service;
 
   if (search_service_->runInSeparateThread()) {
-    connect(&search_worker_, &QObject::destroyed, search_service_,
+    connect(search_worker_, &QObject::destroyed, search_service_,
             &QObject::deleteLater);
     search_service_->setParent(nullptr);
-    search_service_->moveToThread(&search_worker_);
-    search_worker_.start();
+    search_service_->moveToThread(search_worker_);
+    search_worker_->start();
   } else {
     search_service_->setParent(this);
   }
@@ -48,8 +54,9 @@ PaletteFilter::PaletteFilter(QWidget *parent, const QString &palette_name,
     : QAbstractItemModel(parent),
       shown_items_(),
       search_service_(nullptr),
-      search_worker_(this) {
+      search_worker_(new QThread(this)) {
   setSearchService(search_service);
   connect(search_service_, &SearchService::doneSearching, this,
           &PaletteFilter::onDoneSearching, Qt::QueuedConnection);
+  connect(this, &QObject::destroyed, this, &PaletteFilter::onDestroy);
 }

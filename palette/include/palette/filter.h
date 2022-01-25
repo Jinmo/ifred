@@ -14,7 +14,7 @@ class PaletteFilter : public QAbstractItemModel {
   QVector<Action> shown_items_;
   QString keyword_;
   SearchService* search_service_;
-  QThread search_worker_;
+  QThread *search_worker_;
 
  public:
   PaletteFilter(QWidget* parent, const QString& palette_name,
@@ -41,6 +41,7 @@ class PaletteFilter : public QAbstractItemModel {
  public slots:
   void onDoneSearching(QString keyword, QVector<Action> items,
                        int recent_count);
+  void onDestroy();
 
  signals:
   void filteringDone(int recent_count);
