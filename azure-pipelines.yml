@@ -20,7 +20,9 @@ jobs:
         PYTHON_VERSION: '3.8'
       Python39:
         PYTHON_VERSION: '3.9'
-    maxParallel: 4
+      Python310:
+        PYTHON_VERSION: '3.10'
+    maxParallel: 8
 
   pool:
     vmImage: windows-2019
