@@ -10,8 +10,6 @@ jobs:
 - job: Windows
   strategy:
     matrix:
-      Python27:
-        PYTHON_VERSION: '2.7'
       Python36:
         PYTHON_VERSION: '3.6'
       Python37:
@@ -120,25 +118,9 @@ jobs:
       unzip $(Agent.TempDirectory)/idalib-7.0-mac.zip -d idalib-7.0
       tar xvf $(Agent.TempDirectory)/qt5.6.0.txz || exit 100
 
-      mkdir $(Build.ArtifactStagingDirectory)/py2
-
       # Build temporary library files for IDAPython linkage (This is not needed when IDA_INSTALL_DIR points the real installation of IDA Pro)
-      echo | clang --shared -x c - -o $PWD/idalib-7.0/MacOS/plugins/idapython2.dylib || exit 1
-      echo | clang --shared -x c - -o $PWD/idalib-7.0/MacOS/plugins/idapython2_64.dylib || exit 1
       echo | clang --shared -x c - -o $PWD/idalib-7.0/MacOS/plugins/idapython3.dylib || exit 1
       echo | clang --shared -x c - -o $PWD/idalib-7.0/MacOS/plugins/idapython3_64.dylib || exit 1
-
-      mkdir build64-py2
-      cd build64-py2
-      cmake $(Build.SourcesDirectory) -DCMAKE_PREFIX_PATH=$PWD/../qt560/clang_64 -DIDA_SDK=$PWD/../idasdk70 -DIDA_BINARY_64=True -DIDA_EA_64=True -GNinja -DPYBIND11_PYTHON_VERSION=2.7 -DIDA_INSTALL_DIR=$PWD/../idalib-7.0/MacOS -DCMAKE_BUILD_TYPE=RelWithDebInfo
-      ninja
-      cp palette/src/ida/ida_palette64.dylib $(Build.ArtifactStagingDirectory)/py2
-
-      mkdir ../build32-py2
-      cd ../build32-py2
-      cmake $(Build.SourcesDirectory) -DCMAKE_PREFIX_PATH=$PWD/../qt560/clang_64 -DIDA_SDK=$PWD/../idasdk70 -DIDA_BINARY_64=True -DIDA_EA_64=False -GNinja -DPYBIND11_PYTHON_VERSION=2.7 -DIDA_INSTALL_DIR=$PWD/../idalib-7.0/MacOS -DCMAKE_BUILD_TYPE=RelWithDebInfo
-      ninja
-      cp palette/src/ida/ida_palette.dylib $(Build.ArtifactStagingDirectory)/py2
 
       mkdir $(Build.ArtifactStagingDirectory)/py3
 
