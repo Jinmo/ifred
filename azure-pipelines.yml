@@ -95,7 +95,7 @@ jobs:
 
 - job: MacOSX
   pool:
-    vmImage: macos-10.15
+    vmImage: macO
   
   steps:
   - task: DownloadSecureFile@1
