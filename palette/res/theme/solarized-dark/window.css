@@ -1,0 +1,132 @@
+/*
+    Author: Blue DeviL // SCT
+    Masto : @bluedevil@infosec.exchange
+    Repo  : github.com/blue-devil
+    Repo  : gitlab.com/bluedevil
+    Date  : 13.09.2023
+*/
+* {
+    font-family: Segoe UI;
+    font-size: 16px;
+    background: rgb(0, 43, 54);
+    color: rgb(238, 232, 213);
+}
+
+/* Searchbox */
+
+QLineEdit, QLineEdit:hover, QLineEdit:active {
+    font-size: 16px;
+    width: 720px;
+    height: 29px;
+    margin: 7px 7px 8px 8px;
+    padding: 0px 7px;
+    border: 1px solid rgb(42, 161, 152);
+    background: rgb(7, 54, 66);
+}
+
+/* List view and items */
+
+QListView {
+    border: none;
+    padding: 0;
+    margin: 0;
+    min-height: 350px;
+}
+
+QListView::item {
+    padding-left: 14px;
+    padding-top: 3px;
+}
+
+QListView::item:hover {
+    background: rgb(7, 54, 66);
+    border: 0;
+}
+
+QListView::item:checked {
+    padding-bottom: 1px;
+    border-bottom: 1px solid #3f3f46;
+}
+
+QListView::item:selected {
+    background: #07514a !important;
+}
+
+table, td, div, p, span, em {
+    background: transparent;
+}
+
+table {
+    color: #fff;
+    margin-bottom: 5px;
+}
+
+td.placeholder {
+    font-size: 1px;
+    width: 700px;
+}
+
+td {
+    padding: 0;
+    margin: 0;
+    vertical-align: middle;
+}
+
+td.shortcut {
+    float: right;
+    padding-right: 18px;
+}
+
+td.description {
+    color: #555;
+}
+
+em {
+    /* Highlighted Text */
+    font-weight: bold;
+    color: rgb(42, 161, 152);
+    font-style: normal;
+}
+
+span {
+    /* Action ID text */
+    font-family: Segoe UI;
+    padding-left: 20px;
+    color: transparent;
+}
+
+/* List scrollbar */
+
+QScrollBar:vertical * {
+    background-color: #000;
+}
+
+QScrollBar:vertical {
+    border: none;
+    width: 12px;
+    background: rgb(5, 33, 40);
+}
+
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+QScrollBar::handle:vertical {
+    background: rgba(2, 255, 255, 0.3);
+    min-height: 20px;
+    border-radius: 6px;
+}
+
+QScrollBar::add-line:vertical {
+    width: 0;
+    height: 0;
+    subcontrol-position: bottom;
+    subcontrol-origin: margin;
+}
+
+QScrollBar::sub-line:vertical {
+    width: 0;
+    height: 0;
+    subcontrol-position: top;
+    subcontrol-origin: margin;
+}
