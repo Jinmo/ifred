@@ -19,6 +19,7 @@
 
 #define __DEFINE_PLUGIN_RETURN_CODES__
 
+#include <pro.h>
 #include <ida.hpp>
 #include <idp.hpp>
 #include <diskio.hpp>
