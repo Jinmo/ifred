@@ -19,6 +19,7 @@
 
 #define __DEFINE_PLUGIN_RETURN_CODES__
 
+#include <cstdint>
 #include <pro.h>
 #include <ida.hpp>
 #include <idp.hpp>
