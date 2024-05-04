@@ -8,9 +8,6 @@ trigger:
 
 jobs:
 - job: Windows
-  strategy:
-    matrix:
-    maxParallel: 8
 
   pool:
     vmImage: windows-2019
