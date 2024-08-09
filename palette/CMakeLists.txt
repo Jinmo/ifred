@@ -1,10 +1,10 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.8)
 
 include("ida-cmake/cmake/QtIDA.cmake")
 include("ida-cmake/cmake/IDA.cmake")
 
 # Some required settings
-set(PYTHON_SUPPORT ON CACHE BOOL "")
+set(PYTHON_SUPPORT OFF CACHE BOOL "")
 set(PYTHON_EXECUTABLE "" CACHE PATH "Python executable (x64 if >= 7.0)")
 
 include(GenerateExportHeader)
