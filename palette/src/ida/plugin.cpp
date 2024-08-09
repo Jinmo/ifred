@@ -336,28 +336,50 @@ class name_palette_handler : public action_handler_t {
     qstring shortcut;
     get_action_shortcut(&shortcut, context->action);
     shortcut.replace("-", "+");
-    show_palette("name palette" + QString(get_path(PATH_TYPE_IDB)),
-                 "Enter symbol name...", getNames(), shortcut.c_str(),
-                 [](Action& action) {
-                   auto&& id = action.id;
+    show_palette(
+        "name palette" + QString(get_path(PATH_TYPE_IDB)),
+        "Enter symbol name...", getNames(), shortcut.c_str(),
+        [](Action& action) {
+          auto&& id = action.id;
+          bool use_local_types = reg_read_bool("ifred_local_type", false);
 
-                   if (id.startsWith("struct:")) {
-                     auto tid = id.midRef(7).toULongLong();
-                     if (get_enum_idx(tid) == -1)
-                       open_structs_window(tid);
-                     else
-                       open_enums_window(tid);
-                   } else {
-                     ea_t address =
-                         static_cast<ea_t>(id.toULongLong(nullptr, 16));
-                     jumpto(address);
-                     qstring name;
-                     get_ea_name(&name, address, 0, 0);
-                     reg_update_strlist("History\\$", name.c_str(), 32);
-                   }
+          if (id.startsWith("struct:")) {
+            auto tid = id.midRef(7).toULongLong();
+            if (get_enum_idx(tid) == -1) {
+              if (!use_local_types) {
+                open_structs_window(tid);
+              } else {
+                struc_t* s = get_struc(tid);
+                if (s) open_loctypes_window(s->ordinal);
+              }
+            } else {
+              if (!use_local_types)
+                open_enums_window(tid);
+              else
+                open_loctypes_window(get_enum_type_ordinal(tid));
+            }
+          } else {
+            ea_t address = static_cast<ea_t>(id.toULongLong(nullptr, 16));
+            jumpto(address);
+            qstring name;
+            get_ea_name(&name, address, 0, 0);
+            reg_update_strlist("History\\$", name.c_str(), 32);
+          }
 
-                   return true;
-                 });
+          return true;
+        });
+    return 1;
+  }
+
+  action_state_t idaapi update(action_update_ctx_t*) override {
+    return AST_ENABLE_ALWAYS;
+  }
+};
+
+class toggle_local_types_handler : public action_handler_t {
+  int idaapi activate(action_activation_ctx_t* context) override {
+    bool new_value = !reg_read_bool("ifred_local_type", false);
+    reg_write_bool("ifred_local_type", new_value);
     return 1;
   }
 
@@ -368,14 +390,20 @@ class name_palette_handler : public action_handler_t {
 
 static command_palette_handler command_palette_handler_;
 static name_palette_handler name_palette_handler_;
+static toggle_local_types_handler toggle_local_types_handler_;
 
 static action_desc_t command_palette_action = ACTION_DESC_LITERAL(
-    "ifred:command_palette", "ifred command palette", &command_palette_handler_,
-    CMD_PALETTE_SHORTCUT, "command palette", -1);
+    "ifred:command_palette", "ifred: Command Palette",
+    &command_palette_handler_, CMD_PALETTE_SHORTCUT, "command palette", -1);
 
 static action_desc_t name_palette_action = ACTION_DESC_LITERAL(
-    "ifred:name_palette", "ifred name palette", &name_palette_handler_,
+    "ifred:name_palette", "ifred: Name Palette", &name_palette_handler_,
     NAME_PALETTE_SHORTCUT, "name palette", -1);
+
+static action_desc_t toggle_local_types_action =
+    ACTION_DESC_LITERAL("ifred:toggle_local_types", "ifred: Toggle Local Types",
+                        &toggle_local_types_handler_, "",
+                        "toggle local types or struct/enum view", -1);
 
 //--------------------------------------------------------------------------
 bool idaapi run(size_t) { return true; }
@@ -437,6 +465,11 @@ INIT_RETURN_TYPE idaapi init() {
 
   if (!register_action(name_palette_action)) {
     msg("name palette action loading error\n");
+    return PLUGIN_SKIP;
+  };
+
+  if (!register_action(toggle_local_types_action)) {
+    msg("toggle local types action loading error\n");
     return PLUGIN_SKIP;
   };
 
