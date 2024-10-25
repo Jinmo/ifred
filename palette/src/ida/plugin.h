@@ -24,13 +24,23 @@
 #include <ida.hpp>
 #include <idp.hpp>
 #include <diskio.hpp>
-#include <enum.hpp>
 #include <kernwin.hpp>
 #include <loader.hpp>
 #include <moves.hpp>
 #include <name.hpp>
 #include <registry.hpp>
-#include <struct.hpp>
 #include <typeinf.hpp>
+
+#if IDA_SDK_VERSION >= 900
+#define SHOULD_USE_TYPEINF 1
+#else
+#define SHOULD_USE_TYPEINF 0
+#endif
+
+#if IDA_SDK_VERSION < 900
+#define get_ordinal_count get_ordinal_qty
+#include <enum.hpp>
+#include <struct.hpp>
+#endif
 
 #pragma warning(pop)

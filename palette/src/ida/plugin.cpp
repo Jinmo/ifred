@@ -89,7 +89,9 @@ void addActions(QVector<Action>& result, const qstrvec_t& actions) {
   }
 }
 
-void addNames(QVector<Action>& result, size_t names) {
+void addNames(QVector<Action>& result) {
+  size_t names = get_nlist_size();
+
   for (size_t i = 0; i < names; i++) {
     ea_t ea = get_nlist_ea(i);
     qstring demangled_name;
@@ -120,6 +122,7 @@ const QVector<Action> getActions() {
   return result;
 }
 
+#if !SHOULD_USE_TYPEINF
 qstring get_nice_struc_name(tid_t struct_) {
   auto name = get_struc_name(struct_);
   tinfo_t tif;
@@ -148,6 +151,45 @@ void addEnums(QVector<Action>& result) {
         "struct:" + QString::number(n),
         QString::fromStdString(get_nice_struc_name(n).c_str()), QString()});
   }
+}
+#else
+qstring get_nice_struc_name(tid_t struct_) {
+  tinfo_t tif;
+  qstring name;
+  tif.get_numbered_type(get_idati(), struct_);
+  tif.print(&name);
+  return name;
+}
+#endif
+
+void addTypes(QVector<Action> &result) {
+#if SHOULD_USE_TYPEINF
+  auto til = get_idati();
+  auto count = get_ordinal_count(til);
+  for (auto ordinal = 0; ordinal < count; ordinal++) {
+    // NOTE: this shouldn'be freed I think? It's managed by IDA and doesn't always return the start of allocation
+    const char *name = get_numbered_type_name(til, ordinal);
+    if (!name) {
+      // Type doesn't exist for this ordinal
+      continue;
+    }
+
+    if (name[0] == '\0') {
+      // Type is anonymous (not named)
+      continue;
+    }
+
+    result.push_back(Action{
+        "struct:" + QString::number(ordinal),
+        QString::fromStdString(get_nice_struc_name(ordinal).c_str()), QString()});
+  }
+#else
+  // 1. Add structs from IDA
+  addStructs(result);
+
+  // 2. Add enums from IDA
+  addEnums(result);
+#endif
 }
 
 class NamesManager {
@@ -235,23 +277,18 @@ class NamesManager {
     address_to_struct.clear();
   }
 
-  QVector<Action> get(bool clear = false) {
-    size_t names = get_nlist_size();
-    size_t structs = get_struc_qty();
+  void clear_struct() {
+    address_to_struct.clear();
+  }
 
+  QVector<Action> get(bool clear = false) {
     if (!result.empty() && !clear) return result;
 
-    // 0. Reserve vector to avoid multiple allocations
-    result.reserve(names + structs);
-
     // 1. Add names from IDA
-    addNames(result, names);
+    addNames(result);
 
-    // 2. Add structs from IDA
-    addStructs(result);
-
-    // 3. Add enums from IDA
-    addEnums(result);
+    // 2. Add types from IDA
+    addTypes(result);
 
     init(&result);
 
@@ -274,11 +311,29 @@ class NamesManager {
         manager->rename(ea, new_name);
         break;
       }
+#if SHOULD_USE_TYPEINF && IDA_SDK_VERSION >= 900
+      case idb_event::local_types_changed: {
+        auto ltc = va_arg(va, local_type_change_t);
+        auto ordinal = va_arg(va, uint32_t);
+        auto name = va_arg(va, const char *);
+        switch (ltc) {
+        case LTC_ADDED:
+        case LTC_ALIASED:
+        case LTC_EDITED:
+          manager->update_struct(ordinal, get_nice_struc_name(ordinal).c_str());
+          break;
+        case LTC_TIL_COMPACTED:
+          break;
+        }
+        break;
+      }
+#else
       case idb_event::struc_renamed: {
         auto struc = va_arg(va, struc_t*);
-        if (struc)
-          manager->update_struct(struc->id,
-                                 get_nice_struc_name(struc->id).c_str());
+        if (struc) {
+          auto tid = struc->id;
+          manager->update_struct(tid, get_nice_struc_name(tid).c_str());
+        }
         break;
       }
       case idb_event::struc_created:
@@ -287,6 +342,7 @@ class NamesManager {
         auto tid = va_arg(va, tid_t);
         manager->update_struct(tid, get_nice_struc_name(tid).c_str());
       }
+#endif
     }
     return 0;
   }
@@ -331,6 +387,27 @@ class command_palette_handler : public action_handler_t {
   }
 };
 
+void jump_to_type(unsigned long long tid) {
+#if SHOULD_USE_TYPEINF
+  open_loctypes_window(tid);
+#else
+  bool use_local_types = reg_read_bool("ifred_local_type", false);
+  if (get_enum_idx(tid) == -1) {
+    if (!use_local_types) {
+      open_structs_window(tid);
+    } else {
+      struc_t* s = get_struc(tid);
+      if (s) open_loctypes_window(s->ordinal);
+    }
+  } else {
+    if (!use_local_types)
+      open_enums_window(tid);
+    else
+      open_loctypes_window(get_enum_type_ordinal(tid));
+  }
+#endif
+}
+
 class name_palette_handler : public action_handler_t {
   int idaapi activate(action_activation_ctx_t* context) override {
     qstring shortcut;
@@ -341,23 +418,9 @@ class name_palette_handler : public action_handler_t {
         "Enter symbol name...", getNames(), shortcut.c_str(),
         [](Action& action) {
           auto&& id = action.id;
-          bool use_local_types = reg_read_bool("ifred_local_type", false);
-
           if (id.startsWith("struct:")) {
             auto tid = id.midRef(7).toULongLong();
-            if (get_enum_idx(tid) == -1) {
-              if (!use_local_types) {
-                open_structs_window(tid);
-              } else {
-                struc_t* s = get_struc(tid);
-                if (s) open_loctypes_window(s->ordinal);
-              }
-            } else {
-              if (!use_local_types)
-                open_enums_window(tid);
-              else
-                open_loctypes_window(get_enum_type_ordinal(tid));
-            }
+            jump_to_type(tid);
           } else {
             ea_t address = static_cast<ea_t>(id.toULongLong(nullptr, 16));
             jumpto(address);
