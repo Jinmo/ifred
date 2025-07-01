@@ -322,7 +322,13 @@ class NamesManager {
         case LTC_EDITED:
           manager->update_struct(ordinal, get_nice_struc_name(ordinal).c_str());
           break;
+        case LTC_COMPILER:
+        case LTC_DELETED:
+        case LTC_NONE:
         case LTC_TIL_COMPACTED:
+        case LTC_TIL_LOADED:
+        case LTC_TIL_UNLOADED:
+        defaut:
           break;
         }
         break;
@@ -343,6 +349,8 @@ class NamesManager {
         manager->update_struct(tid, get_nice_struc_name(tid).c_str());
       }
 #endif
+    default:
+        break;
     }
     return 0;
   }
