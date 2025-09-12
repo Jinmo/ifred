@@ -211,11 +211,11 @@ class NamesManager {
     for (auto& action : *names) {
       auto sep = action.id.indexOf(':');
       if (action.id.startsWith("struct:")) {
-        address_to_struct.insert(action.id.midRef(sep + 1).toULongLong(nullptr),
+        address_to_struct.insert(QStringView(action.id).mid(sep + 1).toULongLong(nullptr),
                                  index);
       } else {
         address_to_name.insert(
-            action.id.midRef(0, sep).toULongLong(nullptr, 16), index);
+            QStringView(action.id).mid(0, sep).toULongLong(nullptr, 16), index);
       }
       index++;
     }
@@ -419,7 +419,7 @@ class name_palette_handler : public action_handler_t {
         [](Action& action) {
           auto&& id = action.id;
           if (id.startsWith("struct:")) {
-            auto tid = id.midRef(7).toULongLong();
+            auto tid = QStringView(id).mid(7).toULongLong();
             jump_to_type(tid);
           } else {
             ea_t address = static_cast<ea_t>(id.toULongLong(nullptr, 16));
