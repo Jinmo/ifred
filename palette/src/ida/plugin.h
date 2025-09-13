@@ -1,5 +1,9 @@
 #pragma warning(push)
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #if _MSC_VER
 // Visual Studio
 #pragma warning(disable : 4244)

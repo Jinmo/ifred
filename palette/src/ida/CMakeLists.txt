@@ -21,4 +21,4 @@ if ((${PYTHON_SUPPORT}) AND (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin"))
 endif ()
 
 target_link_libraries(ida_palette
-        PRIVATE Qt5::Core Qt5::Gui Qt5::Widgets palette ${python_libraries})
+        PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets palette ${python_libraries})

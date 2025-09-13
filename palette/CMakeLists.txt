@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.21)
 
 include("ida-cmake/cmake/QtIDA.cmake")
 include("ida-cmake/cmake/IDA.cmake")
@@ -36,7 +36,7 @@ set(sources src/search_services/basic_service.cpp
         )
 
 add_library(palette STATIC ${sources})
-target_link_libraries(palette PRIVATE Qt5::Core Qt5::Gui Qt5::Widgets ${python_libraries})
+target_link_libraries(palette PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets ${python_libraries})
 target_compile_definitions(palette PUBLIC "QT_NAMESPACE=QT" ${python_support_definitions})
 
 target_include_directories(palette
@@ -52,3 +52,6 @@ GENERATE_EXPORT_HEADER(palette)
 
 # IDA plugins
 add_subdirectory(src/ida)
+
+# Compile with fPIC
+set_target_properties(palette PROPERTIES POSITION_INDEPENDENT_CODE ON)
