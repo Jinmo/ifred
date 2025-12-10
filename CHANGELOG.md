@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [2025-12-10]
 
 ### Added
 
@@ -8,15 +8,20 @@
 * Prevented cmake to add full paths into binaries
 * Prevented build system to add debug directories in windows build
 * Made binaries stripped except macOs arm64
-* On macOS with IDA, use Qt6 for headers but don't link - plugin will link IDA's Qt
+* On macOS with IDA, use Qt6 for headers but don't link - plugin will link
+  IDA's Qt
 
 ### Fixed
 
+* Made necessary changes to build on macOS
 * config.json turns a folder instead of a file. now it stays as a json file
 * if macOS arm64 is stripped then IDA cannot load plugin. Error message is
   `MH_DYLIB is missing LC_ID_DYLIB`. On macOS ARM64 (Apple Silicon), the
   dynamic linker (dyld) is much stricter about Mach-O header consistency
   than it is on `x86_64`.
+* if IDA Pro is not loaded with a binary and the user tries to open ida
+  palette by using shortcut, then IDA pro crashes. Now it opens and
+  empty palette if no binary have loaded to prevent crash.
 
 ## [2025-09-14]
 
@@ -37,6 +42,6 @@
 * IDA Pro v9.0 support
 * Prebuilt binaries provided
 
-[unreleased]: https://github.com/blue-devil/ifred/compare/v2025.09.14...HEAD
+[2025-12-10]: https://github.com/blue-devil/ifred/compare/v2025.09.14...HEAD
 [2025-09-14]: https://github.com/blue-devil/ifred/compare/v2024.10.29...v2025.09.14
 [2024-10-29]: https://github.com/blue-devil/ifred/releases/tag/v2024.10.29
