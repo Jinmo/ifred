@@ -7,3 +7,8 @@ build
 cmake-build-*
 
 CMakeSettings\.json
+
+Qt/*
+build/*
+ida-sdk*
+scripts/*
