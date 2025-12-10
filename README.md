@@ -2,7 +2,7 @@
 
 [![Build Status](https://jinmo123.visualstudio.com/idapkg/_apis/build/status/Jinmo.ifred?branchName=master)](https://jinmo123.visualstudio.com/idapkg/_build/latest?definitionId=1&branchName=master) ![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/jinmo/ifred)
 
-[screenshot1][01]
+![screenshot1][01]
 
 ## How to build
 
@@ -96,11 +96,11 @@ css, json files.
 
 ayu white:
 
-[screenshot2][02]
+![screenshot2][02]
 
 solarized dark:
 
-[screenshot3][03]
+![screenshot3][03]
 
 [01]: screenshots/1.png
 [02]: screenshots/2.png
