@@ -21,8 +21,8 @@ QString loadFileFromBundle(const char* filename, QFile& file, bool& updated) {
     auto bytes = resFile.readAll();
     auto content = QString::fromUtf8(bytes);
 
-    auto dir = QDir(file.fileName());
-    dir.mkpath("..");
+    QFileInfo fileInfo(file.fileName());
+    QDir().mkpath(fileInfo.absolutePath());
 
     if (file.open(QIODevice::WriteOnly)) {
       file.write(bytes);

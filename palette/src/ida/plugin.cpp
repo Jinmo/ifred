@@ -89,7 +89,17 @@ void addActions(QVector<Action>& result, const qstrvec_t& actions) {
   }
 }
 
+// Helper function to check if database is loaded
+static bool isDatabaseLoaded() {
+  qstring idb_path = get_path(PATH_TYPE_IDB);
+  return !idb_path.empty();
+}
+
 void addNames(QVector<Action>& result) {
+  if (!isDatabaseLoaded()) {
+    return;
+  }
+
   size_t names = get_nlist_size();
 
   for (size_t i = 0; i < names; i++) {
@@ -126,12 +136,19 @@ const QVector<Action> getActions() {
 qstring get_nice_struc_name(tid_t struct_) {
   auto name = get_struc_name(struct_);
   tinfo_t tif;
-  tif.get_named_type(get_idati(), name.c_str());
-  tif.print(&name);
-  return name;
+  auto til = get_idati();
+  if (til) {
+    tif.get_named_type(get_idati(), name.c_str());
+    tif.print(&name);
+  }
+    return name;
 }
 
 void addStructs(QVector<Action>& result) {
+  if (!isDatabaseLoaded()) {
+    return;
+  }
+
   int idx = get_first_struc_idx();
   while (idx != BADADDR) {
     tid_t sid = get_struc_by_idx(idx);
@@ -144,6 +161,10 @@ void addStructs(QVector<Action>& result) {
 }
 
 void addEnums(QVector<Action>& result) {
+  if (!isDatabaseLoaded()) {
+    return;
+  }
+
   size_t cnt = get_enum_qty();
   for (size_t i = 0; i < cnt; i++) {
     enum_t n = getn_enum(i);
@@ -156,15 +177,25 @@ void addEnums(QVector<Action>& result) {
 qstring get_nice_struc_name(tid_t struct_) {
   tinfo_t tif;
   qstring name;
-  tif.get_numbered_type(get_idati(), struct_);
-  tif.print(&name);
-  return name;
+  auto til = get_idati();
+  if (til) {
+    tif.get_numbered_type(get_idati(), struct_);
+    tif.print(&name);
+  }
+    return name;
 }
 #endif
 
 void addTypes(QVector<Action> &result) {
 #if SHOULD_USE_TYPEINF
+  if (!isDatabaseLoaded()) {
+    return;
+  }
   auto til = get_idati();
+  if (!til) {
+    // TIL not available, skip adding types
+    return;
+  }
   auto count = get_ordinal_count(til);
   for (auto ordinal = 0; ordinal < count; ordinal++) {
     // NOTE: this shouldn'be freed I think? It's managed by IDA and doesn't always return the start of allocation
@@ -328,7 +359,7 @@ class NamesManager {
         case LTC_TIL_COMPACTED:
         case LTC_TIL_LOADED:
         case LTC_TIL_UNLOADED:
-        defaut:
+        default:
           break;
         }
         break;
@@ -553,7 +584,7 @@ INIT_RETURN_TYPE idaapi init() {
 
 #ifdef _WIN32
   HMODULE hModule;
-  if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCSTR)&init,
+  if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCWSTR)&init,
                          &hModule)) {
     msg("ifred windows loadlibrary workaround error");
     return PLUGIN_SKIP;
