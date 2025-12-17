@@ -1,16 +1,28 @@
 # IDA command palette & more
 
-[![Build Status](https://jinmo123.visualstudio.com/idapkg/_apis/build/status/Jinmo.ifred?branchName=master)](https://jinmo123.visualstudio.com/idapkg/_build/latest?definitionId=1&branchName=master)
+[![Build Status](https://jinmo123.visualstudio.com/idapkg/_apis/build/status/Jinmo.ifred?branchName=master)](https://jinmo123.visualstudio.com/idapkg/_build/latest?definitionId=1&branchName=master) ![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/jinmo/ifred)
 
-![screenshot](screenshots/1.png)
+![screenshot1][01]
 
 ## How to build
 
-Currently tested on Windows. Install Qt 5.6.3 and IDA SDK, and follow steps in azure-pipelines.yml.
+Tested on all operating systems that run IDA Pro.
 
-You can
-download [prebuilt plugins](https://jinmo123.visualstudio.com/idapkg/_build/latest?definitionId=1&branchName=master)
-from azure pipelines.
+| OS      | Arch   | Status |
+| ------- | ------ | ------ |
+| Linux   | x86_64 | ✅     |
+| macOS   | x86_64 | ✅     |
+| macOS   | arm64  | ✅     |
+| Windows | x86_64 | ✅     |
+
+Currently this repo supports IDA Pro with Qt6. For IDA Pro v9.1 and earlier
+with Qt5 support head to [qt5 branch][04]. To build you need IDA Pro SDK.
+
+For easier compiling, use Qt6 artifacts provided by [Binary Ninja Crew][05]
+
+You can download prebuilt binaries with Qt6 from this [repo][06].
+
+You can download older [prebuilt plugins][07] with Qt5 from azure pipelines.
 
 ## Python API
 
@@ -78,9 +90,22 @@ int main() {
 
 ## Changing theme
 
-You can copy css, json files from `palette/res/theme/<name>/*` to `%APPDATA%/Hex-rays/IDA Pro/plugins/palette/theme/`,
-like the existing css, json files.
+You can copy css, json files from `palette/res/theme/<name>/*` to
+`%APPDATA%/Hex-rays/IDA Pro/plugins/palette/theme/`, like the existing
+css, json files.
 
 ayu white:
 
-![screenshot](screenshots/2.png)
+![screenshot2][02]
+
+solarized dark:
+
+![screenshot3][03]
+
+[01]: screenshots/1.png
+[02]: screenshots/2.png
+[03]: screenshots/3.png
+[04]: https://github.com/Jinmo/ifred/tree/qt5
+[05]: https://github.com/Vector35/qt-artifacts/releases
+[06]: https://github.com/blue-devil/ifred/releases
+[07]: https://jinmo123.visualstudio.com/idapkg/_build/latest?definitionId=1&branchName=master
