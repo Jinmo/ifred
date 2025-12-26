@@ -1,0 +1,307 @@
+name: Build IDA Plugin
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    env:
+      HCLI_API_KEY: ${{ secrets.HCLI_API_KEY }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build \
+            libgl1-mesa-dev libxcb-xinerama0-dev libxkbcommon-dev \
+            libxcb-cursor-dev libxcb-icccm4-dev libxcb-image0-dev \
+            libxcb-keysyms1-dev libxcb-randr0-dev libxcb-render-util0-dev \
+            libxcb-shape0-dev libxcb-sync-dev libxcb-xfixes0-dev \
+            libfontconfig1-dev libfreetype6-dev libx11-dev libx11-xcb-dev \
+            libxext-dev libxfixes-dev libxi-dev libxrender-dev libxkbcommon-x11-dev
+
+      - name: Install HCLI
+        run: pip install ida-hcli==0.14.2
+
+      - name: Download IDA SDK
+        run: |
+          hcli --disable-updates download release/9.2/sdk-and-utilities/idasdk92.zip
+          unzip -q idasdk92.zip -d ./ida-temp
+          mv ./ida-temp/src ./ida-sdk
+
+      - name: Download and Install IDA Free
+        run: |
+          hcli --disable-updates download release/9.2/ida-free/ida-free-pc_92_x64linux.run
+          chmod +x ida-free-pc_92_x64linux.run
+          ./ida-free-pc_92_x64linux.run --mode unattended --prefix ${{ github.workspace }}/ida
+
+      - name: Cache Qt6 build
+        uses: actions/cache@v4
+        id: qt-cache
+        with:
+          path: qt-install
+          key: ${{ runner.os }}-qt6-6.8.2-qtnamespace-v1
+          restore-keys: |
+            ${{ runner.os }}-qt6-
+
+      - name: Build Qt6 from source (if not cached)
+        if: steps.qt-cache.outputs.cache-hit != 'true'
+        run: |
+          # Download Qt source
+          curl -L -o qt-src.tar.xz https://download.qt.io/archive/qt/6.8/6.8.2/single/qt-everywhere-src-6.8.2.tar.xz
+          tar xf qt-src.tar.xz
+
+          # Configure Qt with QT_NAMESPACE=QT (required for IDA)
+          cmake -S qt-everywhere-src-6.8.2 -B qt-build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/qt-install \
+            -DQT_BUILD_EXAMPLES=OFF \
+            -DQT_BUILD_TESTS=OFF \
+            -DQT_NAMESPACE=QT \
+            -DQT_BUILD_SUBMODULES=qtbase \
+            -DFEATURE_gui=ON \
+            -DFEATURE_widgets=ON \
+            -DFEATURE_opengl=ON \
+            -DFEATURE_network=OFF \
+            -DFEATURE_sql=OFF \
+            -DFEATURE_dbus=OFF \
+            -DFEATURE_concurrent=OFF \
+            -DFEATURE_printsupport=OFF
+
+          # Build and install
+          cmake --build qt-build --parallel
+          cmake --install qt-build
+
+      - name: Configure CMake
+        run: |
+          cmake -B build -G Ninja \
+            -DCMAKE_PREFIX_PATH=${{ github.workspace }}/qt-install \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DPYTHON_SUPPORT=OFF \
+            -DIDA_SDK=${{ github.workspace }}/ida-sdk \
+            -DIDA_INSTALL_DIR=${{ github.workspace }}/ida \
+            -DIDA_BINARY_64=ON \
+            -DIDA_EA_64=ON
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ifred-linux-64
+          path: build/palette/src/ida/*.so
+
+  build-windows:
+    runs-on: windows-latest
+    env:
+      HCLI_API_KEY: ${{ secrets.HCLI_API_KEY }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Setup Visual Studio Developer Environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Install HCLI
+        run: pip install ida-hcli==0.14.2
+
+      - name: Download IDA SDK
+        shell: bash
+        run: |
+          hcli --disable-updates download release/9.2/sdk-and-utilities/idasdk92.zip
+          unzip -q idasdk92.zip -d ./ida-temp
+          mv ./ida-temp/src ./ida-sdk
+
+      - name: Cache Qt6 build
+        uses: actions/cache@v4
+        id: qt-cache
+        with:
+          path: qt-install
+          key: ${{ runner.os }}-qt6-6.8.2-qtnamespace-v1
+          restore-keys: |
+            ${{ runner.os }}-qt6-
+
+      - name: Build Qt6 from source (if not cached)
+        if: steps.qt-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          # Download Qt source
+          curl -L -o qt-src.tar.xz https://download.qt.io/archive/qt/6.8/6.8.2/single/qt-everywhere-src-6.8.2.tar.xz
+          tar xf qt-src.tar.xz
+
+          # Configure Qt with QT_NAMESPACE=QT (required for IDA)
+          cmake -S qt-everywhere-src-6.8.2 -B qt-build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/qt-install" \
+            -DQT_BUILD_EXAMPLES=OFF \
+            -DQT_BUILD_TESTS=OFF \
+            -DQT_NAMESPACE=QT \
+            -DQT_BUILD_SUBMODULES=qtbase \
+            -DFEATURE_gui=ON \
+            -DFEATURE_widgets=ON \
+            -DFEATURE_opengl=ON \
+            -DFEATURE_network=OFF \
+            -DFEATURE_sql=OFF \
+            -DFEATURE_dbus=OFF \
+            -DFEATURE_concurrent=OFF \
+            -DFEATURE_printsupport=OFF
+
+          # Build and install
+          cmake --build qt-build --parallel
+          cmake --install qt-build
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          cmake -B build -G Ninja \
+            -DCMAKE_PREFIX_PATH="${{ github.workspace }}/qt-install" \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DPYTHON_SUPPORT=OFF \
+            -DIDA_SDK="${{ github.workspace }}/ida-sdk" \
+            -DIDA_BINARY_64=ON \
+            -DIDA_EA_64=ON
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Upload artifacts (64-bit)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ifred-windows-64
+          path: build/palette/src/ida/*.dll
+
+  build-macos:
+    runs-on: macos-latest  # arm64 runner
+    env:
+      HCLI_API_KEY: ${{ secrets.HCLI_API_KEY }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install build dependencies
+        run: brew install cmake ninja
+
+      - name: Install HCLI
+        run: pip3 install ida-hcli==0.14.2 --break-system-packages
+
+      - name: Download IDA SDK
+        run: |
+          hcli --disable-updates download release/9.2/sdk-and-utilities/idasdk92.zip
+          unzip -q idasdk92.zip -d ./ida-temp
+          mv ./ida-temp/src ./ida-sdk
+
+      - name: Download and Install IDA Free
+        run: |
+          hcli --disable-updates download "release/9.2/ida-free/ida-free-pc_92_armmac.app.zip"
+          unzip -q ida-free-pc_92_armmac.app.zip
+          ./ida-free-pc_92_armmac.app/Contents/MacOS/installbuilder.sh --mode unattended --prefix ${{ github.workspace }}/ida-install
+
+      - name: Cache Qt6 build
+        uses: actions/cache@v4
+        id: qt-cache
+        with:
+          path: qt-install
+          key: ${{ runner.os }}-qt6-6.8.2-arm64-qtnamespace-v1
+          restore-keys: |
+            ${{ runner.os }}-qt6-arm64-
+
+      - name: Build Qt6 from source (if not cached)
+        if: steps.qt-cache.outputs.cache-hit != 'true'
+        run: |
+          # Download Qt source
+          curl -L -o qt-src.tar.xz https://download.qt.io/archive/qt/6.8/6.8.2/single/qt-everywhere-src-6.8.2.tar.xz
+          tar xf qt-src.tar.xz
+
+          # Configure Qt with QT_NAMESPACE=QT (required for IDA)
+          cmake -S qt-everywhere-src-6.8.2 -B qt-build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/qt-install \
+            -DCMAKE_OSX_ARCHITECTURES="arm64" \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 \
+            -DQT_BUILD_EXAMPLES=OFF \
+            -DQT_BUILD_TESTS=OFF \
+            -DQT_NAMESPACE=QT \
+            -DQT_BUILD_SUBMODULES=qtbase \
+            -DFEATURE_gui=ON \
+            -DFEATURE_widgets=ON \
+            -DFEATURE_opengl=ON \
+            -DFEATURE_network=OFF \
+            -DFEATURE_sql=OFF \
+            -DFEATURE_dbus=OFF \
+            -DFEATURE_concurrent=OFF \
+            -DFEATURE_printsupport=OFF
+
+          # Build and install
+          cmake --build qt-build --parallel
+          cmake --install qt-build
+
+      - name: Configure CMake
+        run: |
+          cmake -B build -G Ninja \
+            -DCMAKE_PREFIX_PATH=${{ github.workspace }}/qt-install \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DCMAKE_OSX_ARCHITECTURES="arm64" \
+            -DPYTHON_SUPPORT=OFF \
+            -DIDA_SDK=${{ github.workspace }}/ida-sdk \
+            -DIDA_INSTALL_DIR="${{ github.workspace }}/ida-install/IDA Free 9.2.app/Contents/MacOS" \
+            -DIDA_BINARY_64=ON \
+            -DIDA_EA_64=ON
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ifred-macos-arm64
+          path: build/palette/src/ida/*.dylib
+
+  package:
+    runs-on: ubuntu-latest
+    needs: [build-linux, build-windows, build-macos]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create plugin package
+        run: |
+          mkdir -p package
+          cp ida-plugin.json package/
+          cp artifacts/ifred-linux-64/*.so package/
+          cp artifacts/ifred-windows-64/*.dll package/
+          cp artifacts/ifred-macos-arm64/*.dylib package/
+          cd package && zip -r ../ifred-plugin.zip .
+
+      - name: Upload plugin package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ifred-plugin
+          path: ifred-plugin.zip
