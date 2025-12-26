@@ -2,16 +2,13 @@ name: Build IDA Plugin
 
 on:
   push:
-    branches: [master]
+    branches: [master, github-ci-2]
   pull_request:
     branches: [master]
 
 jobs:
   build-linux:
     runs-on: ubuntu-latest
-    env:
-      HCLI_API_KEY: ${{ secrets.HCLI_API_KEY }}
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -33,12 +30,17 @@ jobs:
         run: pip install ida-hcli==0.14.2
 
       - name: Download IDA SDK
+        env:
+          HCLI_API_KEY: ${{ secrets.HCLI_API_KEY }}
         run: |
           hcli --disable-updates download release/9.2/sdk-and-utilities/idasdk92.zip
           unzip -q idasdk92.zip -d ./ida-temp
           mv ./ida-temp/src ./ida-sdk
+          ln -s ${{ github.workspace }}/palette/ida-cmake ${{ github.workspace }}/ida-sdk/ida-cmake
 
       - name: Download and Install IDA Free
+        env:
+          HCLI_API_KEY: ${{ secrets.HCLI_API_KEY }}
         run: |
           hcli --disable-updates download release/9.2/ida-free/ida-free-pc_92_x64linux.run
           chmod +x ida-free-pc_92_x64linux.run
@@ -87,10 +89,9 @@ jobs:
             -DCMAKE_PREFIX_PATH=${{ github.workspace }}/qt-install \
             -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             -DPYTHON_SUPPORT=OFF \
-            -DIDA_SDK=${{ github.workspace }}/ida-sdk \
-            -DIDA_INSTALL_DIR=${{ github.workspace }}/ida \
-            -DIDA_BINARY_64=ON \
-            -DIDA_EA_64=ON
+            -DIDASDK=${{ github.workspace }}/ida-sdk \
+            -DIDABIN=${{ github.workspace }}/ida \
+            -DEA64=ON
 
       - name: Build
         run: cmake --build build --parallel
@@ -99,13 +100,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ifred-linux-64
-          path: build/palette/src/ida/*.so
+          path: ${{ github.workspace }}/ida/plugins/ida_palette*.so
+          retention-days: 1
 
   build-windows:
     runs-on: windows-latest
-    env:
-      HCLI_API_KEY: ${{ secrets.HCLI_API_KEY }}
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -127,10 +126,13 @@ jobs:
 
       - name: Download IDA SDK
         shell: bash
+        env:
+          HCLI_API_KEY: ${{ secrets.HCLI_API_KEY }}
         run: |
           hcli --disable-updates download release/9.2/sdk-and-utilities/idasdk92.zip
           unzip -q idasdk92.zip -d ./ida-temp
           mv ./ida-temp/src ./ida-sdk
+          cp -r palette/ida-cmake ida-sdk/ida-cmake
 
       - name: Cache Qt6 build
         uses: actions/cache@v4
@@ -177,9 +179,8 @@ jobs:
             -DCMAKE_PREFIX_PATH="${{ github.workspace }}/qt-install" \
             -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             -DPYTHON_SUPPORT=OFF \
-            -DIDA_SDK="${{ github.workspace }}/ida-sdk" \
-            -DIDA_BINARY_64=ON \
-            -DIDA_EA_64=ON
+            -DIDASDK="${{ github.workspace }}/ida-sdk" \
+            -DEA64=ON
 
       - name: Build
         run: cmake --build build --parallel
@@ -188,13 +189,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ifred-windows-64
-          path: build/palette/src/ida/*.dll
+          path: ${{ github.workspace }}/ida-sdk/bin/plugins/ida_palette*.dll
+          retention-days: 1
 
   build-macos:
     runs-on: macos-latest  # arm64 runner
-    env:
-      HCLI_API_KEY: ${{ secrets.HCLI_API_KEY }}
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -208,12 +207,17 @@ jobs:
         run: pip3 install ida-hcli==0.14.2 --break-system-packages
 
       - name: Download IDA SDK
+        env:
+          HCLI_API_KEY: ${{ secrets.HCLI_API_KEY }}
         run: |
           hcli --disable-updates download release/9.2/sdk-and-utilities/idasdk92.zip
           unzip -q idasdk92.zip -d ./ida-temp
           mv ./ida-temp/src ./ida-sdk
+          ln -s ${{ github.workspace }}/palette/ida-cmake ${{ github.workspace }}/ida-sdk/ida-cmake
 
       - name: Download and Install IDA Free
+        env:
+          HCLI_API_KEY: ${{ secrets.HCLI_API_KEY }}
         run: |
           hcli --disable-updates download "release/9.2/ida-free/ida-free-pc_92_armmac.app.zip"
           unzip -q ida-free-pc_92_armmac.app.zip
@@ -265,10 +269,9 @@ jobs:
             -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             -DCMAKE_OSX_ARCHITECTURES="arm64" \
             -DPYTHON_SUPPORT=OFF \
-            -DIDA_SDK=${{ github.workspace }}/ida-sdk \
-            -DIDA_INSTALL_DIR="${{ github.workspace }}/ida-install/IDA Free 9.2.app/Contents/MacOS" \
-            -DIDA_BINARY_64=ON \
-            -DIDA_EA_64=ON
+            -DIDASDK=${{ github.workspace }}/ida-sdk \
+            -DIDABIN="${{ github.workspace }}/ida-install/IDA Free 9.2.app/Contents/MacOS" \
+            -DEA64=ON
 
       - name: Build
         run: cmake --build build --parallel
@@ -277,7 +280,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ifred-macos-arm64
-          path: build/palette/src/ida/*.dylib
+          path: "${{ github.workspace }}/ida-install/IDA Free 9.2.app/Contents/MacOS/plugins/ida_palette*.dylib"
+          retention-days: 1
 
   package:
     runs-on: ubuntu-latest
@@ -295,13 +299,21 @@ jobs:
         run: |
           mkdir -p package
           cp ida-plugin.json package/
+          cp README.md package/
           cp artifacts/ifred-linux-64/*.so package/
           cp artifacts/ifred-windows-64/*.dll package/
           cp artifacts/ifred-macos-arm64/*.dylib package/
-          cd package && zip -r ../ifred-plugin.zip .
 
       - name: Upload plugin package
         uses: actions/upload-artifact@v4
         with:
           name: ifred-plugin
-          path: ifred-plugin.zip
+          path: package/*
+
+      - name: Delete intermediate artifacts
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: |
+            ifred-linux-64
+            ifred-windows-64
+            ifred-macos-arm64

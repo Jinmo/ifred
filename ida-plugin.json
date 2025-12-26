@@ -1,10 +1,10 @@
 {
-  "IDAMetadataDescriptorVersion": 2,
+  "IDAMetadataDescriptorVersion": 1,
   "plugin": {
     "name": "ifred",
     "version": "0.0.5",
     "description": "IDA command palette & more",
-    "entryPoint": "ida_palette64",
+    "entryPoint": "ida_palette",
     "authors": [
       {
         "name": "Jinmo",
@@ -15,12 +15,8 @@
       "repository": "https://github.com/Jinmo/ifred"
     },
     "license": "MIT",
-    "platforms": [
-      "windows-x86_64",
-      "linux-x86_64",
-      "macos-aarch64"
-    ],
     "idaVersions": ["9.2"],
-    "keywords": ["palette", "command", "launcher", "fuzzy"]
+    "keywords": ["palette", "command", "launcher", "fuzzy"],
+    "categories": ["ui-ux-and-visualization", "collaboration-and-productivity"]
   }
 }

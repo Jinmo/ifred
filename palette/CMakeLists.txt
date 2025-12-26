@@ -1,7 +1,9 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.27)
 
-include("ida-cmake/cmake/QtIDA.cmake")
-include("ida-cmake/cmake/IDA.cmake")
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
 
 # Some required settings
 set(PYTHON_SUPPORT OFF CACHE BOOL "")
