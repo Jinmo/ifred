@@ -1,6 +1,7 @@
 # IDA command palette & more
 
-[![Build Status](https://jinmo123.visualstudio.com/idapkg/_apis/build/status/Jinmo.ifred?branchName=master)](https://jinmo123.visualstudio.com/idapkg/_build/latest?definitionId=1&branchName=master) ![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/jinmo/ifred)
+[![Build IDA Plugin](https://github.com/Jinmo/ifred/actions/workflows/build.yml/badge.svg)](https://github.com/Jinmo/ifred/actions/workflows/build.yml)
+![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/jinmo/ifred)
 
 ![screenshot1][01]
 
@@ -22,7 +23,7 @@ For easier compiling, use Qt6 artifacts provided by [Binary Ninja Crew][05]
 
 You can download prebuilt binaries with Qt6 from this [repo][06].
 
-You can download older [prebuilt plugins][07] with Qt5 from azure pipelines.
+You can download older [prebuilt plugins][07] with Qt5 from the releases page.
 
 ## Python API
 
@@ -108,4 +109,4 @@ solarized dark:
 [04]: https://github.com/Jinmo/ifred/tree/qt5
 [05]: https://github.com/Vector35/qt-artifacts/releases
 [06]: https://github.com/blue-devil/ifred/releases
-[07]: https://jinmo123.visualstudio.com/idapkg/_build/latest?definitionId=1&branchName=master
+[07]: https://github.com/Jinmo/ifred/releases
