@@ -3,7 +3,16 @@ cmake_minimum_required(VERSION 3.27)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
+# Support both Qt5 and Qt6
+option(USE_QT5 "Build with Qt5 instead of Qt6 (for IDA 8.4 and earlier)" OFF)
+
+if(USE_QT5)
+    find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets)
+    set(QT_VERSION_MAJOR 5)
+else()
+    find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
+    set(QT_VERSION_MAJOR 6)
+endif()
 
 # Some required settings
 set(PYTHON_SUPPORT OFF CACHE BOOL "")
@@ -38,7 +47,11 @@ set(sources src/search_services/basic_service.cpp
         )
 
 add_library(palette STATIC ${sources})
-target_link_libraries(palette PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets ${python_libraries})
+if(USE_QT5)
+    target_link_libraries(palette PRIVATE Qt5::Core Qt5::Gui Qt5::Widgets ${python_libraries})
+else()
+    target_link_libraries(palette PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets ${python_libraries})
+endif()
 target_compile_definitions(palette PUBLIC "QT_NAMESPACE=QT" ${python_support_definitions})
 
 target_include_directories(palette

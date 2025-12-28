@@ -7,6 +7,7 @@ on:
     branches: [master]
 
 jobs:
+  # IDA 9.2 builds (Qt6)
   build-linux:
     runs-on: ubuntu-latest
     steps:
@@ -103,6 +104,100 @@ jobs:
           path: ${{ github.workspace }}/ida/plugins/ida_palette*.so
           retention-days: 1
 
+  # IDA 8.4 builds (Qt5)
+  build-linux-ida84:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build \
+            libgl1-mesa-dev libxcb-xinerama0-dev libxkbcommon-dev \
+            libxcb-cursor-dev libxcb-icccm4-dev libxcb-image0-dev \
+            libxcb-keysyms1-dev libxcb-randr0-dev libxcb-render-util0-dev \
+            libxcb-shape0-dev libxcb-sync-dev libxcb-xfixes0-dev \
+            libfontconfig1-dev libfreetype6-dev libx11-dev libx11-xcb-dev \
+            libxext-dev libxfixes-dev libxi-dev libxrender-dev libxkbcommon-x11-dev
+
+      - name: Install HCLI
+        run: pip install ida-hcli==0.14.2
+
+      - name: Download IDA SDK
+        env:
+          HCLI_API_KEY: ${{ secrets.HCLI_API_KEY }}
+        run: |
+          hcli --disable-updates download release/8.4/sdk-and-utilities/idasdk84.zip
+          unzip -q idasdk84.zip -d ./ida-temp
+          mv ./ida-temp/idasdk84 ./ida-sdk
+          ln -s ${{ github.workspace }}/palette/ida-cmake ${{ github.workspace }}/ida-sdk/ida-cmake
+
+      - name: Download and Install IDA Free
+        env:
+          HCLI_API_KEY: ${{ secrets.HCLI_API_KEY }}
+        run: |
+          hcli --disable-updates download release/8.4/ida-free/idafree84_linux.run
+          chmod +x idafree84_linux.run
+          ./idafree84_linux.run --mode unattended --prefix ${{ github.workspace }}/ida
+
+      - name: Cache Qt5 build
+        uses: actions/cache@v4
+        id: qt-cache
+        with:
+          path: qt-install
+          key: ${{ runner.os }}-qt5-5.15.2-qtnamespace-v1
+          restore-keys: |
+            ${{ runner.os }}-qt5-
+
+      - name: Build Qt5 from source (if not cached)
+        if: steps.qt-cache.outputs.cache-hit != 'true'
+        run: |
+          # Download Qt5 source
+          curl -L -o qt-src.tar.xz https://download.qt.io/archive/qt/5.15/5.15.2/single/qt-everywhere-src-5.15.2.tar.xz
+          tar xf qt-src.tar.xz
+
+          # Configure Qt5 with QT_NAMESPACE=QT (required for IDA)
+          cd qt-everywhere-src-5.15.2
+          ./configure -prefix ${{ github.workspace }}/qt-install \
+            -opensource -confirm-license \
+            -release \
+            -qtnamespace QT \
+            -skip qtwebengine -skip qt3d -skip qtcharts -skip qtdatavis3d \
+            -skip qtgamepad -skip qtlocation -skip qtmultimedia -skip qtpurchasing \
+            -skip qtremoteobjects -skip qtscript -skip qtsensors -skip qtserialbus \
+            -skip qtserialport -skip qtspeech -skip qtvirtualkeyboard -skip qtwayland \
+            -skip qtwebchannel -skip qtwebsockets -skip qtwebview \
+            -nomake examples -nomake tests
+
+          # Build and install
+          make -j$(nproc)
+          make install
+
+      - name: Configure CMake
+        run: |
+          cmake -B build -G Ninja \
+            -DCMAKE_PREFIX_PATH=${{ github.workspace }}/qt-install \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DPYTHON_SUPPORT=OFF \
+            -DUSE_QT5=ON \
+            -DIDASDK=${{ github.workspace }}/ida-sdk \
+            -DIDABIN=${{ github.workspace }}/ida \
+            -DEA64=ON
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ifred-linux-64-ida84
+          path: ${{ github.workspace }}/ida/plugins/ida_palette*.so
+          retention-days: 1
+
   build-windows:
     runs-on: windows-latest
     steps:
@@ -189,6 +284,97 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ifred-windows-64
+          path: ${{ github.workspace }}/ida-sdk/bin/plugins/ida_palette*.dll
+          retention-days: 1
+
+  build-windows-ida84:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Setup Visual Studio Developer Environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Install HCLI
+        run: pip install ida-hcli==0.14.2
+
+      - name: Download IDA SDK
+        shell: bash
+        env:
+          HCLI_API_KEY: ${{ secrets.HCLI_API_KEY }}
+        run: |
+          hcli --disable-updates download release/8.4/sdk-and-utilities/idasdk84.zip
+          unzip -q idasdk84.zip -d ./ida-temp
+          mv ./ida-temp/idasdk84 ./ida-sdk
+          cp -r palette/ida-cmake ida-sdk/ida-cmake
+
+      - name: Cache Qt5 build
+        uses: actions/cache@v4
+        id: qt-cache
+        with:
+          path: qt-install
+          key: ${{ runner.os }}-qt5-5.15.2-qtnamespace-v1
+          restore-keys: |
+            ${{ runner.os }}-qt5-
+
+      - name: Install jom
+        if: steps.qt-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          curl -L -o jom.zip https://download.qt.io/official_releases/jom/jom_1_1_4.zip
+          unzip jom.zip -d jom
+          echo "${{ github.workspace }}/jom" >> $GITHUB_PATH
+
+      - name: Build Qt5 from source (if not cached)
+        if: steps.qt-cache.outputs.cache-hit != 'true'
+        shell: cmd
+        run: |
+          curl -L -o qt-src.zip https://download.qt.io/archive/qt/5.15/5.15.2/single/qt-everywhere-src-5.15.2.zip
+          7z x qt-src.zip
+
+          cd qt-everywhere-src-5.15.2
+          call configure.bat -prefix "${{ github.workspace }}/qt-install" ^
+            -opensource -confirm-license ^
+            -release ^
+            -qtnamespace QT ^
+            -skip qtwebengine -skip qt3d -skip qtcharts -skip qtdatavis3d ^
+            -skip qtgamepad -skip qtlocation -skip qtmultimedia -skip qtpurchasing ^
+            -skip qtremoteobjects -skip qtscript -skip qtsensors -skip qtserialbus ^
+            -skip qtserialport -skip qtspeech -skip qtvirtualkeyboard -skip qtwayland ^
+            -skip qtwebchannel -skip qtwebsockets -skip qtwebview ^
+            -nomake examples -nomake tests
+
+          ${{ github.workspace }}\jom\jom.exe -j%NUMBER_OF_PROCESSORS%
+          ${{ github.workspace }}\jom\jom.exe install
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          cmake -B build -G Ninja \
+            -DCMAKE_PREFIX_PATH="${{ github.workspace }}/qt-install" \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DPYTHON_SUPPORT=OFF \
+            -DUSE_QT5=ON \
+            -DIDASDK="${{ github.workspace }}/ida-sdk" \
+            -DEA64=ON
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Upload artifacts (64-bit)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ifred-windows-64-ida84
           path: ${{ github.workspace }}/ida-sdk/bin/plugins/ida_palette*.dll
           retention-days: 1
 
@@ -283,9 +469,95 @@ jobs:
           path: "${{ github.workspace }}/ida-install/IDA Free 9.2.app/Contents/MacOS/plugins/ida_palette*.dylib"
           retention-days: 1
 
+  build-macos-ida84:
+    runs-on: macos-13  # x64 runner for IDA 8.4
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install build dependencies
+        run: brew install cmake ninja
+
+      - name: Install HCLI
+        run: pip3 install ida-hcli==0.14.2 --break-system-packages
+
+      - name: Download IDA SDK
+        env:
+          HCLI_API_KEY: ${{ secrets.HCLI_API_KEY }}
+        run: |
+          hcli --disable-updates download release/8.4/sdk-and-utilities/idasdk84.zip
+          unzip -q idasdk84.zip -d ./ida-temp
+          mv ./ida-temp/idasdk84 ./ida-sdk
+          ln -s ${{ github.workspace }}/palette/ida-cmake ${{ github.workspace }}/ida-sdk/ida-cmake
+
+      - name: Download and Install IDA Free
+        env:
+          HCLI_API_KEY: ${{ secrets.HCLI_API_KEY }}
+        run: |
+          hcli --disable-updates download "release/8.4/ida-free/idafree84_mac.app.zip"
+          unzip -q idafree84_mac.app.zip
+          ./idafree84_mac.app/Contents/MacOS/installbuilder.sh --mode unattended --prefix ${{ github.workspace }}/ida-install
+
+      - name: Cache Qt5 build
+        uses: actions/cache@v4
+        id: qt-cache
+        with:
+          path: qt-install
+          key: ${{ runner.os }}-qt5-5.15.2-x64-qtnamespace-v1
+          restore-keys: |
+            ${{ runner.os }}-qt5-x64-
+
+      - name: Build Qt5 from source (if not cached)
+        if: steps.qt-cache.outputs.cache-hit != 'true'
+        run: |
+          # Download Qt5 source
+          curl -L -o qt-src.tar.xz https://download.qt.io/archive/qt/5.15/5.15.2/single/qt-everywhere-src-5.15.2.tar.xz
+          tar xf qt-src.tar.xz
+
+          # Configure Qt5 with QT_NAMESPACE=QT (required for IDA)
+          cd qt-everywhere-src-5.15.2
+          ./configure -prefix ${{ github.workspace }}/qt-install \
+            -opensource -confirm-license \
+            -release \
+            -qtnamespace QT \
+            -skip qtwebengine -skip qt3d -skip qtcharts -skip qtdatavis3d \
+            -skip qtgamepad -skip qtlocation -skip qtmultimedia -skip qtpurchasing \
+            -skip qtremoteobjects -skip qtscript -skip qtsensors -skip qtserialbus \
+            -skip qtserialport -skip qtspeech -skip qtvirtualkeyboard -skip qtwayland \
+            -skip qtwebchannel -skip qtwebsockets -skip qtwebview \
+            -nomake examples -nomake tests
+
+          # Build and install
+          make -j$(sysctl -n hw.ncpu)
+          make install
+
+      - name: Configure CMake
+        run: |
+          cmake -B build -G Ninja \
+            -DCMAKE_PREFIX_PATH=${{ github.workspace }}/qt-install \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DCMAKE_OSX_ARCHITECTURES="x86_64" \
+            -DPYTHON_SUPPORT=OFF \
+            -DUSE_QT5=ON \
+            -DIDASDK=${{ github.workspace }}/ida-sdk \
+            -DIDABIN="${{ github.workspace }}/ida-install/IDA Free 8.4.app/Contents/MacOS" \
+            -DEA64=ON
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ifred-macos-x64-ida84
+          path: "${{ github.workspace }}/ida-install/IDA Free 8.4.app/Contents/MacOS/plugins/ida_palette*.dylib"
+          retention-days: 1
+
   package:
     runs-on: ubuntu-latest
-    needs: [build-linux, build-windows, build-macos]
+    needs: [build-linux, build-windows, build-macos, build-linux-ida84, build-windows-ida84, build-macos-ida84]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -295,20 +567,35 @@ jobs:
         with:
           path: artifacts
 
-      - name: Create plugin package
+      - name: Create plugin packages
         run: |
-          mkdir -p package
-          cp ida-plugin.json package/
-          cp README.md package/
-          cp artifacts/ifred-linux-64/*.so package/
-          cp artifacts/ifred-windows-64/*.dll package/
-          cp artifacts/ifred-macos-arm64/*.dylib package/
+          # IDA 9.2 package (Qt6)
+          mkdir -p package-ida92
+          cp ida-plugin.json package-ida92/
+          cp README.md package-ida92/
+          cp artifacts/ifred-linux-64/*.so package-ida92/
+          cp artifacts/ifred-windows-64/*.dll package-ida92/
+          cp artifacts/ifred-macos-arm64/*.dylib package-ida92/
 
-      - name: Upload plugin package
+          # IDA 8.4 package (Qt5)
+          mkdir -p package-ida84
+          cp ida-plugin.json package-ida84/
+          cp README.md package-ida84/
+          cp artifacts/ifred-linux-64-ida84/*.so package-ida84/
+          cp artifacts/ifred-windows-64-ida84/*.dll package-ida84/
+          cp artifacts/ifred-macos-x64-ida84/*.dylib package-ida84/
+
+      - name: Upload IDA 9.2 plugin package
         uses: actions/upload-artifact@v4
         with:
-          name: ifred-plugin
-          path: package/*
+          name: ifred-plugin-ida92
+          path: package-ida92/*
+
+      - name: Upload IDA 8.4 plugin package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ifred-plugin-ida84
+          path: package-ida84/*
 
       - name: Delete intermediate artifacts
         uses: geekyeggo/delete-artifact@v5
@@ -317,3 +604,6 @@ jobs:
             ifred-linux-64
             ifred-windows-64
             ifred-macos-arm64
+            ifred-linux-64-ida84
+            ifred-windows-64-ida84
+            ifred-macos-x64-ida84

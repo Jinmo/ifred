@@ -2,7 +2,11 @@ include(${IDASDK}/ida-cmake/idasdk.cmake)
 
 set(PLUGIN_NAME          ida_palette)
 set(PLUGIN_SOURCES       plugin.cpp python.cpp)
-set(PLUGIN_LINK_LIBRARIES palette Qt6::Core Qt6::Gui Qt6::Widgets)
+if(USE_QT5)
+    set(PLUGIN_LINK_LIBRARIES palette Qt5::Core Qt5::Gui Qt5::Widgets)
+else()
+    set(PLUGIN_LINK_LIBRARIES palette Qt6::Core Qt6::Gui Qt6::Widgets)
+endif()
 
 generate()
 
