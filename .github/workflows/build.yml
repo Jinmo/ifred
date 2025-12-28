@@ -124,25 +124,14 @@ jobs:
             libfontconfig1-dev libfreetype6-dev libx11-dev libx11-xcb-dev \
             libxext-dev libxfixes-dev libxi-dev libxrender-dev libxkbcommon-x11-dev
 
-      - name: Install HCLI
-        run: pip install ida-hcli==0.14.2
-
       - name: Download IDA SDK
         env:
-          HCLI_API_KEY: ${{ secrets.HCLI_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          hcli --disable-updates download release/8.4/sdk-and-utilities/idasdk84.zip
-          unzip -q idasdk84.zip -d ./ida-temp
-          mv ./ida-temp/idasdk84 ./ida-sdk
+          gh release download sdk-assets --pattern 'idasdk_pro84.zip' --repo ${{ github.repository }}
+          unzip -q idasdk_pro84.zip
+          mv idasdk_pro84 ida-sdk
           ln -s ${{ github.workspace }}/palette/ida-cmake ${{ github.workspace }}/ida-sdk/ida-cmake
-
-      - name: Download and Install IDA Free
-        env:
-          HCLI_API_KEY: ${{ secrets.HCLI_API_KEY }}
-        run: |
-          hcli --disable-updates download release/8.4/ida-free/idafree84_linux.run
-          chmod +x idafree84_linux.run
-          ./idafree84_linux.run --mode unattended --prefix ${{ github.workspace }}/ida
 
       - name: Cache Qt5 build
         uses: actions/cache@v4
@@ -185,7 +174,6 @@ jobs:
             -DPYTHON_SUPPORT=OFF \
             -DUSE_QT5=ON \
             -DIDASDK=${{ github.workspace }}/ida-sdk \
-            -DIDABIN=${{ github.workspace }}/ida \
             -DEA64=ON
 
       - name: Build
@@ -195,7 +183,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ifred-linux-64-ida84
-          path: ${{ github.workspace }}/ida/plugins/ida_palette*.so
+          path: ${{ github.workspace }}/ida-sdk/bin/plugins/ida_palette*.so
           retention-days: 1
 
   build-windows:
@@ -305,17 +293,14 @@ jobs:
         with:
           arch: x64
 
-      - name: Install HCLI
-        run: pip install ida-hcli==0.14.2
-
       - name: Download IDA SDK
         shell: bash
         env:
-          HCLI_API_KEY: ${{ secrets.HCLI_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          hcli --disable-updates download release/8.4/sdk-and-utilities/idasdk84.zip
-          unzip -q idasdk84.zip -d ./ida-temp
-          mv ./ida-temp/idasdk84 ./ida-sdk
+          gh release download sdk-assets --pattern 'idasdk_pro84.zip' --repo ${{ github.repository }}
+          unzip -q idasdk_pro84.zip
+          mv idasdk_pro84 ida-sdk
           cp -r palette/ida-cmake ida-sdk/ida-cmake
 
       - name: Cache Qt5 build
@@ -478,27 +463,16 @@ jobs:
           submodules: recursive
 
       - name: Install build dependencies
-        run: brew install cmake ninja
-
-      - name: Install HCLI
-        run: pip3 install ida-hcli==0.14.2 --break-system-packages
+        run: brew install cmake ninja gh
 
       - name: Download IDA SDK
         env:
-          HCLI_API_KEY: ${{ secrets.HCLI_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          hcli --disable-updates download release/8.4/sdk-and-utilities/idasdk84.zip
-          unzip -q idasdk84.zip -d ./ida-temp
-          mv ./ida-temp/idasdk84 ./ida-sdk
+          gh release download sdk-assets --pattern 'idasdk_pro84.zip' --repo ${{ github.repository }}
+          unzip -q idasdk_pro84.zip
+          mv idasdk_pro84 ida-sdk
           ln -s ${{ github.workspace }}/palette/ida-cmake ${{ github.workspace }}/ida-sdk/ida-cmake
-
-      - name: Download and Install IDA Free
-        env:
-          HCLI_API_KEY: ${{ secrets.HCLI_API_KEY }}
-        run: |
-          hcli --disable-updates download "release/8.4/ida-free/idafree84_mac.app.zip"
-          unzip -q idafree84_mac.app.zip
-          ./idafree84_mac.app/Contents/MacOS/installbuilder.sh --mode unattended --prefix ${{ github.workspace }}/ida-install
 
       - name: Cache Qt5 build
         uses: actions/cache@v4
@@ -542,7 +516,6 @@ jobs:
             -DPYTHON_SUPPORT=OFF \
             -DUSE_QT5=ON \
             -DIDASDK=${{ github.workspace }}/ida-sdk \
-            -DIDABIN="${{ github.workspace }}/ida-install/IDA Free 8.4.app/Contents/MacOS" \
             -DEA64=ON
 
       - name: Build
@@ -552,7 +525,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ifred-macos-x64-ida84
-          path: "${{ github.workspace }}/ida-install/IDA Free 8.4.app/Contents/MacOS/plugins/ida_palette*.dylib"
+          path: ${{ github.workspace }}/ida-sdk/bin/plugins/ida_palette*.dylib
           retention-days: 1
 
   package:
