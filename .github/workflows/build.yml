@@ -106,7 +106,7 @@ jobs:
 
   # IDA 8.4 builds (Qt5)
   build-linux-ida84:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04  # Use older Ubuntu for GCC 9 compatibility with Qt 5.15.2
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -454,83 +454,12 @@ jobs:
           path: "${{ github.workspace }}/ida-install/IDA Free 9.2.app/Contents/MacOS/plugins/ida_palette*.dylib"
           retention-days: 1
 
-  build-macos-ida84:
-    runs-on: macos-13-large  # x64 runner for IDA 8.4
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - name: Install build dependencies
-        run: brew install cmake ninja gh
-
-      - name: Download IDA SDK
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release download sdk-assets --pattern 'idasdk_pro84.zip' --repo ${{ github.repository }}
-          unzip -q idasdk_pro84.zip
-          mv idasdk_pro84 ida-sdk
-          ln -s ${{ github.workspace }}/palette/ida-cmake ${{ github.workspace }}/ida-sdk/ida-cmake
-
-      - name: Cache Qt5 build
-        uses: actions/cache@v4
-        id: qt-cache
-        with:
-          path: qt-install
-          key: ${{ runner.os }}-qt5-5.15.2-x64-qtnamespace-v1
-          restore-keys: |
-            ${{ runner.os }}-qt5-x64-
-
-      - name: Build Qt5 from source (if not cached)
-        if: steps.qt-cache.outputs.cache-hit != 'true'
-        run: |
-          # Download Qt5 source
-          curl -L -o qt-src.tar.xz https://download.qt.io/archive/qt/5.15/5.15.2/single/qt-everywhere-src-5.15.2.tar.xz
-          tar xf qt-src.tar.xz
-
-          # Configure Qt5 with QT_NAMESPACE=QT (required for IDA)
-          cd qt-everywhere-src-5.15.2
-          ./configure -prefix ${{ github.workspace }}/qt-install \
-            -opensource -confirm-license \
-            -release \
-            -qtnamespace QT \
-            -skip qtwebengine -skip qt3d -skip qtcharts -skip qtdatavis3d \
-            -skip qtgamepad -skip qtlocation -skip qtmultimedia -skip qtpurchasing \
-            -skip qtremoteobjects -skip qtscript -skip qtsensors -skip qtserialbus \
-            -skip qtserialport -skip qtspeech -skip qtvirtualkeyboard -skip qtwayland \
-            -skip qtwebchannel -skip qtwebsockets -skip qtwebview \
-            -nomake examples -nomake tests
-
-          # Build and install
-          make -j$(sysctl -n hw.ncpu)
-          make install
-
-      - name: Configure CMake
-        run: |
-          cmake -B build -G Ninja \
-            -DCMAKE_PREFIX_PATH=${{ github.workspace }}/qt-install \
-            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-            -DCMAKE_OSX_ARCHITECTURES="x86_64" \
-            -DPYTHON_SUPPORT=OFF \
-            -DUSE_QT5=ON \
-            -DIDASDK=${{ github.workspace }}/ida-sdk \
-            -DEA64=ON
-
-      - name: Build
-        run: cmake --build build --parallel
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ifred-macos-x64-ida84
-          path: ${{ github.workspace }}/ida-sdk/bin/plugins/ida_palette*.dylib
-          retention-days: 1
+  # NOTE: macOS IDA 8.4 build removed - no free x64 macOS runners available
+  # IDA 8.4 was x64-only on macOS, and macos-13 runners are retired
 
   package:
     runs-on: ubuntu-latest
-    needs: [build-linux, build-windows, build-macos, build-linux-ida84, build-windows-ida84, build-macos-ida84]
+    needs: [build-linux, build-windows, build-macos, build-linux-ida84, build-windows-ida84]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -550,13 +479,12 @@ jobs:
           cp artifacts/ifred-windows-64/*.dll package-ida92/
           cp artifacts/ifred-macos-arm64/*.dylib package-ida92/
 
-          # IDA 8.4 package (Qt5)
+          # IDA 8.4 package (Qt5) - Linux and Windows only (no free x64 macOS runners)
           mkdir -p package-ida84
           cp ida-plugin.json package-ida84/
           cp README.md package-ida84/
           cp artifacts/ifred-linux-64-ida84/*.so package-ida84/
           cp artifacts/ifred-windows-64-ida84/*.dll package-ida84/
-          cp artifacts/ifred-macos-x64-ida84/*.dylib package-ida84/
 
       - name: Upload IDA 9.2 plugin package
         uses: actions/upload-artifact@v4
@@ -579,4 +507,3 @@ jobs:
             ifred-macos-arm64
             ifred-linux-64-ida84
             ifred-windows-64-ida84
-            ifred-macos-x64-ida84
