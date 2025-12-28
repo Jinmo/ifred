@@ -584,8 +584,8 @@ INIT_RETURN_TYPE idaapi init() {
 
 #ifdef _WIN32
   HMODULE hModule;
-  if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCWSTR)&init,
-                         &hModule)) {
+  if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+                          reinterpret_cast<LPCWSTR>(&init), &hModule)) {
     msg("ifred windows loadlibrary workaround error");
     return PLUGIN_SKIP;
   }

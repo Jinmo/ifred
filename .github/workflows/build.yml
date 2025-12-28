@@ -132,11 +132,6 @@ jobs:
           unzip -q idasdk_pro84.zip
           mv idasdk_pro84 ida-sdk
           ln -s ${{ github.workspace }}/palette/ida-cmake ${{ github.workspace }}/ida-sdk/ida-cmake
-          # Fix IDA 8.4 SDK lib paths (has _pro suffix and libida64 naming)
-          cd ida-sdk/lib
-          ln -s x64_linux_gcc_64_pro x64_linux_gcc_64
-          ln -s x64_linux_gcc_32_pro x64_linux_gcc_32
-          ln -s x64_linux_gcc_64_pro/libida64.so x64_linux_gcc_64_pro/libida.so
 
       - name: Cache Qt5 build
         uses: actions/cache@v4
@@ -307,10 +302,6 @@ jobs:
           unzip -q idasdk_pro84.zip
           mv idasdk_pro84 ida-sdk
           cp -r palette/ida-cmake ida-sdk/ida-cmake
-          # Fix IDA 8.4 SDK lib paths (has _pro suffix)
-          cd ida-sdk/lib
-          cp -r x64_win_vc_64_pro x64_win_vc_64
-          cp -r x64_win_vc_32_pro x64_win_vc_32
 
       - name: Cache Qt5 build
         uses: actions/cache@v4
@@ -464,7 +455,7 @@ jobs:
           retention-days: 1
 
   build-macos-ida84:
-    runs-on: macos-13  # x64 runner for IDA 8.4
+    runs-on: macos-13-large  # x64 runner for IDA 8.4
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -482,11 +473,6 @@ jobs:
           unzip -q idasdk_pro84.zip
           mv idasdk_pro84 ida-sdk
           ln -s ${{ github.workspace }}/palette/ida-cmake ${{ github.workspace }}/ida-sdk/ida-cmake
-          # Fix IDA 8.4 SDK lib paths (has _pro suffix and libida64 naming)
-          cd ida-sdk/lib
-          ln -s x64_mac_clang_64_pro x64_mac_clang_64
-          ln -s x64_mac_clang_32_pro x64_mac_clang_32
-          ln -s x64_mac_clang_64_pro/libida64.dylib x64_mac_clang_64_pro/libida.dylib
 
       - name: Cache Qt5 build
         uses: actions/cache@v4
